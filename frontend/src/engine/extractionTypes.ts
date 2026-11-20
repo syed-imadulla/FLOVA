@@ -9,6 +9,7 @@ export type ExtractionEntryIntent =
   | "transaction"
   | "expected_payout"
   | "balance_checkin"
+  | "financial_query"
   | "unknown";
 
 export type ExtractionActionIntent =
@@ -45,6 +46,12 @@ export interface ExtractedCheckinData {
   checked_at: string | null;
 }
 
+export interface ExtractedQueryData {
+  query_type: "runway_check" | "balance_check" | "payout_check" | "commitment_check" | "general";
+  target_date?: string | null;
+  target_entity?: string | null;
+}
+
 export interface ExtractionMetadata {
   certainty: number;
   clarification_required: boolean;
@@ -60,5 +67,6 @@ export interface FinancialExtractionDTO {
   transaction: ExtractedTransactionData | null;
   expected_payout: ExtractedPayoutData | null;
   balance_checkin: ExtractedCheckinData | null;
+  financial_query?: ExtractedQueryData | null;
   metadata: ExtractionMetadata;
 }

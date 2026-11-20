@@ -3,8 +3,9 @@
 import { supabase, unwrap } from "../lib/supabase";
 import { paiseToRupeeString, toPaise, toPaiseOrNull } from "../lib/money";
 import type {
-  BalanceCheckin, Commitment, CommitmentStatus, NewBalanceCheckin, NewCommitment, NewPayout, NewTransaction,
-  Payout, PayoutStatus, Profile, ProfileUpdate, RunwayInput, Transaction,
+  ActivityItem, BalanceCheckin, Commitment, CommitmentStatus, ExtractedReceiptCandidate,
+  NewBalanceCheckin, NewCommitment, NewPayout, NewTransaction,
+  Payout, PayoutStatus, Profile, ProfileUpdate, RunwayInput, Transaction, VoiceTransactionCandidate,
 } from "../types/contracts";
 
 const money = (p: number | null | undefined) => (p === null || p === undefined ? p : paiseToRupeeString(p));
@@ -190,4 +191,198 @@ export async function loadRunwayInput(): Promise<RunwayInput> {
     })),
     commitments: commitments.map((c) => ({ id: c.id, title: c.title, amount: toPaise(c.amount), dueDate: c.due_date, kind: c.kind })),
   };
+}
+
+// ---------- Unified Activity Timeline (Phases 7 & 10) ----------
+/**
+ * Loads unified chronological activity timeline merging transactions and balance check-ins.
+ * Check-ins are strictly segregated with type="checkin" to prevent treating them as income/expense.
+ */
+export async function listActivityTimeline(opts: {
+  from?: string;
+  to?: string;
+  limit?: number;
+  includeExpectedPayouts?: boolean;
+} = {}): Promise<ActivityItem[]> {
+  const includeExpectedPayouts = opts.includeExpectedPayouts !== false;
+
+  let txQuery = supabase.from("transactions").select("*")
+    .order("transaction_date", { ascending: false })
+    .order("created_at", { ascending: false });
+  if (opts.from) txQuery = txQuery.gte("transaction_date", opts.from);
+  if (opts.to) txQuery = txQuery.lte("transaction_date", opts.to);
+  if (opts.limit) txQuery = txQuery.limit(opts.limit);
+
+  let checkinQuery = supabase.from("balance_checkins").select("*")
+    .order("checked_at", { ascending: false })
+    .order("created_at", { ascending: false });
+  if (opts.from) checkinQuery = checkinQuery.gte("checked_at", opts.from);
+  if (opts.to) checkinQuery = checkinQuery.lte("checked_at", opts.to);
+  if (opts.limit) checkinQuery = checkinQuery.limit(opts.limit);
+
+  const txRes = await txQuery;
+  const checkinRes = await checkinQuery;
+  let payoutRes: { data: any; error: any } = { data: [], error: null };
+
+  if (includeExpectedPayouts) {
+    let payoutQuery = supabase.from("payouts").select("*")
+      .order("expected_date", { ascending: false, nullsFirst: false })
+      .order("created_at", { ascending: false });
+    if (opts.from) payoutQuery = payoutQuery.gte("expected_date", opts.from);
+    if (opts.to) payoutQuery = payoutQuery.lte("expected_date", opts.to);
+    if (opts.limit) payoutQuery = payoutQuery.limit(opts.limit);
+    payoutRes = await payoutQuery;
+  }
+
+  const transactions = unwrap(txRes, "Load activity transactions") as Transaction[];
+  const checkins = unwrap(checkinRes, "Load activity checkins") as BalanceCheckin[];
+  const payouts = payoutRes.data ? (unwrap(payoutRes, "Load activity payouts") as Payout[]) : [];
+
+  const activityItems: ActivityItem[] = [];
+
+  for (const t of transactions) {
+    activityItems.push({
+      id: t.id,
+      kind: t.payout_id ? "payout_receipt" : "transaction",
+      type: t.type,
+      timestamp: t.created_at,
+      date: t.transaction_date,
+      title: t.description || t.category || (t.type === "income" ? "Income" : "Expense"),
+      category: t.category,
+      ownership: t.ownership,
+      expenseType: t.expense_type,
+      amountPaise: toPaise(t.amount),
+      rupeeAmount: t.amount,
+      payoutId: t.payout_id,
+      source: t.source,
+      note: t.description,
+    });
+  }
+
+  for (const c of checkins) {
+    const cashPaise = toPaise(c.cash_amount);
+    const bankPaise = toPaise(c.bank_amount);
+    const notMinePaise = toPaise(c.not_mine_amount);
+    const totalPersonalPaise = cashPaise + bankPaise - notMinePaise;
+    const ts = c.checked_at || c.created_at;
+
+    activityItems.push({
+      id: c.id,
+      kind: "checkin",
+      type: "checkin",
+      timestamp: ts,
+      date: ts.slice(0, 10),
+      title: c.note || "Balance Check-in",
+      category: "checkin",
+      snapshot: {
+        cashPaise,
+        bankPaise,
+        notMinePaise,
+        totalPersonalPaise,
+      },
+      note: c.note,
+      source: "manual",
+    });
+  }
+
+  for (const p of payouts) {
+    // Only surface scheduled or estimated payouts as future advisory items
+    if (p.status === "scheduled" || p.status === "estimated" || p.status === "unearned") {
+      const expDate = p.expected_date || p.created_at.slice(0, 10);
+      const ts = p.expected_date ? `${p.expected_date}T00:00:00Z` : p.created_at;
+
+      activityItems.push({
+        id: p.id,
+        kind: "expected_payout",
+        type: "expected_payout",
+        timestamp: ts,
+        date: expDate,
+        title: `${p.source || "Platform"} Payout (Expected)`,
+        category: "payout",
+        amountPaise: toPaise(p.expected_amount),
+        rupeeAmount: p.expected_amount,
+        payoutId: p.id,
+        payoutStatus: p.status,
+        expectedDate: p.expected_date,
+        source: "system",
+        note: p.note || `Scheduled for ${expDate}`,
+      });
+    }
+  }
+
+  activityItems.sort((a, b) => (b.timestamp > a.timestamp ? 1 : b.timestamp < a.timestamp ? -1 : 0));
+
+  if (opts.limit && activityItems.length > opts.limit) {
+    return activityItems.slice(0, opts.limit);
+  }
+
+  return activityItems;
+}
+
+// ---------- Candidate Confirmation (FLOVA Catch & Voice) ----------
+/**
+ * Confirms an AI-extracted candidate (receipt or voice) into a permanent transaction.
+ * Requires user confirmation and throws when essential fields (amount, expenseType) are missing.
+ */
+export async function confirmCandidateTransaction(
+  candidate: ExtractedReceiptCandidate | VoiceTransactionCandidate
+): Promise<Transaction> {
+  const amountPaise = candidate.amountPaise;
+  if (amountPaise === null || amountPaise === undefined || amountPaise <= 0) {
+    throw new Error("Cannot confirm transaction: amount is missing or invalid. User review required.");
+  }
+
+  const isReceipt = "merchant" in candidate;
+
+  if (isReceipt) {
+    const rc = candidate as ExtractedReceiptCandidate;
+    if (!rc.expenseType) {
+      throw new Error("Choose whether this expense is living or work.");
+    }
+
+    const descText = rc.description || rc.notes;
+    let description: string | undefined = undefined;
+    if (rc.merchant && descText) {
+      description = `${rc.merchant} - ${descText}`;
+    } else if (rc.merchant) {
+      description = rc.merchant;
+    } else if (descText) {
+      description = descText;
+    }
+
+    return addTransaction({
+      id: rc.id,
+      type: "expense",
+      amount: amountPaise,
+      category: rc.category || "other",
+      description,
+      expenseType: rc.expenseType,
+      ownership: "mine",
+      date: rc.date ?? undefined,
+      source: "ai_suggestion",
+    });
+  } else {
+    const vc = candidate as VoiceTransactionCandidate;
+    if (!vc.type) {
+      throw new Error("Cannot confirm transaction: transaction type (income or expense) is required.");
+    }
+    const ownership = vc.ownership ?? "mine";
+    if (vc.type === "expense" && ownership === "mine" && !vc.expenseType) {
+      throw new Error("Choose whether this expense is living or work.");
+    }
+
+    const expenseType = vc.type === "expense" && ownership === "mine" ? (vc.expenseType ?? undefined) : undefined;
+
+    return addTransaction({
+      id: vc.id,
+      type: vc.type,
+      amount: amountPaise,
+      category: vc.category || "other",
+      description: vc.transcript || undefined,
+      expenseType,
+      ownership,
+      date: vc.date ?? undefined,
+      source: "voice",
+    });
+  }
 }
