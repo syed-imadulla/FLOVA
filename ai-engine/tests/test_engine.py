@@ -117,3 +117,13 @@ def test_reasons_match_what_happened():
     lean = rule.step(500)
     assert lean.reasons[0].startswith("Lean week")
     assert not any("extra is saved" in r for r in lean.reasons)
+
+
+def test_shortfall_reasons_do_not_contradict():
+    rule = SelfSalary(essentials=3000)
+    rule.step(5200)
+    rule.step(5200)
+    short = rule.step(400)
+    assert short.status == "shortfall"
+    assert not any("buffer covers" in r for r in short.reasons)
+    assert any("buffer ran out" in r for r in short.reasons)

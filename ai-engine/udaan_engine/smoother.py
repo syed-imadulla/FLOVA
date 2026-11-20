@@ -112,7 +112,10 @@ class SelfSalary:
         available = income + self.buffer
         salary = max(0.0, min(desired, available))
         if salary < desired:
-            reasons.append("Buffer is empty, so the salary is only what came in this week.")
+            # The buffer could not cover it, so drop any line promising it would.
+            reasons = [r for r in reasons if "buffer covers" not in r]
+            reasons.append(
+                f"Your buffer ran out: salary is this week's pay plus what was left (Rs {available:,.0f}).")
 
         saved = income - salary
         self.buffer = self.buffer + saved
