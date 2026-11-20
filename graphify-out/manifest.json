@@ -102,9 +102,9 @@
     "semantic_hash": ""
   },
   "frontend/src/App.tsx": {
-    "mtime": 1795213288.0618804,
-    "seen": 1795213337.1728878,
-    "ast_hash": "2330c33fdfe9ddbf99eae2144db1bff9",
+    "mtime": 1795215913.1624825,
+    "seen": 1795215954.491498,
+    "ast_hash": "a5b40f8c25a1f227b3d59129f7b4f2ab",
     "semantic_hash": ""
   },
   "frontend/src/api.ts": {
@@ -1227,6 +1227,66 @@
     "mtime": 1795213262.8158414,
     "seen": 1795213337.1728878,
     "ast_hash": "4cb0b034b111786ce39de7bcde7939ad",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/landing/FlovaBottomCTA.tsx": {
+    "mtime": 1795215858.6753404,
+    "seen": 1795215954.491498,
+    "ast_hash": "c527b06a25cd3229b64e8eb98b98e7e6",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/landing/FlovaClarityShowcase.tsx": {
+    "mtime": 1795215804.0041184,
+    "seen": 1795215954.491498,
+    "ast_hash": "d4ca4f46a7610d2a1141627151621350",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/landing/FlovaFooter.tsx": {
+    "mtime": 1795215869.7890205,
+    "seen": 1795215954.491498,
+    "ast_hash": "282509f86e3a6a7046b0c07856061903",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/landing/FlovaHero.tsx": {
+    "mtime": 1795215982.863667,
+    "seen": 1795215994.410054,
+    "ast_hash": "41cfd79a3e7103ec8ecad6a3a7082e27",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/landing/FlovaHowItWorks.tsx": {
+    "mtime": 1795215754.0052762,
+    "seen": 1795215954.491498,
+    "ast_hash": "e91f151ca91fcd4e4c9714faebbaa273",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/landing/FlovaIndiaContext.tsx": {
+    "mtime": 1795215773.2962713,
+    "seen": 1795215954.491498,
+    "ast_hash": "da7a140ea74e04c49f6a58e36708959f",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/landing/FlovaLandingPage.tsx": {
+    "mtime": 1795215878.3332374,
+    "seen": 1795215954.491498,
+    "ast_hash": "e0e09317db251cb4fb4332cac6dfa8fe",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/landing/FlovaNavbar.tsx": {
+    "mtime": 1795215560.21412,
+    "seen": 1795215954.491498,
+    "ast_hash": "681b0542d22d71b4f586a0deacbf8081",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/landing/FlovaPillars.tsx": {
+    "mtime": 1795215728.2478955,
+    "seen": 1795215954.491498,
+    "ast_hash": "d3936d23daf27cf77af873f9dad991a5",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/landing/FlovaUserStories.tsx": {
+    "mtime": 1795215847.6577265,
+    "seen": 1795215954.491498,
+    "ast_hash": "a80f7222fae24021ee472d2106d1d229",
     "semantic_hash": ""
   },
   "backend/package-lock.json": {

@@ -1,4 +1,3 @@
-import { useCallback, useState } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "./auth/AuthProvider";
 import { RedirectIfAuthed } from "./auth/RedirectIfAuthed";
@@ -19,30 +18,9 @@ import { LoginPage } from "./pages/auth/LoginPage";
 import { SignupPage } from "./pages/auth/SignupPage";
 import { ProfileProvider } from "./profile/ProfileProvider";
 import { RequireOnboarded } from "./profile/RequireOnboarded";
-import { PhonePeLandingPage, type Tab } from "./components/phonepe/PhonePeLandingPage";
-
-function loadRider(): number | null {
-  try {
-    const v = localStorage.getItem("flova.rider");
-    return v ? Number(v) : null;
-  } catch {
-    return null;
-  }
-}
+import { FlovaLandingPage } from "./components/landing/FlovaLandingPage";
 
 export default function App() {
-  const [tab, setTab] = useState<Tab>("week");
-  const [riderId, setRiderId] = useState<number | null>(loadRider);
-
-  const onRider = useCallback((id: number | null) => {
-    setRiderId(id);
-    try {
-      if (id == null) localStorage.removeItem("flova.rider");
-      else localStorage.setItem("flova.rider", String(id));
-    } catch {
-      /* storage blocked: fine, just not remembered */
-    }
-  }, []);
 
   return (
     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
@@ -50,18 +28,8 @@ export default function App() {
         <ProfileProvider>
           <DataVersionProvider>
             <Routes>
-              {/* Public FLOVA Landing Page adapted from PhonePe reference */}
-              <Route
-                path="/"
-                element={
-                  <PhonePeLandingPage
-                    tab={tab}
-                    setTab={setTab}
-                    riderId={riderId}
-                    onRider={onRider}
-                  />
-                }
-              />
+              {/* Public FLOVA Indian-Context Landing Page */}
+              <Route path="/" element={<FlovaLandingPage />} />
 
               {/* Authenticated Application Dashboard */}
               <Route
