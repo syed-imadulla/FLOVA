@@ -4,15 +4,17 @@ import { AuthProvider } from "./auth/AuthProvider";
 import { RedirectIfAuthed } from "./auth/RedirectIfAuthed";
 import { RequireAuth } from "./auth/RequireAuth";
 import { DataVersionProvider } from "./data/DataVersionProvider";
+import { ActivityPage } from "./pages/ActivityPage";
 import { AddTransactionPage } from "./pages/AddTransactionPage";
 import { CheckinPage } from "./pages/CheckinPage";
 import { CommitmentsPage } from "./pages/CommitmentsPage";
-import { HistoryPage } from "./pages/HistoryPage";
+import { FlovaCatchPage } from "./pages/FlovaCatchPage";
 import { HomeRunwayView } from "./pages/HomeRunwayView";
 import { InsightsView } from "./pages/InsightsView";
-import { ProfileSettingsView } from "./pages/ProfileSettingsView";
+import { MoneyOverviewPage } from "./pages/MoneyOverviewPage";
 import { OnboardingPage } from "./pages/OnboardingPage";
 import { PayoutsPage } from "./pages/PayoutsPage";
+import { ProfileSettingsView } from "./pages/ProfileSettingsView";
 import { VoiceCapturePage } from "./pages/VoiceCapturePage";
 import { WishPage } from "./wish/WishPage";
 import { LoginPage } from "./pages/auth/LoginPage";
@@ -50,7 +52,7 @@ export default function App() {
         <ProfileProvider>
           <DataVersionProvider>
             <Routes>
-              {/* Public FLOVA Landing Page adapted from PhonePe reference */}
+              {/* Public FLOVA Landing Page (PhonePe-inspired) — no auth required */}
               <Route
                 path="/"
                 element={
@@ -60,6 +62,34 @@ export default function App() {
                     riderId={riderId}
                     onRider={onRider}
                   />
+                }
+              />
+
+              {/* Authentication Routes */}
+              <Route
+                path="/login"
+                element={
+                  <RedirectIfAuthed>
+                    <LoginPage />
+                  </RedirectIfAuthed>
+                }
+              />
+              <Route
+                path="/signup"
+                element={
+                  <RedirectIfAuthed>
+                    <SignupPage />
+                  </RedirectIfAuthed>
+                }
+              />
+
+              {/* Onboarding — requires auth, pre-onboarding */}
+              <Route
+                path="/onboarding"
+                element={
+                  <RequireAuth>
+                    <OnboardingPage />
+                  </RequireAuth>
                 }
               />
 
@@ -115,33 +145,75 @@ export default function App() {
                 }
               />
 
-              {/* Authentication Routes */}
+              {/* Phase 10: Activity & Money Overview */}
               <Route
-                path="/login"
-                element={
-                  <RedirectIfAuthed>
-                    <LoginPage />
-                  </RedirectIfAuthed>
-                }
-              />
-              <Route
-                path="/signup"
-                element={
-                  <RedirectIfAuthed>
-                    <SignupPage />
-                  </RedirectIfAuthed>
-                }
-              />
-
-              {/* Onboarding & Data Capture Routes */}
-              <Route
-                path="/onboarding"
+                path="/overview"
                 element={
                   <RequireAuth>
-                    <OnboardingPage />
+                    <RequireOnboarded>
+                      <MoneyOverviewPage />
+                    </RequireOnboarded>
                   </RequireAuth>
                 }
               />
+              <Route
+                path="/activity"
+                element={
+                  <RequireAuth>
+                    <RequireOnboarded>
+                      <ActivityPage />
+                    </RequireOnboarded>
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/history"
+                element={
+                  <RequireAuth>
+                    <RequireOnboarded>
+                      <ActivityPage />
+                    </RequireOnboarded>
+                  </RequireAuth>
+                }
+              />
+
+              {/* Phase 8: FLOVA Catch */}
+              <Route
+                path="/catch"
+                element={
+                  <RequireAuth>
+                    <RequireOnboarded>
+                      <FlovaCatchPage />
+                    </RequireOnboarded>
+                  </RequireAuth>
+                }
+              />
+
+              {/* Phase 9: Voice Transcription */}
+              <Route
+                path="/voice"
+                element={
+                  <RequireAuth>
+                    <RequireOnboarded>
+                      <VoiceCapturePage />
+                    </RequireOnboarded>
+                  </RequireAuth>
+                }
+              />
+
+              {/* WISH */}
+              <Route
+                path="/wish"
+                element={
+                  <RequireAuth>
+                    <RequireOnboarded>
+                      <WishPage />
+                    </RequireOnboarded>
+                  </RequireAuth>
+                }
+              />
+
+              {/* Data Capture Routes */}
               <Route
                 path="/checkin"
                 element={
@@ -182,36 +254,8 @@ export default function App() {
                   </RequireAuth>
                 }
               />
-              <Route
-                path="/history"
-                element={
-                  <RequireAuth>
-                    <RequireOnboarded>
-                      <HistoryPage />
-                    </RequireOnboarded>
-                  </RequireAuth>
-                }
-              />
-              <Route
-                path="/voice"
-                element={
-                  <RequireAuth>
-                    <RequireOnboarded>
-                      <VoiceCapturePage />
-                    </RequireOnboarded>
-                  </RequireAuth>
-                }
-              />
-              <Route
-                path="/wish"
-                element={
-                  <RequireAuth>
-                    <RequireOnboarded>
-                      <WishPage />
-                    </RequireOnboarded>
-                  </RequireAuth>
-                }
-              />
+
+              {/* Legacy route aliases */}
               <Route path="/plan" element={<Navigate to="/commitments" replace />} />
               <Route path="/transactions" element={<Navigate to="/history" replace />} />
               <Route path="*" element={<Navigate to="/" replace />} />

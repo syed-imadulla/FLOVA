@@ -34,6 +34,7 @@ export {
 export type {
   ExtractedCheckinData,
   ExtractedPayoutData,
+  ExtractedQueryData,
   ExtractedTransactionData,
   ExtractionActionIntent,
   ExtractionEntryIntent,
