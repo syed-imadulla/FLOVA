@@ -7,6 +7,7 @@ through `frontend/src/services/`, and RLS makes sure each signed-in worker only 
 | Path | What |
 |---|---|
 | `supabase/migrations/20261120000100_init_schema.sql` | enums, 5 tables, triggers, indexes, RLS policies |
+| `supabase/migrations/20261120000200_explicit_grants.sql` | explicit schema and table grants for authenticated role |
 | `scripts/test-db.mjs` | runs the migration on a local Postgres (PGlite) and tests RLS, constraints and payout sync: no Supabase needed |
 | `scripts/rls-live-check.mjs` | the same User A vs User B isolation checks against the real Supabase project |
 | `../docs/CONTRACT.md` | field names, enums and recording rules for the whole team |
@@ -16,6 +17,7 @@ through `frontend/src/services/`, and RLS makes sure each signed-in worker only 
 ## Set up Supabase (once)
 1. Create a project at supabase.com (region: Mumbai `ap-south-1`).
 2. **SQL Editor → New query** → paste `supabase/migrations/20261120000100_init_schema.sql` → **Run**.
+   Then paste and run `supabase/migrations/20261120000200_explicit_grants.sql` to apply explicit table and schema grants.
    With the Supabase CLI instead: `cd backend && supabase link --project-ref <ref> && supabase db push`.
 3. **Authentication → Sign In / Providers → Email**: email + password on. Turning **Confirm email** off speeds up the demo.
 4. **Project Settings → API**: copy the Project URL and the publishable (anon) key into `frontend/.env.local`,
