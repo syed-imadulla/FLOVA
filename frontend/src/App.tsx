@@ -1,12 +1,21 @@
 import { useCallback, useState } from "react";
-import { EvidenceView } from "./components/EvidenceView";
-import { RiderView } from "./components/RiderView";
-import { SmsView } from "./components/SmsView";
-import { HeroSection } from "./components/HeroSection";
-import { OneRupeeMorphBridge } from "./components/OneRupeeMorphBridge";
-import { LandingSections } from "./components/LandingSections";
-
-type Tab = "week" | "sms" | "evidence";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { AuthProvider } from "./auth/AuthProvider";
+import { RedirectIfAuthed } from "./auth/RedirectIfAuthed";
+import { RequireAuth } from "./auth/RequireAuth";
+import { DataVersionProvider } from "./data/DataVersionProvider";
+import { AddTransactionPage } from "./pages/AddTransactionPage";
+import { CheckinPage } from "./pages/CheckinPage";
+import { CommitmentsPage } from "./pages/CommitmentsPage";
+import { HistoryPage } from "./pages/HistoryPage";
+import { HomePlaceholder } from "./pages/HomePlaceholder";
+import { OnboardingPage } from "./pages/OnboardingPage";
+import { PayoutsPage } from "./pages/PayoutsPage";
+import { LoginPage } from "./pages/auth/LoginPage";
+import { SignupPage } from "./pages/auth/SignupPage";
+import { ProfileProvider } from "./profile/ProfileProvider";
+import { RequireOnboarded } from "./profile/RequireOnboarded";
+import { AbyssLandingPage, type Tab } from "./components/abyss/AbyssLandingPage";
 
 function loadRider(): number | null {
   try {
@@ -21,14 +30,6 @@ export default function App() {
   const [tab, setTab] = useState<Tab>("week");
   const [riderId, setRiderId] = useState<number | null>(loadRider);
 
-  const handleLaunch = useCallback(() => {
-    setTab("week");
-  }, []);
-
-  const handleSelectTab = useCallback((selectedTab: Tab) => {
-    setTab(selectedTab);
-  }, []);
-
   const onRider = useCallback((id: number | null) => {
     setRiderId(id);
     try {
@@ -40,52 +41,130 @@ export default function App() {
   }, []);
 
   return (
-    <div className="flova-root">
-      {/* Editorial Landing Hero Section (Choreographed to 20261120-1435-37 reference) */}
-      <HeroSection
-        onLaunch={handleLaunch}
-        onSelectTab={handleSelectTab}
-        activeTab={tab}
-      />
+    <BrowserRouter>
+      <AuthProvider>
+        <ProfileProvider>
+          <DataVersionProvider>
+            <Routes>
+              {/* Public FLOVA Landing Page adapted from Abyss tactile design */}
+              <Route
+                path="/"
+                element={
+                  <AbyssLandingPage
+                    tab={tab}
+                    setTab={setTab}
+                    riderId={riderId}
+                    onRider={onRider}
+                  />
+                }
+              />
 
-      {/* Scroll-Driven Indian 1-Rupee Coin Morph Bridge */}
-      <OneRupeeMorphBridge />
+              {/* Authenticated Application Dashboard */}
+              <Route
+                path="/app"
+                element={
+                  <RequireAuth>
+                    <RequireOnboarded>
+                      <HomePlaceholder />
+                    </RequireOnboarded>
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/dashboard"
+                element={
+                  <RequireAuth>
+                    <RequireOnboarded>
+                      <HomePlaceholder />
+                    </RequireOnboarded>
+                  </RequireAuth>
+                }
+              />
 
-      {/* Follow-Up Feature & Editorial Bands (Choreographed to 20261120-1548-29 reference) */}
-      <LandingSections
-        onLaunchWorkspace={handleLaunch}
-        onOpenSimulator={handleLaunch}
-      />
+              {/* Authentication Routes */}
+              <Route
+                path="/login"
+                element={
+                  <RedirectIfAuthed>
+                    <LoginPage />
+                  </RedirectIfAuthed>
+                }
+              />
+              <Route
+                path="/signup"
+                element={
+                  <RedirectIfAuthed>
+                    <SignupPage />
+                  </RedirectIfAuthed>
+                }
+              />
 
-      {/* Interactive Worker Workspace Stage */}
-      <section id="flova-app-stage" className="app-stage-wrapper">
-        <div className="app">
-          <header className="app-sub-header">
-            <div>
-              <div className="app-stage-badge">Synthetic Demo &amp; Rider Workspace</div>
-              <h2 className="app-stage-title">Steady Weekly Salary Engine</h2>
-              <p className="tagline">Adaptive runway for irregular gig income · 50 simulated years backtested</p>
-            </div>
-            <nav className="app-tabs-nav" aria-label="Workspace tabs">
-              {([["week", "My week"], ["sms", "SMS mode"], ["evidence", "Evidence"]] as const).map(([k, label]) => (
-                <button
-                  key={k}
-                  type="button"
-                  className={tab === k ? "tab active" : "tab"}
-                  onClick={() => setTab(k)}
-                >
-                  {label}
-                </button>
-              ))}
-            </nav>
-          </header>
-          <main>
-            {tab === "week" && <RiderView riderId={riderId} onRider={onRider} />}
-            {tab === "sms" && <SmsView defaultPhone="9876543210" />}
-            {tab === "evidence" && <EvidenceView />}
-          </main>
-        </div>
-      </section>
-    </div>
+              {/* Onboarding & Data Capture Routes */}
+              <Route
+                path="/onboarding"
+                element={
+                  <RequireAuth>
+                    <OnboardingPage />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/checkin"
+                element={
+                  <RequireAuth>
+                    <RequireOnboarded>
+                      <CheckinPage />
+                    </RequireOnboarded>
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/add"
+                element={
+                  <RequireAuth>
+                    <RequireOnboarded>
+                      <AddTransactionPage />
+                    </RequireOnboarded>
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/payouts"
+                element={
+                  <RequireAuth>
+                    <RequireOnboarded>
+                      <PayoutsPage />
+                    </RequireOnboarded>
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/commitments"
+                element={
+                  <RequireAuth>
+                    <RequireOnboarded>
+                      <CommitmentsPage />
+                    </RequireOnboarded>
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/history"
+                element={
+                  <RequireAuth>
+                    <RequireOnboarded>
+                      <HistoryPage />
+                    </RequireOnboarded>
+                  </RequireAuth>
+                }
+              />
+
+              {/* Fallback to Home */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </DataVersionProvider>
+        </ProfileProvider>
+      </AuthProvider>
+    </BrowserRouter>
   );
 }

@@ -464,10 +464,16 @@ describe("Daily Runway Projection Engine Tests", () => {
     const res = calculateDailyRunway(input);
     // Starting personal balance correctly reflects: 200k - 20k = 180,000 paise.
     assertStrictEqual(res.startingConfirmedBalancePaise, 180000);
-    // Day 0 projection begins at 180,000 and applies the forward baseline (40k) -> closes at 140,000.
-    // The petrol expense is NOT deducted a second time in Day 0 projection adjustments!
+    // Under Option A (Remaining Daily Budget):
+    // Petrol expense (20,000 paise) consumed the 15,000 work budget (clamped to 0).
+    // Remaining living budget is 25,000 paise. Day 0 essential expense = 25,000.
+    // Day 0 closing: 180,000 - 25,000 = 155,000 paise.
     assertStrictEqual(res.projections[0].openingBalancePaise, 180000);
+    assertStrictEqual(res.projections[0].essentialExpensePaise, 25000);
     assertStrictEqual(res.projections[0].otherTransactionAdjustmentPaise, 0);
-    assertStrictEqual(res.projections[0].closingBalancePaise, 140000);
+    assertStrictEqual(res.projections[0].closingBalancePaise, 155000);
+    // Day 1 (tomorrow) applies the full forward baseline (40k): 155,000 - 40,000 = 115,000.
+    assertStrictEqual(res.projections[1].essentialExpensePaise, 40000);
+    assertStrictEqual(res.projections[1].closingBalancePaise, 115000);
   });
 });

@@ -1,7 +1,8 @@
 # FLOVA data contract (v1 · owner: M1)
 
 This is the agreed shape of FLOVA's data. **M2, M3 and M4 build against this.** The source of truth is
-`backend/supabase/migrations/20261120000100_init_schema.sql`, mirrored in `frontend/src/types/contracts.ts`.
+`backend/supabase/migrations/20261120000100_init_schema.sql` (and explicit table grants in
+`backend/supabase/migrations/20261120000200_explicit_grants.sql`), mirrored in `frontend/src/types/contracts.ts`.
 To change a field or enum: tell M1 → new migration → update `frontend/src/types/contracts.ts` → announce in the team chat.
 
 ## Rules everyone follows
@@ -108,3 +109,13 @@ Received money is recorded **once**, as a transaction. A payout only mirrors wha
 | Engine feed | `loadRunwayInput()` → `RunwayInput` (all paise, nulls kept) |
 
 All amounts passed to these functions are **paise**.
+
+## Frontend data hooks (`frontend/src/data/`)
+| Hook | State & Methods | Notes |
+|---|---|---|
+| `useLatestCheckin()` | `{ checkin, loading, error, add(c), reload() }` | Loads most recent balance check-in |
+| `useTransactions(opts)` | `{ items, loading, error, add(t), update(id, patch), remove(id), reload() }` | Transactions newest first (default limit 100) |
+| `usePayouts()` | `{ items, loading, error, add(p), receive(id, amount, date?), setStatus(id, status), reload() }` | Expected payouts list and settlement actions |
+| `useCommitments(filter)` | `{ items, loading, error, add(c), setStatus(id, status), reload() }` | Commitments (upcoming or all) |
+| `useProfile()` | `{ profile, loading, error, reload(), save(patch) }` | Profile state in `frontend/src/profile/` |
+
