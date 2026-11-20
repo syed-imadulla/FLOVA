@@ -20,6 +20,7 @@ export function AddTransactionPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [savedMessage, setSavedMessage] = useState<string | null>(null);
+  const [submissionId, setSubmissionId] = useState(() => (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : ""));
 
   // When type or isNotMine changes, adjust default category
   function handleTypeChange(newType: TransactionType) {
@@ -66,6 +67,7 @@ export function AddTransactionPage() {
     setSaving(true);
     try {
       await add({
+        id: submissionId || undefined,
         type,
         amount: amountRes.paise,
         category,
@@ -77,6 +79,9 @@ export function AddTransactionPage() {
       setSavedMessage("Transaction saved successfully!");
       setAmountText("");
       setDescription("");
+      if (typeof crypto !== "undefined" && crypto.randomUUID) {
+        setSubmissionId(crypto.randomUUID());
+      }
       navigate("/history");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save transaction");

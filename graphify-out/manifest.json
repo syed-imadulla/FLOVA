@@ -162,15 +162,15 @@
     "semantic_hash": ""
   },
   "frontend/src/services/data.ts": {
-    "mtime": 1795180989.8638306,
-    "seen": 1795181064.109681,
-    "ast_hash": "93ce24ad35e95fff08b27e55c24d6d46",
+    "mtime": 1795200946.5574768,
+    "seen": 1795202166.4239101,
+    "ast_hash": "b776c9efb13be3e8fafc3e665bb475e2",
     "semantic_hash": ""
   },
   "frontend/src/types/contracts.ts": {
-    "mtime": 1795180988.774841,
-    "seen": 1795181064.1096828,
-    "ast_hash": "967c8a3d1554ffd24e7b8c01f7879026",
+    "mtime": 1795196956.7693965,
+    "seen": 1795198451.1208677,
+    "ast_hash": "e21460d9f72119dd10114e978bac62e5",
     "semantic_hash": ""
   },
   "frontend/src/vite-env.d.ts": {
@@ -384,15 +384,15 @@
     "semantic_hash": ""
   },
   ".planning/ROADMAP.md": {
-    "mtime": 1795190407.9110682,
-    "seen": 1795192175.1799529,
-    "ast_hash": "43fe4007d52a8df6f9c9df5f40ce108a",
+    "mtime": 1795200502.5764713,
+    "seen": 1795200509.0339956,
+    "ast_hash": "0568155583f662b06f524c0fd5329bde",
     "semantic_hash": ""
   },
   ".planning/STATE.md": {
-    "mtime": 1795190407.9110682,
-    "seen": 1795192175.1799555,
-    "ast_hash": "76971000b29c156b01b7b9bdf70c3a75",
+    "mtime": 1795200945.7964835,
+    "seen": 1795202166.4245539,
+    "ast_hash": "847c911914ee5f4dac587d24e1942ed9",
     "semantic_hash": ""
   },
   ".planning/codebase/ARCHITECTURE.md": {
@@ -678,9 +678,9 @@
     "semantic_hash": ""
   },
   "frontend/src/data/usePayouts.ts": {
-    "mtime": 1795190407.9130054,
-    "seen": 1795192175.1787317,
-    "ast_hash": "d0cfc3d85b15f8c8fc29b7021c0f31ac",
+    "mtime": 1795198251.8480864,
+    "seen": 1795198451.1199663,
+    "ast_hash": "bf8b52faea21b99981c4bf794bfbf057",
     "semantic_hash": ""
   },
   "frontend/src/data/useTransactions.ts": {
@@ -690,9 +690,9 @@
     "semantic_hash": ""
   },
   "frontend/src/pages/AddTransactionPage.tsx": {
-    "mtime": 1795190407.9130054,
-    "seen": 1795192175.1790576,
-    "ast_hash": "02b7abe7052ac49433f24e426f3d6dd9",
+    "mtime": 1795197221.4470134,
+    "seen": 1795198451.12041,
+    "ast_hash": "4408996929978347897955169060e7bb",
     "semantic_hash": ""
   },
   "frontend/src/pages/CheckinPage.tsx": {
@@ -714,9 +714,9 @@
     "semantic_hash": ""
   },
   "frontend/src/pages/PayoutsPage.tsx": {
-    "mtime": 1795190407.9138741,
-    "seen": 1795192175.1790938,
-    "ast_hash": "9e0df7556fd28d6451b4beaac333db98",
+    "mtime": 1795198252.1330597,
+    "seen": 1795198451.120542,
+    "ast_hash": "e6018c574fa23c3f9f7dda7a7ac8c63f",
     "semantic_hash": ""
   },
   ".planning/phases/03-data-capture-hooks/03-01-PLAN.md": {
@@ -813,6 +813,78 @@
     "mtime": 1795191758.1646752,
     "seen": 1795192175.1806014,
     "ast_hash": "e29b9ed1b5a476f9ef1724539aee4499",
+    "semantic_hash": ""
+  },
+  "backend/scripts/test-concurrency-postgres.sh": {
+    "mtime": 1795198029.7517357,
+    "seen": 1795198451.119506,
+    "ast_hash": "2ea99f9ac8e50119d3bf1afa430ea342",
+    "semantic_hash": ""
+  },
+  "backend/scripts/test-payout-sync.mjs": {
+    "mtime": 1795200946.1704803,
+    "seen": 1795202166.4223707,
+    "ast_hash": "ad88b11c670f4cc5a7c84a90c3073ada",
+    "semantic_hash": ""
+  },
+  ".planning/phases/05-payout-synchronization-hardening/05-01-PLAN.md": {
+    "mtime": 1795198765.1591144,
+    "seen": 1795198806.694682,
+    "ast_hash": "e9f81bb7371f895bb4461ae3c3aa0396",
+    "semantic_hash": ""
+  },
+  ".planning/phases/05-payout-synchronization-hardening/05-01-SUMMARY.md": {
+    "mtime": 1795198775.996017,
+    "seen": 1795198806.6946833,
+    "ast_hash": "6b948e6a22aa1f85910cc2af49e89d18",
+    "semantic_hash": ""
+  },
+  ".planning/phases/05-payout-synchronization-hardening/05-CONTEXT.md": {
+    "mtime": 1795198744.2733026,
+    "seen": 1795198806.694685,
+    "ast_hash": "e38627128c6ee925f60a01b26dcf0390",
+    "semantic_hash": ""
+  },
+  ".planning/phases/05-payout-synchronization-hardening/05-UAT.md": {
+    "mtime": 1795200946.0194817,
+    "seen": 1795202166.4254885,
+    "ast_hash": "7608663e0542ac103b77a71e49a4dde3",
+    "semantic_hash": ""
+  },
+  ".planning/phases/05-payout-synchronization-hardening/05-VERIFICATION.md": {
+    "mtime": 1795200946.0934808,
+    "seen": 1795202166.4254901,
+    "ast_hash": "5ad620cb9c98ebf8c91816edf7a11157",
+    "semantic_hash": ""
+  },
+  "frontend/src/services/__tests__/idempotentRetry.test.ts": {
+    "mtime": 1795200426.2981582,
+    "seen": 1795200509.0333412,
+    "ast_hash": "3377961cd468ce085fcf98a09fbdd70e",
+    "semantic_hash": ""
+  },
+  "frontend/src/services/__tests__/mockLoader.mjs": {
+    "mtime": 1795200399.8543963,
+    "seen": 1795200509.0333424,
+    "ast_hash": "d82cc51a4068eb319dd3982d6ae08ff7",
+    "semantic_hash": ""
+  },
+  "frontend/src/services/__tests__/mockSupabase.ts": {
+    "mtime": 1795200393.9414496,
+    "seen": 1795200509.0333438,
+    "ast_hash": "f51856a8d4383d777feef0c9ad8c1e0c",
+    "semantic_hash": ""
+  },
+  ".planning/phases/05-payout-synchronization-hardening/05-02-PLAN.md": {
+    "mtime": 1795200479.5436788,
+    "seen": 1795200509.0347867,
+    "ast_hash": "04b7fab9c904f0959104bdcc94ca7ce9",
+    "semantic_hash": ""
+  },
+  ".planning/phases/05-payout-synchronization-hardening/05-02-SUMMARY.md": {
+    "mtime": 1795200472.74874,
+    "seen": 1795200509.0347881,
+    "ast_hash": "cbd8a25caaa5cd60c8b94629c15c5e28",
     "semantic_hash": ""
   }
 }
