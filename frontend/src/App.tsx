@@ -1,6 +1,6 @@
 import { useCallback, useState, lazy, Suspense } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
-import { AbyssLandingPage, type Tab } from "./components/abyss/AbyssLandingPage";
+import { WarmLandingPage, type Tab } from "./components/warm/WarmLandingPage";
 
 // Lazy-load authenticated pages and Supabase providers so the public landing page loads instantly
 // and never crashes even if Supabase environment variables have not been configured yet.
@@ -56,7 +56,7 @@ export default function App() {
         <Route
           path="/"
           element={
-            <AbyssLandingPage
+            <WarmLandingPage
               tab={tab}
               setTab={setTab}
               riderId={riderId}
