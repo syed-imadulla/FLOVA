@@ -4,7 +4,7 @@
 // =====================================================================
 
 import type { Paise, RunwayInput } from "../types/contracts";
-import { safeAdd, safeSub, validateBalanceCheckin } from "./validation";
+import { safeAdd, safeSub, validateBalanceCheckin, validatePayout } from "./validation";
 
 export type ConfirmedBalanceStatus =
   | "CONFIRMED"
@@ -31,19 +31,22 @@ export interface ConfirmedBalanceResult {
 /**
  * Calculates confirmed personal liquid balance strictly adhering to FLOVA data contract:
  * 1. Starts from latest check-in: (cash + bank - notMine).
- * 2. Deduplicates same-day entries: counts transactions where createdAt > checkedAt.
- * 3. Applies confirmed own transactions (ownership === "mine"):
+ * 2. Validates payouts against contract rules:
+ *    - Rejects invalid amounts, received > expected, or inconsistent statuses.
+ *    - Expected/scheduled/unearned/cancelled payouts are strictly EXCLUDED from confirmed balance.
+ * 3. Deduplicates same-day entries: counts transactions where createdAt > checkedAt.
+ * 4. Applies confirmed own transactions (ownership === "mine"):
  *    - type === "income" -> increases personal balance.
  *    - type === "expense" -> decreases personal balance.
- * 4. Treats custodial / third-party money (ownership === "not_mine") as non-personal:
- *    - COD collection (income) increases custodial liability.
- *    - COD remittance/handover (expense) decreases custodial liability.
- *    - Does NOT modify personal liquid balance.
- * 5. Payouts:
- *    - Expected/scheduled/unearned/cancelled payouts are strictly EXCLUDED.
- *    - Settled/received payouts are already tracked as linked income transactions,
- *      so payouts.received is NEVER added again, preventing double-counting.
- * 6. Returns INSUFFICIENT_INFORMATION if no valid check-in exists (never assumes 0).
+ * 5. Handles Cash On Delivery (COD) and custodial liability lifecycle (ownership === "not_mine"):
+ *    - Collections (income) increase custodial liability owed to platform.
+ *    - Remittances (expense) decrease custodial liability.
+ *    - Rejects invalid lifecycle transitions if remittance exceeds outstanding liability.
+ *    - Custodial money NEVER modifies personal available balance.
+ * 6. Payout Deduplication:
+ *    - Payout receipts are already income transactions, so payouts.received is NEVER
+ *      added on top of transactions, preventing double-counting.
+ * 7. Returns INSUFFICIENT_INFORMATION if no valid check-in exists (never assumes 0).
  */
 export function calculateConfirmedBalance(input: RunwayInput): ConfirmedBalanceResult {
   if (!input || !input.latestCheckin) {
@@ -63,6 +66,21 @@ export function calculateConfirmedBalance(input: RunwayInput): ConfirmedBalanceR
       custodialOwedPaise: null,
       reason: checkinValidation.errors.join("; "),
     };
+  }
+
+  // Validate payouts structure and contract consistency
+  if (Array.isArray(input.payouts)) {
+    for (const p of input.payouts) {
+      const pRes = validatePayout(p);
+      if (!pRes.valid) {
+        return {
+          status: "INVALID_INPUT",
+          confirmedBalancePaise: null,
+          custodialOwedPaise: null,
+          reason: `Invalid payout ${p.id}: ${pRes.errors.join("; ")}`,
+        };
+      }
+    }
   }
 
   const { cash, bank, notMine, checkedAt } = input.latestCheckin;
@@ -88,7 +106,6 @@ export function calculateConfirmedBalance(input: RunwayInput): ConfirmedBalanceR
       seenTransactionIds.add(tx.id);
 
       // Timestamp gate: count only transactions created AFTER the check-in was captured
-      // (transactions created at or before checkedAt were already included in the physical count)
       if (tx.createdAt <= checkedAt) {
         continue;
       }
@@ -110,6 +127,14 @@ export function calculateConfirmedBalance(input: RunwayInput): ConfirmedBalanceR
           runningCustodial = safeAdd(runningCustodial, tx.amount);
         } else if (tx.type === "expense") {
           // COD cash remitted / handed over: decreases custodial liability
+          if (tx.amount > runningCustodial) {
+            return {
+              status: "INVALID_INPUT",
+              confirmedBalancePaise: null,
+              custodialOwedPaise: null,
+              reason: `Invalid COD lifecycle transition: remittance of ${tx.amount} paise exceeds outstanding custodial liability of ${runningCustodial} paise.`,
+            };
+          }
           runningCustodial = safeSub(runningCustodial, tx.amount);
         }
       }

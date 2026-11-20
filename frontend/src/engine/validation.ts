@@ -9,6 +9,7 @@ import type {
   Paise,
   RunwayInput,
 } from "../types/contracts";
+import { PAYOUT_STATUSES } from "../types/contracts";
 
 export interface ValidationResult {
   valid: boolean;
@@ -149,6 +150,74 @@ export function validateTransaction(
 }
 
 /**
+ * Validates payout record structure and status consistency.
+ */
+export function validatePayout(
+  p: RunwayInput["payouts"][number]
+): ValidationResult {
+  const errors: string[] = [];
+  if (!p || typeof p !== "object") {
+    return { valid: false, errors: ["Payout must be an object."] };
+  }
+  if (!p.id || typeof p.id !== "string") {
+    errors.push("Payout missing valid ID.");
+  }
+  if (!isValidPaise(p.expected)) {
+    errors.push(`Payout ${p.id} has invalid expected amount: ${p.expected}.`);
+  }
+  if (!isValidPaise(p.received)) {
+    errors.push(`Payout ${p.id} has invalid received amount: ${p.received}.`);
+  }
+  if (isValidPaise(p.expected) && isValidPaise(p.received) && p.received > p.expected) {
+    errors.push(`Payout ${p.id} received amount (${p.received}) exceeds expected amount (${p.expected}).`);
+  }
+  if (!PAYOUT_STATUSES.includes(p.status)) {
+    errors.push(`Payout ${p.id} has invalid status: ${p.status}.`);
+  }
+  if (p.expectedDate !== null && !isValidISODate(p.expectedDate)) {
+    errors.push(`Payout ${p.id} has invalid expectedDate: ${p.expectedDate}.`);
+  }
+
+  // Contract consistency checks:
+  // If status is scheduled, estimated, or unearned, received amount must be 0
+  if (
+    (p.status === "scheduled" || p.status === "estimated" || p.status === "unearned") &&
+    isValidPaise(p.received) &&
+    p.received > 0
+  ) {
+    errors.push(
+      `Payout ${p.id} has status '${p.status}' but non-zero received amount (${p.received} paise). Expected status 'partial' or 'settled'.`
+    );
+  }
+
+  // If status is settled, received amount must match or exceed expected amount
+  if (
+    p.status === "settled" &&
+    isValidPaise(p.expected) &&
+    isValidPaise(p.received) &&
+    p.received < p.expected
+  ) {
+    errors.push(
+      `Payout ${p.id} has status 'settled' but received amount (${p.received} paise) is less than expected (${p.expected} paise).`
+    );
+  }
+
+  // If status is partial, received amount must be strictly between 0 and expected
+  if (
+    p.status === "partial" &&
+    isValidPaise(p.expected) &&
+    isValidPaise(p.received) &&
+    (p.received <= 0 || p.received >= p.expected)
+  ) {
+    errors.push(
+      `Payout ${p.id} has status 'partial' but received amount (${p.received} paise) is not between 0 and expected (${p.expected} paise).`
+    );
+  }
+
+  return { valid: errors.length === 0, errors };
+}
+
+/**
  * Validates the complete RunwayInput structure.
  */
 export function validateRunwayInput(input: RunwayInput): ValidationResult {
@@ -192,18 +261,10 @@ export function validateRunwayInput(input: RunwayInput): ValidationResult {
   if (!Array.isArray(input.payouts)) {
     errors.push("payouts must be an array.");
   } else {
-    for (const [index, p] of input.payouts.entries()) {
-      if (!isValidPaise(p.expected)) {
-        errors.push(`Payout at index ${index} has invalid expected amount: ${p.expected}.`);
-      }
-      if (!isValidPaise(p.received)) {
-        errors.push(`Payout at index ${index} has invalid received amount: ${p.received}.`);
-      }
-      if (isValidPaise(p.expected) && isValidPaise(p.received) && p.received > p.expected) {
-        errors.push(`Payout at index ${index} received amount (${p.received}) exceeds expected amount (${p.expected}).`);
-      }
-      if (p.expectedDate !== null && !isValidISODate(p.expectedDate)) {
-        errors.push(`Payout at index ${index} has invalid expectedDate: ${p.expectedDate}.`);
+    for (const p of input.payouts) {
+      const pRes = validatePayout(p);
+      if (!pRes.valid) {
+        errors.push(...pRes.errors);
       }
     }
   }
