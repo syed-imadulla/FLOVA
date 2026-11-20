@@ -6,12 +6,12 @@
 - Unclassified: 5 file(s) not represented in the graph (top: (none) 2, .example 2, .css 1)
 
 ## Summary
-- 781 nodes · 1488 edges · 63 communities (37 shown, 26 thin omitted)
+- 781 nodes · 1489 edges · 59 communities (34 shown, 25 thin omitted)
 - Extraction: 91% EXTRACTED · 9% INFERRED · 0% AMBIGUOUS · INFERRED: 137 edges (avg confidence: 0.94)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `bd59686e`
+- Built from commit: `ef3fbc6f`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -21,7 +21,7 @@
 - VERDICT — pick-f1-irregular-income
 - api.ts
 - frontend/package.json
-- Phase Details
+- loadRunwayInput
 - FLOVA data contract (v1 · owner: M1)
 - backend/package.json
 - STATEMENTS — The Big Hack 2.0
@@ -52,23 +52,19 @@
 - Implementation Decisions
 - Technology Stack
 - Testing Patterns
-- parseRupees.test.ts
 - getSession
 - Tests
 - 01-01-PLAN.md
 - Plan 02-01: Profile and Onboarding Persistence
 - auth.ts
 - External Integrations
-- v1 Requirements
 - Plan 03-01: Data Capture Hooks and Pages
 - getSession
 - rls-live-check.mjs
 - Goal Achievement
 - FLOVA (Udaan 2.0)
 - Onboarding Summary
-- Tables
 - useSession.ts
-- Goal Achievement
 - Goal Achievement
 
 ## God Nodes (most connected - your core abstractions)
@@ -90,15 +86,15 @@
   .planning/REQUIREMENTS.md → frontend/src/auth/useSession.ts
 - `Phase 1: Auth flow` --references--> `useSession()`  [INFERRED]
   .planning/ROADMAP.md → frontend/src/auth/useSession.ts
+- `Pattern Overview` --references--> `toPaise()`  [INFERRED]
+  .planning/codebase/ARCHITECTURE.md → frontend/src/lib/money.ts
 - `Monitoring & Observability` --references--> `unwrap()`  [INFERRED]
   .planning/codebase/INTEGRATIONS.md → frontend/src/lib/supabase.ts
-- `5. Next Steps` --references--> `useProfile()`  [INFERRED]
-  .planning/phases/01-auth-flow/01-01-SUMMARY.md → frontend/src/profile/useProfile.ts
 
 ## Import Cycles
 - None detected.
 
-## Communities (63 total, 26 thin omitted)
+## Communities (59 total, 25 thin omitted)
 
 ### Community 0 - "test_engine.py"
 Cohesion: 0.07
@@ -106,7 +102,7 @@ Nodes (36): test_backtest_shape(), test_buffer_never_negative_and_money_is_conse
 
 ### Community 1 - "contracts.ts"
 Cohesion: 0.06
-Nodes (68): DataVersionContext, DataVersionContextType, useDataVersion(), useCommitments(), usePayouts(), useTransactions(), unwrap(), ProfileContext (+60 more)
+Nodes (64): DataVersionContext, DataVersionContextType, useDataVersion(), useCommitments(), usePayouts(), useTransactions(), unwrap(), addCheckin() (+56 more)
 
 ### Community 2 - "VERDICT — pick-f1-irregular-income"
 Cohesion: 0.05
@@ -120,13 +116,13 @@ Nodes (22): api, BacktestRow, OutlookWeek, Plan, Profile, Rider, rs(), Status (+
 Cohesion: 0.09
 Nodes (26): dependencies, react@18.3.1, react-dom@18.3.1, react-router-dom@^6.30.6, @supabase/supabase-js@^2.119.2, devDependencies, @types/react@18.3.12, @types/react-dom@18.3.1 (+18 more)
 
-### Community 5 - "Phase Details"
-Cohesion: 0.15
-Nodes (12): Overview, Phase 1: Auth flow, Phase 2: Profile & onboarding data, Phase 4: Runway feed, Phase 5: Secure AI function (stretch), Phase 6: Demo data, Phase 7: Deployment, Phase 8: Verify & freeze (+4 more)
+### Community 5 - "loadRunwayInput"
+Cohesion: 0.05
+Nodes (39): Service functions (`frontend/src/services/`), getLatestCheckin(), getMyProfile(), loadRunwayInput(), Architectural Constraints, Architecture, Component Responsibilities, Data Flow (+31 more)
 
 ### Community 6 - "FLOVA data contract (v1 · owner: M1)"
-Cohesion: 0.12
-Nodes (13): Branches, Definition of done for any pull request, Every working session, Graphify: required for everyone, One-time setup (each member, each laptop), Who owns what, Working on FLOVA (team rules for the 24-hour build), Evidence (backtest, 50 simulated years per rider type) (+5 more)
+Cohesion: 0.08
+Nodes (23): Branches, Definition of done for any pull request, Every working session, Graphify: required for everyone, One-time setup (each member, each laptop), Who owns what, Working on FLOVA (team rules for the 24-hour build), `balance_checkins` (actual cash + bank at a moment) (+15 more)
 
 ### Community 7 - "backend/package.json"
 Cohesion: 0.10
@@ -169,16 +165,16 @@ Cohesion: 0.10
 Nodes (20): 10. Form state preservation on tab switch, 1. Balance check-in and COD bounds, 1. Currency parser unit tests, 2. Add income and expense transactions, 2. Local date formatting unit tests, 3. Expense Living/Work validation, 3. M3 Engine tests regression suite, 4. COD not-mine transaction (+12 more)
 
 ### Community 34 - "App.tsx"
-Cohesion: 0.05
-Nodes (73): FLOVA data contract (v1 · owner: M1), Frontend data hooks (`frontend/src/data/`), How to record each money situation, Rules everyone follows, Rules for M3's runway engine (from the master plan), Service functions (`frontend/src/services/`), App(), RedirectIfAuthed() (+65 more)
+Cohesion: 0.07
+Nodes (59): Rules everyone follows, App(), RedirectIfAuthed(), RequireAuth(), useSession(), DataVersionProvider(), todayLocalISO(), useLatestCheckin() (+51 more)
 
 ### Community 35 - "20261120000100_init_schema.sql"
 Cohesion: 0.16
 Nodes (21): balance_checkins_user_time, commitments_updated_at, commitments_user_due, on_auth_user_created, payouts_guard_received, payouts_updated_at, payouts_user_date, profiles_updated_at (+13 more)
 
 ### Community 36 - "index.ts"
-Cohesion: 0.14
-Nodes (38): d1, d2, iso1, iso2, calculateConfirmedBalance(), ConfirmedBalanceBreakdown, ConfirmedBalanceResult, ConfirmedBalanceStatus (+30 more)
+Cohesion: 0.10
+Nodes (48): d1, d2, iso1, iso2, calculateConfirmedBalance(), ConfirmedBalanceBreakdown, ConfirmedBalanceResult, ConfirmedBalanceStatus (+40 more)
 
 ### Community 37 - "Project State"
 Cohesion: 0.40
@@ -204,10 +200,6 @@ Nodes (7): Configuration, Frameworks, Key Dependencies, Languages, Platform Requ
 Cohesion: 0.29
 Nodes (6): Mocking & Isolation, Required Pre-Shipping Checks, Test File Organization, Test Framework, Test Structure, Testing Patterns
 
-### Community 43 - "parseRupees.test.ts"
-Cohesion: 0.18
-Nodes (10): req650, reqEmpty, reqZero, res200, res995, resAbc, resDec, resEmpty (+2 more)
-
 ### Community 44 - "getSession"
 Cohesion: 0.36
 Nodes (10): AuthProvider(), handleLogout(), getSession(), onAuthChange(), signOut(), APIs & External Services, Authentication & Routing Infrastructure, 4. Authentication Workflows & Form Behavior (+2 more)
@@ -223,10 +215,6 @@ Nodes (6): publishableKey, supabase, url, LoginPage(), handleSubmit(), signIn()
 ### Community 49 - "External Integrations"
 Cohesion: 0.25
 Nodes (7): Authentication & Identity, CI/CD & Deployment, Data Storage, Environment Configuration, External Integrations, Monitoring & Observability, Webhooks & Callbacks
-
-### Community 50 - "v1 Requirements"
-Cohesion: 0.17
-Nodes (11): Out of Scope, Phase 1: Authentication Flow, Phase 2: Profile & Onboarding Data, Phase 4: Runway Feed & Engine Integration, Phase 5: Secure AI Function (Stretch), Phase 6: Demo Data Seed & Test Fixtures, Phase 7: Deployment & Production Smoke Test, Phase 8: Verify & Release Freeze (+3 more)
 
 ### Community 52 - "getSession"
 Cohesion: 0.83
@@ -244,14 +232,10 @@ Nodes (10): Business & Problem Context, Constraints & Rules for Every Phase, Cor
 Cohesion: 0.29
 Nodes (6): Codebase Context, Docs Context, Onboarding Summary, Project State, Recommended Next Step, Workstream & Rules
 
-### Community 58 - "Tables"
-Cohesion: 0.33
-Nodes (6): `balance_checkins` (actual cash + bank at a moment), `commitments` (bills and debts), `payouts` (money expected, **not cash until received**), `profiles` (one per user, created automatically at sign-up), Tables, `transactions` (money that actually moved)
-
 ## Knowledge Gaps
 - **1 isolated node(s):** `udaan-engine`
   These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 377 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **26 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **25 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
@@ -263,10 +247,10 @@ _Questions this graph is uniquely positioned to answer:_
 - **What connects `udaan-engine` to the rest of the system?**
   _1 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `test_engine.py` be split into smaller, more focused modules?**
-  _Cohesion score 0.06639839034205232 - nodes in this community are weakly interconnected._
-- **Why does `FLOVA data contract (v1 · owner: M1)` connect `App.tsx` to `Tables`, `FLOVA data contract (v1 · owner: M1)`?**
+  _Cohesion score 0.06680080482897384 - nodes in this community are weakly interconnected._
+- **Why does `FLOVA data contract (v1 · owner: M1)` connect `FLOVA data contract (v1 · owner: M1)` to `App.tsx`, `loadRunwayInput`?**
   _High betweenness centrality (0.032) - this node is a cross-community bridge._
 - **Are the 8 inferred relationships involving `useSession()` (e.g. with `Layers` and `Primary Runway Feed Path`) actually correct?**
   _`useSession()` has 8 INFERRED edges - model-reasoned connections that need verification._
 - **Should `contracts.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.058747160012982795 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.06278538812785388 - nodes in this community are weakly interconnected._
