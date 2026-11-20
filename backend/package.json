@@ -1,0 +1,15 @@
+{
+  "name": "flova-backend",
+  "private": true,
+  "version": "0.2.0",
+  "type": "module",
+  "description": "FLOVA backend: Supabase schema, Row Level Security and database tests",
+  "scripts": {
+    "test:db": "node scripts/test-db.mjs",
+    "test:rls-live": "node --env-file=.env.local scripts/rls-live-check.mjs"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.17",
+    "@supabase/supabase-js": "^2.119.2"
+  }
+}
