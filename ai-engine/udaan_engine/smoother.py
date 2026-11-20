@@ -96,7 +96,6 @@ class SelfSalary:
             reasons.append(f"Buffer is above {TARGET_BUFFER_WEEKS:g} weeks, so salary rises by Rs {raise_by:,.0f}.")
         elif base > self.essentials:
             desired -= REFILL_SHARE * self.essentials
-            reasons.append("Good earnings and buffer below target, so a little extra is saved.")
 
         # Essentials come first: if the buffer can cover it, never pay less.
         if desired < self.essentials:
@@ -113,11 +112,21 @@ class SelfSalary:
         available = income + self.buffer
         salary = max(0.0, min(desired, available))
         if salary < desired:
-            reasons.append("Buffer is empty, so the salary is only what came in this week.")
+            # The buffer could not cover it, so drop any line promising it would.
+            reasons = [r for r in reasons if "buffer covers" not in r]
+            reasons.append(
+                f"Your buffer ran out: salary is this week's pay plus what was left (Rs {available:,.0f}).")
 
         saved = income - salary
         self.buffer = self.buffer + saved
         self.salary = salary
+
+        # Say what actually happened to the money this week.
+        if saved < 0 and salary >= self.essentials:
+            reasons.insert(0, f"Lean week: Rs {-saved:,.0f} taken from your buffer to keep your salary steady.")
+        elif saved > 0:
+            why = "buffer is below target" if self.buffer < target else "salary is kept steady"
+            reasons.insert(0, f"Rs {saved:,.0f} more than your salary came in, so it goes to the buffer ({why}).")
 
         if salary < self.essentials:
             status = "shortfall"
