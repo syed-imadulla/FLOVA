@@ -461,6 +461,12 @@
     "ast_hash": "ff7a298ac1645a61773aafd63ed2e6f4",
     "semantic_hash": ""
   },
+  "frontend/src/docs/followup-video-2-notes.md": {
+    "mtime": 1795196289.6113598,
+    "seen": 1795196320.010573,
+    "ast_hash": "d3e76252f2fecf0a259171fed208433e",
+    "semantic_hash": ""
+  },
   "backend/package-lock.json": {
     "mtime": 1795182817.7273962,
     "seen": 1795186226.0623772,

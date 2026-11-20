@@ -1,6 +1,6 @@
 {
   "0": "test_engine.py",
-  "1": "contracts.ts",
+  "1": "data.ts",
   "2": "VERDICT — pick-f1-irregular-income",
   "3": "api.ts",
   "4": "frontend/package.json",
@@ -34,5 +34,10 @@
   "32": "udaan-engine",
   "33": "loader.mjs",
   "34": "validation.test.ts",
-  "35": "FLOVA Hero Section Blueprint: Video 1 Deep Analysis"
+  "35": "FLOVA Hero Section Blueprint: Video 1 Deep Analysis",
+  "36": "contracts.ts",
+  "37": "2. Band-by-Band Cadence in Video 2",
+  "38": "money.ts",
+  "39": "Service functions (`frontend/src/services/`)",
+  "40": "rls-live-check.mjs"
 }
