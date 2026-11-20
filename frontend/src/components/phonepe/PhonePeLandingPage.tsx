@@ -1,9 +1,9 @@
 import React, { useCallback, useState } from "react";
 import { PhonePeNavbar } from "./PhonePeNavbar";
+import { PhonePeHeroSlider } from "./PhonePeHeroSlider";
 import { PhonePeHeroPillars } from "./PhonePeHeroPillars";
 import { PhonePeConcentricSection } from "./PhonePeConcentricSection";
 import { PhonePeConvenienceBills } from "./PhonePeConvenienceBills";
-import { PhonePeAppstoreHalo } from "./PhonePeAppstoreHalo";
 import { PhonePeTransitRow } from "./PhonePeTransitRow";
 import { PhonePeSafeQuickCarousel } from "./PhonePeSafeQuickCarousel";
 import { PhonePeSmartSavings } from "./PhonePeSmartSavings";
@@ -30,7 +30,6 @@ export const PhonePeLandingPage: React.FC<PhonePeLandingPageProps> = ({
   onRider,
 }) => {
   // Only mount the demo stage components after the user explicitly interacts with the stage.
-  // This prevents RiderView/EvidenceView from firing API calls on page load.
   const [stageActivated, setStageActivated] = useState(false);
 
   const scrollToStage = useCallback(() => {
@@ -55,36 +54,39 @@ export const PhonePeLandingPage: React.FC<PhonePeLandingPageProps> = ({
 
   return (
     <div className="phonepe-page selection:bg-[#5f259f] selection:text-white">
-      {/* 1. Sticky PhonePe-Style Navbar */}
+      {/* 1. Sticky Top Navigation Bar */}
       <PhonePeNavbar onLaunchStage={scrollToStage} />
 
-      {/* Main Section Cadence Matching Screenshots Exactly */}
+      {/* Main Section Cadence */}
       <main>
-        {/* SECTION 1 — HERO 4-PILLAR ELEVATED CARDS ROW (Screenshot 2) */}
+        {/* SECTION 1 — PRIMARY SLIDING HERO SHOWCASE (Matching Reference with Multiple Slides & FLOVA Name) */}
+        <PhonePeHeroSlider
+          onExplore={scrollToStage}
+          onLaunchStage={scrollToStage}
+        />
+
+        {/* SECTION 2 — 4-PILLAR ELEVATED CARDS ROW (Payments, Investments, Insurance, Lending) */}
         <PhonePeHeroPillars
           onExploreSolutions={scrollToSolutions}
           onLaunchStage={scrollToStage}
         />
 
-        {/* SECTION 2 — CONCENTRIC RINGS DARK-NAVY TRANSACTIONS SHOWCASE (Screenshot 4) */}
+        {/* SECTION 3 — CONCENTRIC RINGS DARK-NAVY TRANSACTIONS SHOWCASE */}
         <PhonePeConcentricSection />
 
-        {/* SECTION 3 — "CONVENIENCE AT YOUR FINGERTIPS" RECEIPT & BILL CAPSULES (Screenshots 3 & 5) */}
+        {/* SECTION 4 — "CONVENIENCE AT YOUR FINGERTIPS" RECEIPT & BILL CAPSULES */}
         <PhonePeConvenienceBills />
 
-        {/* SECTION 4 — "MORE THAN JUST APPS" ORANGE RADIAL HALO + APPSTORE PHONE (Screenshot 6) */}
-        <PhonePeAppstoreHalo onExplore={scrollToStage} />
-
-        {/* SECTION 5 — "TRAVEL, STAYS & COMMUTE" 4-CARD TRANSIT ROW (Screenshot 7) */}
+        {/* SECTION 5 — "TRAVEL, STAYS & COMMUTE" 4-CARD TRANSIT ROW */}
         <PhonePeTransitRow onExplore={scrollToStage} />
 
-        {/* SECTION 6 — "PAYMENTS ON FLOVA ARE SAFE, RELIABLE, AND QUICK" + CAROUSEL (Screenshot 8) */}
+        {/* SECTION 6 — "PAYMENTS ON FLOVA ARE SAFE, RELIABLE, AND QUICK" + CAROUSEL */}
         <PhonePeSafeQuickCarousel />
 
-        {/* SECTION 7 — "SMART SAVINGS START HERE" STACKED STADIUM CAPSULES (Screenshot 9) */}
+        {/* SECTION 7 — "SMART SAVINGS START HERE" STACKED STADIUM CAPSULES */}
         <PhonePeSmartSavings />
 
-        {/* SECTION 8 — "FLOVA INTERNATIONAL & PAN-INDIA" COUNTRY FLAGS CONTAINER (Screenshot 10) */}
+        {/* SECTION 8 — "FLOVA INTERNATIONAL & PAN-INDIA" COUNTRY FLAGS CONTAINER */}
         <PhonePePanIndiaBanner />
 
         {/* SECTION 9 — "ACCEPT PAYMENTS EVERYWHERE" DOT WAVE ARCH + SOUNDBOX */}
@@ -148,7 +150,7 @@ export const PhonePeLandingPage: React.FC<PhonePeLandingPageProps> = ({
             </div>
           </div>
 
-          {/* Active Stage Body — only mounted after user interaction to avoid spurious API calls on page load */}
+          {/* Active Stage Body */}
           <div className="min-h-[460px]">
             {!stageActivated ? (
               <div className="flex flex-col items-center justify-center min-h-[460px] gap-4 text-center">
