@@ -31,5 +31,7 @@
   "29": "pick-r1-vibe-code/trial-log.md",
   "30": "pick-r3-token-tax/case.md",
   "31": "pick-r3-token-tax/trial-log.md",
-  "32": "udaan-engine"
+  "32": "udaan-engine",
+  "33": "loader.mjs",
+  "34": "validation.test.ts"
 }

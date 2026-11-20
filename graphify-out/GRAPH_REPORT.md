@@ -1,17 +1,17 @@
 # Graph Report - FLOVA  (2026-11-20)
 
 ## Corpus Check
-- 60 files · ~32,783 words
+- 68 files · ~36,097 words
 - Verdict: corpus is large enough that graph structure adds value.
-- Unclassified: 5 file(s) not represented in the graph (top: .example 2, (none) 1, .css 1)
+- Unclassified: 6 file(s) not represented in the graph (top: (none) 2, .example 2, .css 1)
 
 ## Summary
-- 424 nodes · 631 edges · 33 communities (16 shown, 17 thin omitted)
+- 456 nodes · 727 edges · 35 communities (17 shown, 18 thin omitted)
 - Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 20 edges (avg confidence: 0.9)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `effb828d`
+- Built from commit: `c57ebbb1`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -42,6 +42,7 @@
 - pick-r3-token-tax/defense.md
 - pick-r3-token-tax/prosecution.md
 - udaan-engine
+- validation.test.ts
 
 ## God Nodes (most connected - your core abstractions)
 1. `SelfSalary` - 17 edges
@@ -56,21 +57,21 @@
 10. `run_udaan()` - 9 edges
 
 ## Surprising Connections (you probably didn't know these)
+- `Service functions (`frontend/src/services/`)` --references--> `getSession()`  [INFERRED]
+  docs/CONTRACT.md → frontend/src/services/auth.ts
 - `Service functions (`frontend/src/services/`)` --references--> `signIn()`  [INFERRED]
   docs/CONTRACT.md → frontend/src/services/auth.ts
 - `Service functions (`frontend/src/services/`)` --references--> `signOut()`  [INFERRED]
   docs/CONTRACT.md → frontend/src/services/auth.ts
-- `Service functions (`frontend/src/services/`)` --references--> `getSession()`  [INFERRED]
-  docs/CONTRACT.md → frontend/src/services/auth.ts
-- `Rules everyone follows` --references--> `toPaise()`  [INFERRED]
-  docs/CONTRACT.md → frontend/src/lib/money.ts
+- `Service functions (`frontend/src/services/`)` --references--> `RunwayInput`  [INFERRED]
+  docs/CONTRACT.md → frontend/src/types/contracts.ts
 - `Rules everyone follows` --references--> `paiseToRupeeString()`  [INFERRED]
   docs/CONTRACT.md → frontend/src/lib/money.ts
 
 ## Import Cycles
 - None detected.
 
-## Communities (33 total, 17 thin omitted)
+## Communities (35 total, 18 thin omitted)
 
 ### Community 0 - "test_engine.py"
 Cohesion: 0.07
@@ -78,7 +79,7 @@ Nodes (36): test_backtest_shape(), test_buffer_never_negative_and_money_is_conse
 
 ### Community 1 - "contracts.ts"
 Cohesion: 0.06
-Nodes (60): Rules everyone follows, Service functions (`frontend/src/services/`), paiseToRupeeString(), toPaise(), toPaiseOrNull(), unwrap(), addCheckin(), addCommitment() (+52 more)
+Nodes (58): Rules everyone follows, Service functions (`frontend/src/services/`), paiseToRupeeString(), toPaise(), toPaiseOrNull(), unwrap(), addCheckin(), addCommitment() (+50 more)
 
 ### Community 2 - "VERDICT — pick-f1-irregular-income"
 Cohesion: 0.05
@@ -136,25 +137,29 @@ Nodes (4): FLOVA backend (M1), Set up Supabase (once), Tables, Test
 Cohesion: 0.40
 Nodes (4): All assumptions, ASSUMPTIONS — F1 irregular income (idea not chosen yet), Status history, Test-first list
 
+### Community 34 - "validation.test.ts"
+Cohesion: 0.18
+Nodes (25): calculateConfirmedBalance(), ConfirmedBalanceBreakdown, ConfirmedBalanceResult, ConfirmedBalanceStatus, baseProfile, assertMatch(), assertStrictEqual(), assertThrows() (+17 more)
+
 ## Knowledge Gaps
 - **1 isolated node(s):** `udaan-engine`
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 220 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **17 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 224 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **18 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `FLOVA data contract (v1 · owner: M1)` connect `FLOVA data contract (v1 · owner: M1)` to `contracts.ts`?**
-  _High betweenness centrality (0.023) - this node is a cross-community bridge._
+  _High betweenness centrality (0.027) - this node is a cross-community bridge._
 - **Are the 2 inferred relationships involving `backtest_profile()` (e.g. with `RiderProfile` and `.mean_weekly_income()`) actually correct?**
   _`backtest_profile()` has 2 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `udaan-engine` to the rest of the system?**
   _1 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `test_engine.py` be split into smaller, more focused modules?**
-  _Cohesion score 0.06639839034205232 - nodes in this community are weakly interconnected._
-- **Why does `Service functions (`frontend/src/services/`)` connect `contracts.ts` to `auth.ts`, `FLOVA data contract (v1 · owner: M1)`?**
-  _High betweenness centrality (0.020) - this node is a cross-community bridge._
+  _Cohesion score 0.06680080482897384 - nodes in this community are weakly interconnected._
+- **Why does `Service functions (`frontend/src/services/`)` connect `contracts.ts` to `auth.ts`, `validation.test.ts`, `FLOVA data contract (v1 · owner: M1)`?**
+  _High betweenness centrality (0.026) - this node is a cross-community bridge._
 - **Should `contracts.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.05576923076923077 - nodes in this community are weakly interconnected._
-- **Why does `react` connect `api.ts` to `frontend/package.json`?**
-  _High betweenness centrality (0.010) - this node is a cross-community bridge._
+  _Cohesion score 0.05683563748079877 - nodes in this community are weakly interconnected._
+- **Why does `RunwayInput` connect `validation.test.ts` to `contracts.ts`?**
+  _High betweenness centrality (0.022) - this node is a cross-community bridge._
