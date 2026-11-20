@@ -30,3 +30,13 @@ export {
   validateTransaction,
   type ValidationResult,
 } from "./validation";
+
+export type {
+  ExtractedCheckinData,
+  ExtractedPayoutData,
+  ExtractedTransactionData,
+  ExtractionActionIntent,
+  ExtractionEntryIntent,
+  ExtractionMetadata,
+  FinancialExtractionDTO,
+} from "./extractionTypes";
