@@ -92,7 +92,7 @@
   "backend/supabase/migrations/20261120000100_init_schema.sql": {
     "mtime": 1795180983.9838874,
     "seen": 1795181064.1096575,
-    "ast_hash": "a808da93565857325d6b140df3d4accf",
+    "ast_hash": "",
     "semantic_hash": ""
   },
   "frontend/package.json": {
@@ -365,16 +365,82 @@
     "ast_hash": "b8a6d8217753bf8aeee7d2187056735c",
     "semantic_hash": ""
   },
-  "backend/package-lock.json": {
-    "mtime": 1795181037.822368,
-    "seen": 1795181064.1097412,
-    "ast_hash": "18e9064144577d1243e7cab8d9fb0e8e",
+  ".planning/config.json": {
+    "mtime": 1795182199.9731152,
+    "seen": 1795182523.4380772,
+    "ast_hash": "e048b26fcc2163a80c4cf858475b29b7",
     "semantic_hash": ""
   },
-  "frontend/package-lock.json": {
-    "mtime": 1795181006.8025978,
-    "seen": 1795181064.1097429,
-    "ast_hash": "bc500debae9adc133a12e9ddc274a7d0",
+  ".planning/PROJECT.md": {
+    "mtime": 1795182477.068427,
+    "seen": 1795182523.439381,
+    "ast_hash": "7c9975a9c039485d0e23440d2860e098",
+    "semantic_hash": ""
+  },
+  ".planning/REQUIREMENTS.md": {
+    "mtime": 1795182477.0914268,
+    "seen": 1795182523.4393833,
+    "ast_hash": "cfc62dfc612049e25b01e0df60c430b1",
+    "semantic_hash": ""
+  },
+  ".planning/ROADMAP.md": {
+    "mtime": 1795182477.1094267,
+    "seen": 1795182523.439385,
+    "ast_hash": "a988d4b40183bdc6a8dc0ec70d3313f2",
+    "semantic_hash": ""
+  },
+  ".planning/STATE.md": {
+    "mtime": 1795182477.1284266,
+    "seen": 1795182523.4393866,
+    "ast_hash": "bab9a56d933928c77767b9903cb921af",
+    "semantic_hash": ""
+  },
+  ".planning/codebase/ARCHITECTURE.md": {
+    "mtime": 1795182323.9826374,
+    "seen": 1795182523.4393883,
+    "ast_hash": "e15267d68537b4b7494ab192ed322642",
+    "semantic_hash": ""
+  },
+  ".planning/codebase/CONCERNS.md": {
+    "mtime": 1795182323.9868617,
+    "seen": 1795182523.43939,
+    "ast_hash": "090a05e45a823bf4767dcb750018489a",
+    "semantic_hash": ""
+  },
+  ".planning/codebase/CONVENTIONS.md": {
+    "mtime": 1795182323.9849122,
+    "seen": 1795182523.4393919,
+    "ast_hash": "6705e608fe4edbf657160b47e4c682c7",
+    "semantic_hash": ""
+  },
+  ".planning/codebase/INTEGRATIONS.md": {
+    "mtime": 1795182323.9866574,
+    "seen": 1795182523.439394,
+    "ast_hash": "450cc32756d524fcbba72ab12b8e5606",
+    "semantic_hash": ""
+  },
+  ".planning/codebase/STACK.md": {
+    "mtime": 1795182323.9809122,
+    "seen": 1795182523.4393957,
+    "ast_hash": "41291df32b97f2e443f0b6e4783f4d22",
+    "semantic_hash": ""
+  },
+  ".planning/codebase/STRUCTURE.md": {
+    "mtime": 1795182323.9830456,
+    "seen": 1795182523.439397,
+    "ast_hash": "2d4a85e17d7917bd2a0aa78c242b499a",
+    "semantic_hash": ""
+  },
+  ".planning/codebase/TESTING.md": {
+    "mtime": 1795182323.9863946,
+    "seen": 1795182523.439399,
+    "ast_hash": "474fa235717110368ba415bdde0505fa",
+    "semantic_hash": ""
+  },
+  ".planning/onboarding/SUMMARY.md": {
+    "mtime": 1795182477.1494262,
+    "seen": 1795182523.4394004,
+    "ast_hash": "6b6f838274e90ec39026167dea7153a8",
     "semantic_hash": ""
   }
 }
