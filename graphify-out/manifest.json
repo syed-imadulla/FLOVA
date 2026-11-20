@@ -102,9 +102,9 @@
     "semantic_hash": ""
   },
   "frontend/src/App.tsx": {
-    "mtime": 1795212724.4658604,
-    "seen": 1795213006.3427186,
-    "ast_hash": "6fd091d3c50cb9a49fb55f6d5edb0cca",
+    "mtime": 1795213288.0618804,
+    "seen": 1795213337.1728878,
+    "ast_hash": "2330c33fdfe9ddbf99eae2144db1bff9",
     "semantic_hash": ""
   },
   "frontend/src/api.ts": {
@@ -468,9 +468,9 @@
     "semantic_hash": ""
   },
   "frontend/src/pages/HomePlaceholder.tsx": {
-    "mtime": 1795209312.5848815,
-    "seen": 1795213006.3427186,
-    "ast_hash": "579bed4ce74a8fba4771204e49589b84",
+    "mtime": 1795213262.8097162,
+    "seen": 1795213337.1728878,
+    "ast_hash": "4f17d27e0c1bcab7fd51114baa40912a",
     "semantic_hash": ""
   },
   "frontend/src/pages/auth/LoginPage.tsx": {
@@ -1197,6 +1197,36 @@
     "mtime": 1795186683.5260816,
     "seen": 1795213006.3427186,
     "ast_hash": "f9cf6cb4de88c994a50964a60039a2c5",
+    "semantic_hash": ""
+  },
+  "frontend/src/wish/WishPage.tsx": {
+    "mtime": 1795213262.8130405,
+    "seen": 1795213337.1728878,
+    "ast_hash": "14712115a4909d05ee0417231398164a",
+    "semantic_hash": ""
+  },
+  "frontend/src/wish/__tests__/wish.test.ts": {
+    "mtime": 1795213262.8130405,
+    "seen": 1795213337.1728878,
+    "ast_hash": "a030c8a748d0a5deb9e8afee62192ed6",
+    "semantic_hash": ""
+  },
+  "frontend/src/wish/types.ts": {
+    "mtime": 1795213262.8130405,
+    "seen": 1795213337.1728878,
+    "ast_hash": "d371bf6f9e5a28bb9a797f1776f86b1d",
+    "semantic_hash": ""
+  },
+  "frontend/src/wish/useWish.ts": {
+    "mtime": 1795213262.8130405,
+    "seen": 1795213337.1728878,
+    "ast_hash": "9669e64cfe17c5b3c854da810981bfa4",
+    "semantic_hash": ""
+  },
+  "frontend/src/wish/wishService.ts": {
+    "mtime": 1795213262.8158414,
+    "seen": 1795213337.1728878,
+    "ast_hash": "4cb0b034b111786ce39de7bcde7939ad",
     "semantic_hash": ""
   },
   "backend/package-lock.json": {
