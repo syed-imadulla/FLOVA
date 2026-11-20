@@ -1,3 +1,4 @@
+import { useCallback, useState } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "./auth/AuthProvider";
 import { RedirectIfAuthed } from "./auth/RedirectIfAuthed";
@@ -8,24 +9,63 @@ import { AddTransactionPage } from "./pages/AddTransactionPage";
 import { CheckinPage } from "./pages/CheckinPage";
 import { CommitmentsPage } from "./pages/CommitmentsPage";
 import { FlovaCatchPage } from "./pages/FlovaCatchPage";
-import { HomePlaceholder } from "./pages/HomePlaceholder";
+import { HomeRunwayView } from "./pages/HomeRunwayView";
+import { InsightsView } from "./pages/InsightsView";
 import { MoneyOverviewPage } from "./pages/MoneyOverviewPage";
 import { OnboardingPage } from "./pages/OnboardingPage";
 import { PayoutsPage } from "./pages/PayoutsPage";
+import { ProfileSettingsView } from "./pages/ProfileSettingsView";
 import { VoiceCapturePage } from "./pages/VoiceCapturePage";
 import { WishPage } from "./wish/WishPage";
 import { LoginPage } from "./pages/auth/LoginPage";
 import { SignupPage } from "./pages/auth/SignupPage";
 import { ProfileProvider } from "./profile/ProfileProvider";
 import { RequireOnboarded } from "./profile/RequireOnboarded";
+import { PhonePeLandingPage, type Tab } from "./components/phonepe/PhonePeLandingPage";
+
+function loadRider(): number | null {
+  try {
+    const v = localStorage.getItem("flova.rider");
+    return v ? Number(v) : null;
+  } catch {
+    return null;
+  }
+}
 
 export default function App() {
+  const [tab, setTab] = useState<Tab>("week");
+  const [riderId, setRiderId] = useState<number | null>(loadRider);
+
+  const onRider = useCallback((id: number | null) => {
+    setRiderId(id);
+    try {
+      if (id == null) localStorage.removeItem("flova.rider");
+      else localStorage.setItem("flova.rider", String(id));
+    } catch {
+      /* storage blocked: fine, just not remembered */
+    }
+  }, []);
+
   return (
-    <BrowserRouter>
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <AuthProvider>
         <ProfileProvider>
           <DataVersionProvider>
             <Routes>
+              {/* Public FLOVA Landing Page (PhonePe-inspired) — no auth required */}
+              <Route
+                path="/"
+                element={
+                  <PhonePeLandingPage
+                    tab={tab}
+                    setTab={setTab}
+                    riderId={riderId}
+                    onRider={onRider}
+                  />
+                }
+              />
+
+              {/* Authentication Routes */}
               <Route
                 path="/login"
                 element={
@@ -42,16 +82,8 @@ export default function App() {
                   </RedirectIfAuthed>
                 }
               />
-              <Route
-                path="/"
-                element={
-                  <RequireAuth>
-                    <RequireOnboarded>
-                      <HomePlaceholder />
-                    </RequireOnboarded>
-                  </RequireAuth>
-                }
-              />
+
+              {/* Onboarding — requires auth, pre-onboarding */}
               <Route
                 path="/onboarding"
                 element={
@@ -60,56 +92,60 @@ export default function App() {
                   </RequireAuth>
                 }
               />
+
+              {/* Authenticated Application Dashboard */}
               <Route
-                path="/checkin"
+                path="/app"
                 element={
                   <RequireAuth>
                     <RequireOnboarded>
-                      <CheckinPage />
+                      <HomeRunwayView />
                     </RequireOnboarded>
                   </RequireAuth>
                 }
               />
               <Route
-                path="/add"
+                path="/dashboard"
                 element={
                   <RequireAuth>
                     <RequireOnboarded>
-                      <AddTransactionPage />
+                      <HomeRunwayView />
                     </RequireOnboarded>
                   </RequireAuth>
                 }
               />
               <Route
-                path="/catch"
+                path="/insights"
                 element={
                   <RequireAuth>
                     <RequireOnboarded>
-                      <FlovaCatchPage />
+                      <InsightsView />
                     </RequireOnboarded>
                   </RequireAuth>
                 }
               />
               <Route
-                path="/payouts"
+                path="/profile"
                 element={
                   <RequireAuth>
                     <RequireOnboarded>
-                      <PayoutsPage />
+                      <ProfileSettingsView />
                     </RequireOnboarded>
                   </RequireAuth>
                 }
               />
               <Route
-                path="/commitments"
+                path="/settings"
                 element={
                   <RequireAuth>
                     <RequireOnboarded>
-                      <CommitmentsPage />
+                      <ProfileSettingsView />
                     </RequireOnboarded>
                   </RequireAuth>
                 }
               />
+
+              {/* Phase 10: Activity & Money Overview */}
               <Route
                 path="/overview"
                 element={
@@ -140,6 +176,20 @@ export default function App() {
                   </RequireAuth>
                 }
               />
+
+              {/* Phase 8: FLOVA Catch */}
+              <Route
+                path="/catch"
+                element={
+                  <RequireAuth>
+                    <RequireOnboarded>
+                      <FlovaCatchPage />
+                    </RequireOnboarded>
+                  </RequireAuth>
+                }
+              />
+
+              {/* Phase 9: Voice Transcription */}
               <Route
                 path="/voice"
                 element={
@@ -150,6 +200,8 @@ export default function App() {
                   </RequireAuth>
                 }
               />
+
+              {/* WISH */}
               <Route
                 path="/wish"
                 element={
@@ -160,6 +212,52 @@ export default function App() {
                   </RequireAuth>
                 }
               />
+
+              {/* Data Capture Routes */}
+              <Route
+                path="/checkin"
+                element={
+                  <RequireAuth>
+                    <RequireOnboarded>
+                      <CheckinPage />
+                    </RequireOnboarded>
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/add"
+                element={
+                  <RequireAuth>
+                    <RequireOnboarded>
+                      <AddTransactionPage />
+                    </RequireOnboarded>
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/payouts"
+                element={
+                  <RequireAuth>
+                    <RequireOnboarded>
+                      <PayoutsPage />
+                    </RequireOnboarded>
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/commitments"
+                element={
+                  <RequireAuth>
+                    <RequireOnboarded>
+                      <CommitmentsPage />
+                    </RequireOnboarded>
+                  </RequireAuth>
+                }
+              />
+
+              {/* Legacy route aliases */}
+              <Route path="/plan" element={<Navigate to="/commitments" replace />} />
+              <Route path="/transactions" element={<Navigate to="/history" replace />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </DataVersionProvider>
