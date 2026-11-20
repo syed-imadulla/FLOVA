@@ -1,14 +1,13 @@
 import React, { useCallback } from "react";
-import { Link } from "react-router-dom";
 import { PhonePeNavbar } from "./PhonePeNavbar";
 import { PhonePeHeroPillars } from "./PhonePeHeroPillars";
-import { PhonePeAppstoreHalo } from "./PhonePeAppstoreHalo";
 import { PhonePeConcentricSection } from "./PhonePeConcentricSection";
 import { PhonePeConvenienceBills } from "./PhonePeConvenienceBills";
+import { PhonePeAppstoreHalo } from "./PhonePeAppstoreHalo";
 import { PhonePeTransitRow } from "./PhonePeTransitRow";
-import { PhonePePanIndiaBanner } from "./PhonePePanIndiaBanner";
 import { PhonePeSafeQuickCarousel } from "./PhonePeSafeQuickCarousel";
 import { PhonePeSmartSavings } from "./PhonePeSmartSavings";
+import { PhonePePanIndiaBanner } from "./PhonePePanIndiaBanner";
 import { PhonePeDotWaveDevices } from "./PhonePeDotWaveDevices";
 import { PhonePeOrbitalFooter } from "./PhonePeOrbitalFooter";
 import { RiderView } from "../RiderView";
@@ -46,46 +45,46 @@ export const PhonePeLandingPage: React.FC<PhonePeLandingPageProps> = ({
 
   return (
     <div className="phonepe-page selection:bg-[#5f259f] selection:text-white">
-      {/* 1. Sticky PhonePe Navbar */}
+      {/* 1. Sticky PhonePe-Style Navbar */}
       <PhonePeNavbar onLaunchStage={scrollToStage} />
 
-      {/* Main PhonePe Section Cadence Rebranded for FLOVA */}
+      {/* Main Section Cadence Matching Screenshots Exactly */}
       <main>
-        {/* SECTION 1 — HERO 4-PILLAR ELEVATED CARDS ROW */}
+        {/* SECTION 1 — HERO 4-PILLAR ELEVATED CARDS ROW (Screenshot 2) */}
         <PhonePeHeroPillars
           onExploreSolutions={scrollToSolutions}
           onLaunchStage={scrollToStage}
         />
 
-        {/* SECTION 2 — "MORE THAN JUST APPS" ORANGE RADIAL HALO + APPSTORE PHONE */}
-        <PhonePeAppstoreHalo onExplore={scrollToStage} />
-
-        {/* SECTION 3 — CONCENTRIC RINGS DARK-NAVY TRANSACTIONS SHOWCASE */}
+        {/* SECTION 2 — CONCENTRIC RINGS DARK-NAVY TRANSACTIONS SHOWCASE (Screenshot 4) */}
         <PhonePeConcentricSection />
 
-        {/* SECTION 4 — "CONVENIENCE AT YOUR FINGERTIPS" RECEIPT & BILL CAPSULES */}
+        {/* SECTION 3 — "CONVENIENCE AT YOUR FINGERTIPS" RECEIPT & BILL CAPSULES (Screenshots 3 & 5) */}
         <PhonePeConvenienceBills />
 
-        {/* SECTION 5 — "TRAVEL, STAYS & COMMUTE" 4-CARD TRANSIT ROW */}
+        {/* SECTION 4 — "MORE THAN JUST APPS" ORANGE RADIAL HALO + APPSTORE PHONE (Screenshot 6) */}
+        <PhonePeAppstoreHalo onExplore={scrollToStage} />
+
+        {/* SECTION 5 — "TRAVEL, STAYS & COMMUTE" 4-CARD TRANSIT ROW (Screenshot 7) */}
         <PhonePeTransitRow onExplore={scrollToStage} />
 
-        {/* SECTION 6 — "FLOVA PAN-INDIA CORRIDORS" METRO FLAGS CONTAINER */}
-        <PhonePePanIndiaBanner />
-
-        {/* SECTION 7 — "PAYMENTS ON FLOVA ARE SAFE, RELIABLE, AND QUICK" + CAROUSEL */}
+        {/* SECTION 6 — "PAYMENTS ON FLOVA ARE SAFE, RELIABLE, AND QUICK" + CAROUSEL (Screenshot 8) */}
         <PhonePeSafeQuickCarousel />
 
-        {/* SECTION 8 — "SMART SAVINGS START HERE" STACKED STADIUM CAPSULES */}
+        {/* SECTION 7 — "SMART SAVINGS START HERE" STACKED STADIUM CAPSULES (Screenshot 9) */}
         <PhonePeSmartSavings />
+
+        {/* SECTION 8 — "FLOVA INTERNATIONAL & PAN-INDIA" COUNTRY FLAGS CONTAINER (Screenshot 10) */}
+        <PhonePePanIndiaBanner />
 
         {/* SECTION 9 — "ACCEPT PAYMENTS EVERYWHERE" DOT WAVE ARCH + SOUNDBOX */}
         <PhonePeDotWaveDevices />
 
-        {/* SECTION 10 & 11 — ORBITAL INDIA STACK + 5-COL DIRECTORY FOOTER */}
+        {/* SECTION 10 — ORBITAL INDIA STACK + 5-COL DIRECTORY FOOTER */}
         <PhonePeOrbitalFooter />
       </main>
 
-      {/* SECTION 12 — INTERACTIVE WORKER WORKSPACE STAGE (#flova-app-stage) */}
+      {/* SECTION 11 — INTERACTIVE WORKER WORKSPACE STAGE (#flova-app-stage) */}
       <section
         id="flova-app-stage"
         className="py-20 px-4 sm:px-6 bg-[#f7f5fa] border-t border-[#ece4f5]"
@@ -99,46 +98,52 @@ export const PhonePeLandingPage: React.FC<PhonePeLandingPageProps> = ({
               <h2 className="text-2xl sm:text-3xl font-extrabold text-[#23173d] tracking-tight">
                 Interactive Worker Workspace
               </h2>
-              <p className="text-[#5e596e] text-sm mt-1">
-                Explore the deterministic runway engine with 50 backtested simulation years.
+              <p className="text-xs sm:text-sm text-[#5e596e] mt-1">
+                Explore live daily check-in, SMS parsing, and verifiable mathematical evidence without leaving the page.
               </p>
             </div>
 
-            <div className="flex flex-wrap gap-2">
-              <Link
-                to="/login"
-                className="px-4 py-2 rounded-xl text-xs font-mono font-bold bg-[#5f259f] text-white hover:bg-[#4d1d83] transition-colors"
+            {/* Stage Mode Tabs */}
+            <div className="inline-flex p-1 bg-[#f0ebf7] rounded-full self-start sm:self-auto border border-[#e3d7f2]">
+              <button
+                onClick={() => setTab("week")}
+                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                  tab === "week"
+                    ? "bg-[#5f259f] text-white shadow-xs"
+                    : "text-[#5e596e] hover:text-[#23173d]"
+                }`}
               >
-                Sign In to Full App →
-              </Link>
+                Weekly Runway
+              </button>
+              <button
+                onClick={() => setTab("sms")}
+                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                  tab === "sms"
+                    ? "bg-[#5f259f] text-white shadow-xs"
+                    : "text-[#5e596e] hover:text-[#23173d]"
+                }`}
+              >
+                SMS Parser
+              </button>
+              <button
+                onClick={() => setTab("evidence")}
+                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                  tab === "evidence"
+                    ? "bg-[#5f259f] text-white shadow-xs"
+                    : "text-[#5e596e] hover:text-[#23173d]"
+                }`}
+              >
+                Audit Evidence
+              </button>
             </div>
           </div>
 
-          {/* Tab Navigation */}
-          <div className="flex gap-2 pb-6 border-b border-slate-100 mb-6 overflow-x-auto">
-            {([
-              ["week", "My week (Rider View)"],
-              ["sms", "SMS Mode Fallback"],
-              ["evidence", "50-Year Simulation Evidence"],
-            ] as const).map(([k, label]) => (
-              <button
-                key={k}
-                onClick={() => setTab(k)}
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
-                  tab === k
-                    ? "bg-[#5f259f] text-white shadow-xs"
-                    : "bg-[#f5efff] text-[#5f259f] hover:bg-[#ebdcfc]"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-
-          {/* Render Active Stage Component */}
-          <div className="pt-2">
-            {tab === "week" && <RiderView riderId={riderId} onRider={onRider} />}
-            {tab === "sms" && <SmsView defaultPhone="9876543210" />}
+          {/* Active Stage Body */}
+          <div className="min-h-[460px]">
+            {tab === "week" && (
+              <RiderView riderId={riderId} onRider={onRider} />
+            )}
+            {tab === "sms" && <SmsView defaultPhone="" />}
             {tab === "evidence" && <EvidenceView />}
           </div>
         </div>
