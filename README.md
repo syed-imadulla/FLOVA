@@ -25,29 +25,32 @@ Run it yourself: `cd ai-engine && python3 -m udaan_engine`.
 
 ## Run it
 ```bash
-# backend (terminal 1)
-cd backend
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements-dev.txt
-uvicorn app.main:app --reload      # http://localhost:8000/docs
+# backend: Supabase (Auth + PostgreSQL + Row Level Security). One-time setup in backend/README.md.
+cd backend && npm install && npm run test:db   # local schema + RLS tests, no Supabase account needed
 
-# frontend (terminal 2)
+# frontend
 cd frontend
+cp .env.example .env.local         # Supabase URL + publishable key (ask M1)
 npm install
 npm run dev                        # http://localhost:5173
 ```
 
-Tests: `cd ai-engine && pytest -q` (16) and `cd backend && pytest -q` (10).
+Team rules, branches and the required **Graphify** workflow: [CONTRIBUTING.md](CONTRIBUTING.md).
+Data contract (tables, fields, enums): [docs/CONTRACT.md](docs/CONTRACT.md).
+
+Tests: `cd ai-engine && pytest -q` (16) and `cd backend && npm run test:db` (22 schema and RLS checks).
 
 ## Layout
 | Folder | What |
 |---|---|
 | `ai-engine/` | Self-salary rule, outlook, synthetic income, backtest (pure Python, no dependencies) |
-| `backend/` | FastAPI + SQLite API |
+| `backend/` | Supabase schema, Row Level Security policies and database tests (M1) |
+| `docs/` | Shared data contract |
+| `graphify-out/` | Graphify knowledge graph of the repo (committed, cache ignored) |
 | `frontend/` | React + Vite + TypeScript UI |
 | `.hackathon/` | Problem picking, assumptions and trial notes from the event |
 
 ## Tech and credits
-Python, FastAPI, SQLite, React, Vite, TypeScript. Data: IDInsight 2024 (via IDR), Economic Survey 2025-26 (via Upstox), NITI Aayog gig-workforce estimates.
+React, Vite, TypeScript, Supabase (Auth, PostgreSQL, Row Level Security), Python (ai-engine prototype). Data: IDInsight 2024 (via IDR), Economic Survey 2025-26 (via Upstox), NITI Aayog gig-workforce estimates.
 
 **AI assistance:** parts of the code were written with Claude Code (Anthropic) during the event, as allowed by the rules. Each team member can explain their part.

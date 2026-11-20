@@ -1,24 +1,34 @@
-# FLOVA backend
+# FLOVA backend (M1)
 
-FastAPI + SQLite. The plan is never stored; it's replayed from the payouts each time, so an undo can't leave a stale buffer behind.
+Supabase Auth + PostgreSQL with Row Level Security. There is no custom API server: the React app talks to Supabase
+through `frontend/src/services/`, and RLS makes sure each signed-in worker only ever reads or changes their own rows.
+(The earlier FastAPI + SQLite prototype is in git history up to commit `effb828`.)
 
+| Path | What |
+|---|---|
+| `supabase/migrations/20261120000100_init_schema.sql` | enums, 5 tables, triggers, indexes, RLS policies |
+| `scripts/test-db.mjs` | runs the migration on a local Postgres (PGlite) and tests RLS, constraints and payout sync: no Supabase needed |
+| `scripts/rls-live-check.mjs` | the same User A vs User B isolation checks against the real Supabase project |
+| `../docs/CONTRACT.md` | field names, enums and recording rules for the whole team |
+| `../frontend/src/types/contracts.ts` | the same contract as TypeScript types |
+| `../frontend/src/services/` | auth and data functions the UI calls |
+
+## Set up Supabase (once)
+1. Create a project at supabase.com (region: Mumbai `ap-south-1`).
+2. **SQL Editor → New query** → paste `supabase/migrations/20261120000100_init_schema.sql` → **Run**.
+   With the Supabase CLI instead: `cd backend && supabase link --project-ref <ref> && supabase db push`.
+3. **Authentication → Sign In / Providers → Email**: email + password on. Turning **Confirm email** off speeds up the demo.
+4. **Project Settings → API**: copy the Project URL and the publishable (anon) key into `frontend/.env.local`,
+   `backend/.env.local` and Vercel's environment variables. Never put the service-role key in a `VITE_` variable.
+
+## Test
 ```bash
 cd backend
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements-dev.txt
-uvicorn app.main:app --reload     # http://localhost:8000/docs
-pytest -q
+npm install
+npm run test:db         # local: 22 checks, including User B cannot read/edit/delete/insert as User A
+npm run test:rls-live   # real project: needs backend/.env.local filled in
 ```
 
-| Endpoint | What it does |
-|---|---|
-| `POST /riders` | Sign up: name, optional phone, weekly essentials |
-| `POST /riders/demo?profile=full_time&weeks=10` | Rider pre-filled with simulated payouts |
-| `POST /riders/{id}/payouts` | Log this week's payout, get the new plan back |
-| `DELETE /riders/{id}/payouts/last` | Undo a mistyped payout |
-| `GET /riders/{id}/plan` | Salary, buffer, history, 4-week outlook, "can help" check |
-| `POST /sms` | Keypad-phone channel: `PAY 5200`, `STATUS`, `UNDO` |
-| `GET /simulate/{profile}` | 52 simulated weeks with the rule applied |
-| `GET /backtest?years=50` | Baseline vs FLOVA for all rider types |
-
-Env: `FLOVA_DB` (SQLite path), `FLOVA_CORS` (comma-separated origins).
+## Tables
+`profiles` (auto-created at sign-up) · `balance_checkins` · `transactions` · `payouts` · `commitments`.
+Money is `numeric(12,2)` rupees in the database and integer paise in the app. Full details: `../docs/CONTRACT.md`.
