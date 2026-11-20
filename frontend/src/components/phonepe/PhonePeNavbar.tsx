@@ -39,9 +39,9 @@ export const PhonePeNavbar: React.FC<PhonePeNavbarProps> = ({ onLaunchStage }) =
             className="flex items-center gap-3 group focus:outline-none"
             aria-label="FLOVA Home"
           >
-            {/* PhonePe-Style Purple Emblem with Devanagari 'पे' */}
+            {/* Placeholder Logo — replace with final FLOVA mark */}
             <div className="w-11 h-11 rounded-full bg-[#5f259f] flex items-center justify-center text-white shadow-xs group-hover:scale-105 transition-transform duration-200">
-              <span className="text-2xl font-black font-sans leading-none">पे</span>
+              <span className="text-lg font-black tracking-tight leading-none select-none">F</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-2xl font-black tracking-tight text-[#5f259f]">

@@ -45,10 +45,10 @@ export const PhonePeOrbitalFooter: React.FC = () => {
               </div>
             </div>
 
-            {/* Central PhonePe-Style Circular Logo */}
+            {/* Central Placeholder Circular Logo */}
             <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-[#5f259f] text-white flex flex-col items-center justify-center shadow-2xl z-10 border-4 border-white animate-phonepe-pulse-glow">
-              <span className="text-2xl sm:text-3xl font-black">पे</span>
-              <span className="text-[9px] font-mono font-bold tracking-widest text-purple-200">
+              <span className="text-xl sm:text-2xl font-black tracking-tight leading-none">F</span>
+              <span className="text-[9px] font-mono font-bold tracking-widest text-purple-200 mt-0.5">
                 FLOVA
               </span>
             </div>

@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import { PhonePeNavbar } from "./PhonePeNavbar";
 import { PhonePeHeroPillars } from "./PhonePeHeroPillars";
 import { PhonePeConcentricSection } from "./PhonePeConcentricSection";
@@ -29,12 +29,22 @@ export const PhonePeLandingPage: React.FC<PhonePeLandingPageProps> = ({
   riderId,
   onRider,
 }) => {
+  // Only mount the demo stage components after the user explicitly interacts with the stage.
+  // This prevents RiderView/EvidenceView from firing API calls on page load.
+  const [stageActivated, setStageActivated] = useState(false);
+
   const scrollToStage = useCallback(() => {
+    setStageActivated(true);
     const el = document.getElementById("flova-app-stage");
     if (el) {
       el.scrollIntoView({ behavior: "smooth" });
     }
   }, []);
+
+  const handleTabChange = useCallback((t: Tab) => {
+    setStageActivated(true);
+    setTab(t);
+  }, [setTab]);
 
   const scrollToSolutions = useCallback(() => {
     const el = document.getElementById("solutions");
@@ -106,7 +116,7 @@ export const PhonePeLandingPage: React.FC<PhonePeLandingPageProps> = ({
             {/* Stage Mode Tabs */}
             <div className="inline-flex p-1 bg-[#f0ebf7] rounded-full self-start sm:self-auto border border-[#e3d7f2]">
               <button
-                onClick={() => setTab("week")}
+                onClick={() => handleTabChange("week")}
                 className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
                   tab === "week"
                     ? "bg-[#5f259f] text-white shadow-xs"
@@ -116,7 +126,7 @@ export const PhonePeLandingPage: React.FC<PhonePeLandingPageProps> = ({
                 Weekly Runway
               </button>
               <button
-                onClick={() => setTab("sms")}
+                onClick={() => handleTabChange("sms")}
                 className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
                   tab === "sms"
                     ? "bg-[#5f259f] text-white shadow-xs"
@@ -126,7 +136,7 @@ export const PhonePeLandingPage: React.FC<PhonePeLandingPageProps> = ({
                 SMS Parser
               </button>
               <button
-                onClick={() => setTab("evidence")}
+                onClick={() => handleTabChange("evidence")}
                 className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
                   tab === "evidence"
                     ? "bg-[#5f259f] text-white shadow-xs"
@@ -138,13 +148,26 @@ export const PhonePeLandingPage: React.FC<PhonePeLandingPageProps> = ({
             </div>
           </div>
 
-          {/* Active Stage Body */}
+          {/* Active Stage Body — only mounted after user interaction to avoid spurious API calls on page load */}
           <div className="min-h-[460px]">
-            {tab === "week" && (
-              <RiderView riderId={riderId} onRider={onRider} />
+            {!stageActivated ? (
+              <div className="flex flex-col items-center justify-center min-h-[460px] gap-4 text-center">
+                <div className="w-16 h-16 rounded-full bg-[#f5efff] flex items-center justify-center text-3xl">
+                  🛵
+                </div>
+                <p className="text-sm text-[#5e596e] max-w-xs leading-relaxed">
+                  Click <strong className="text-[#5f259f]">Launch Runway</strong> in the nav, or select a tab above to explore the live demo.
+                </p>
+              </div>
+            ) : (
+              <>
+                {tab === "week" && (
+                  <RiderView riderId={riderId} onRider={onRider} />
+                )}
+                {tab === "sms" && <SmsView defaultPhone="" />}
+                {tab === "evidence" && <EvidenceView />}
+              </>
             )}
-            {tab === "sms" && <SmsView defaultPhone="" />}
-            {tab === "evidence" && <EvidenceView />}
           </div>
         </div>
       </section>

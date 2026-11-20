@@ -3,6 +3,10 @@
 @import "./hero.css";
 @import "./landing.css";
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
   --bg: #f6f7f4;
   --card: #ffffff;

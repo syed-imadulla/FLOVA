@@ -75,9 +75,9 @@ export const PhonePeAppstoreHalo: React.FC<PhonePeAppstoreHaloProps> = ({ onExpl
                   INTRODUCING
                 </span>
 
-                {/* Orange Circular Emblem */}
+                {/* Placeholder Emblem — replace with final FLOVA mark */}
                 <div className="w-20 h-20 mx-auto rounded-full bg-[#e65100] text-white flex items-center justify-center shadow-lg mb-4">
-                  <span className="text-4xl font-black">पे</span>
+                  <span className="text-2xl font-black tracking-tight leading-none select-none">F</span>
                 </div>
 
                 <div className="text-2xl font-black text-[#e65100] tracking-tight">
