@@ -1,6 +1,6 @@
 import { useCallback, useState, lazy, Suspense } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
-import { WarmLandingPage, type Tab } from "./components/warm/WarmLandingPage";
+import { PhonePeLandingPage, type Tab } from "./components/phonepe/PhonePeLandingPage";
 
 // Lazy-load authenticated pages and Supabase providers so the public landing page loads instantly
 // and never crashes even if Supabase environment variables have not been configured yet.
@@ -56,7 +56,7 @@ export default function App() {
         <Route
           path="/"
           element={
-            <WarmLandingPage
+            <PhonePeLandingPage
               tab={tab}
               setTab={setTab}
               riderId={riderId}
