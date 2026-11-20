@@ -45,6 +45,9 @@ export function HomePlaceholder() {
       <div style={{ margin: "1.5rem 0", padding: "1rem", backgroundColor: "#f5f5f5", borderRadius: "4px" }}>
         <h2 style={{ fontSize: "1.1rem", marginTop: 0 }}>Money Actions</h2>
         <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem" }}>
+          <Link to="/voice" style={{ padding: "0.6rem 1rem", background: "#dc2626", border: "none", textDecoration: "none", color: "#fff", borderRadius: "6px", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "0.4rem" }}>
+            🎙 Voice Entry
+          </Link>
           <Link to="/checkin" style={{ padding: "0.5rem 1rem", background: "#fff", border: "1px solid #ccc", textDecoration: "none", color: "#333", borderRadius: "3px" }}>
             Balance Check-In
           </Link>

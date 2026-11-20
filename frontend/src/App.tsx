@@ -10,6 +10,7 @@ import { HistoryPage } from "./pages/HistoryPage";
 import { HomePlaceholder } from "./pages/HomePlaceholder";
 import { OnboardingPage } from "./pages/OnboardingPage";
 import { PayoutsPage } from "./pages/PayoutsPage";
+import { VoiceCapturePage } from "./pages/VoiceCapturePage";
 import { LoginPage } from "./pages/auth/LoginPage";
 import { SignupPage } from "./pages/auth/SignupPage";
 import { ProfileProvider } from "./profile/ProfileProvider";
@@ -102,6 +103,16 @@ export default function App() {
                   <RequireAuth>
                     <RequireOnboarded>
                       <HistoryPage />
+                    </RequireOnboarded>
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/voice"
+                element={
+                  <RequireAuth>
+                    <RequireOnboarded>
+                      <VoiceCapturePage />
                     </RequireOnboarded>
                   </RequireAuth>
                 }
