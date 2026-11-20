@@ -11,7 +11,9 @@ export function RedirectIfAuthed({ children }: { children: ReactNode }) {
   }
 
   if (session) {
-    const fromPath = (location.state as { from?: { pathname?: string } })?.from?.pathname || "/";
+    // Authenticated users who hit /login or /signup without a saved "from" path
+    // should land on /app (the authenticated dashboard), not the public landing page.
+    const fromPath = (location.state as { from?: { pathname?: string } })?.from?.pathname || "/app";
     return <Navigate to={fromPath} replace />;
   }
 

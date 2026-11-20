@@ -67,7 +67,7 @@ export function OnboardingPage() {
         daily_work_estimate: workResult.paise,
         onboarding_completed: true,
       });
-      navigate("/", { replace: true });
+      navigate("/app", { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save profile");
     } finally {
