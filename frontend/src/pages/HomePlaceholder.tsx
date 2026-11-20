@@ -48,6 +48,9 @@ export function HomePlaceholder() {
           <Link to="/voice" style={{ padding: "0.6rem 1rem", background: "#dc2626", border: "none", textDecoration: "none", color: "#fff", borderRadius: "6px", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "0.4rem" }}>
             🎙 Voice Entry
           </Link>
+          <Link to="/wish" style={{ padding: "0.6rem 1rem", background: "#536C53", border: "none", textDecoration: "none", color: "#fff", borderRadius: "6px", fontWeight: 600 }}>
+            WISH · Savings Goal
+          </Link>
           <Link to="/checkin" style={{ padding: "0.5rem 1rem", background: "#fff", border: "1px solid #ccc", textDecoration: "none", color: "#333", borderRadius: "3px" }}>
             Balance Check-In
           </Link>
