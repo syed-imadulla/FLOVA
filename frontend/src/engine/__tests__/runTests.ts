@@ -1,10 +1,11 @@
 // =====================================================================
 // FLOVA Financial Engine — Test Suite Runner
-// Pure TypeScript test suite runner executing validation & balance tests.
+// Pure TypeScript test suite runner executing validation, balance, and runway tests.
 // =====================================================================
 
 import "./validation.test";
 import "./balance.test";
+import "./runway.test";
 import { runAllTests } from "./testUtils";
 
 void runAllTests().then(({ failed }) => {

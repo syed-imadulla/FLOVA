@@ -10,6 +10,15 @@ export {
 } from "./balance";
 
 export {
+  addDays,
+  calculateDailyRunway,
+  type DailyProjectionEntry,
+  type RunwayProjectionInput,
+  type RunwayProjectionResult,
+  type RunwayProjectionStatus,
+} from "./runway";
+
+export {
   isValidISODate,
   isValidISOTimestamp,
   isValidPaise,
