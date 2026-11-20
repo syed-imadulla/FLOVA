@@ -26,6 +26,43 @@ import type {
 import { isValidPaise } from "./validation";
 
 /**
+ * Generates a standard RFC4122 v4 UUID string.
+ * Uses crypto.randomUUID() when available (modern browser, Deno, Node 19+).
+ * Falls back to RFC4122 v4 UUID generator for environments without crypto.randomUUID.
+ */
+function generateUUID(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
+/**
+ * Resolves or creates a stable candidate ID.
+ * Hierarchy:
+ * 1. If trusted context supplies existingCandidateIds for this slot, reuse it.
+ * 2. If a draft ID was authorized and exists, reuse it.
+ * 3. Generate once at candidate creation and retain in draft lifecycle.
+ */
+function resolveCandidateId(
+  draftId: string | null,
+  index: number,
+  context?: PendingDraftContext
+): string {
+  if (context?.existingCandidateIds && context.existingCandidateIds[index]) {
+    return context.existingCandidateIds[index];
+  }
+  if (draftId) {
+    return index === 0 ? draftId : `${draftId}-tx-${index}`;
+  }
+  return generateUUID();
+}
+
+/**
  * Safely converts a decimal rupee string to integer Paise.
  * Rules:
  * - null/undefined remains null (never defaulted to 0).
@@ -91,7 +128,8 @@ function mapTransactionToVoiceCandidate(
   tx: ExtractedTransactionData,
   dto: FinancialExtractionDTO,
   index: number,
-  draftId: string | null
+  draftId: string | null,
+  context?: PendingDraftContext
 ): VoiceTransactionCandidate {
   const amountPaise = safeConvertRupeeStringToPaise(tx.amount);
   const type: TransactionType = tx.type ?? "expense";
@@ -137,8 +175,16 @@ function mapTransactionToVoiceCandidate(
     clarificationRequired = true;
   }
 
+  // Fix A: missing date stays null. Never silently use new Date().
+  // Trusted application context can supply a date without inventing one.
+  const extractedDate = (tx.date as ISODate) ?? null;
+  const contextualDate = context?.trustedDate ?? null;
+  const resolvedDate = extractedDate ?? contextualDate;
+
+  const candidateId = resolveCandidateId(draftId, index, context);
+
   return {
-    candidate_id: draftId ? `${draftId}-${index}` : `voice-cand-${Date.now()}-${index}`,
+    candidate_id: candidateId,
     draft_id: draftId,
     type,
     amount_paise: amountPaise,
@@ -146,7 +192,9 @@ function mapTransactionToVoiceCandidate(
     category: catRes.category,
     expense_type: expenseType,
     ownership,
-    date: (tx.date as ISODate) ?? null,
+    date: resolvedDate,
+    extracted_date: extractedDate,
+    contextual_date: contextualDate,
     description: tx.description ?? null,
     payment_method: tx.payment_method ?? null,
     counterparty: tx.merchant_or_counterparty ?? null,
@@ -166,7 +214,8 @@ function mapTransactionToReceiptCandidate(
   tx: ExtractedTransactionData,
   dto: FinancialExtractionDTO,
   index: number,
-  draftId: string | null
+  draftId: string | null,
+  context?: PendingDraftContext
 ): ExtractedReceiptCandidate {
   const amountPaise = safeConvertRupeeStringToPaise(tx.amount);
   const type: TransactionType = tx.type ?? "expense";
@@ -200,8 +249,15 @@ function mapTransactionToReceiptCandidate(
     clarificationRequired = true;
   }
 
+  // Fix A: missing date stays null. Never silently use new Date().
+  const extractedDate = (tx.date as ISODate) ?? null;
+  const contextualDate = context?.trustedDate ?? null;
+  const resolvedDate = extractedDate ?? contextualDate;
+
+  const candidateId = resolveCandidateId(draftId, index, context);
+
   return {
-    candidate_id: draftId ? `${draftId}-${index}` : `receipt-cand-${Date.now()}-${index}`,
+    candidate_id: candidateId,
     draft_id: draftId,
     type,
     amount_paise: amountPaise,
@@ -209,7 +265,9 @@ function mapTransactionToReceiptCandidate(
     category: catRes.category,
     expense_type: expenseType,
     ownership,
-    date: (tx.date as ISODate) ?? null,
+    date: resolvedDate,
+    extracted_date: extractedDate,
+    contextual_date: contextualDate,
     description: tx.description ?? null,
     payment_method: tx.payment_method ?? null,
     merchant: tx.merchant_or_counterparty ?? null,
@@ -257,7 +315,7 @@ export function mapDtoToVoiceCandidates(
 
   const draftId = resolveCandidateDraftId(dto, context);
 
-  return txList.map((tx, idx) => mapTransactionToVoiceCandidate(tx, dto, idx, draftId));
+  return txList.map((tx, idx) => mapTransactionToVoiceCandidate(tx, dto, idx, draftId, context));
 }
 
 /**
@@ -281,7 +339,7 @@ export function mapDtoToReceiptCandidates(
 
   const draftId = resolveCandidateDraftId(dto, context);
 
-  return txList.map((tx, idx) => mapTransactionToReceiptCandidate(tx, dto, idx, draftId));
+  return txList.map((tx, idx) => mapTransactionToReceiptCandidate(tx, dto, idx, draftId, context));
 }
 
 /**
@@ -305,7 +363,8 @@ export function candidateToNewTransaction(
   }
 
   return {
-    id: candidate.draft_id ?? undefined,
+    // Stable ID: reuse draft_id if available, otherwise candidate_id.
+    id: candidate.draft_id ?? candidate.candidate_id,
     type: candidate.type,
     amount: candidate.amount_paise,
     category: candidate.category,

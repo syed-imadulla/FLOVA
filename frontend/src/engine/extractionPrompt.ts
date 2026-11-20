@@ -648,13 +648,15 @@ export function validateExtractionOutput(
         }
 
         // Validate expense_type
+        // Fix B: never default missing or invalid expense_type to "living".
+        // Invalid values are rejected; missing values remain null and require clarification.
         let expenseType = tx.expense_type;
         if (tx.type === "income" || ownership === "not_mine") {
           expenseType = null; // Enforce DB rule: expense_type must be null for income and not_mine
         } else if (tx.type === "expense" && ownership === "mine") {
           if (expenseType !== "living" && expenseType !== "work" && expenseType !== null) {
             errors.push(`Transaction at index ${i} has invalid expense_type '${expenseType}'.`);
-            expenseType = "living";
+            expenseType = null; // Fix B: reject invalid value, leave null — requires clarification
           }
         }
 
@@ -677,7 +679,11 @@ export function validateExtractionOutput(
           category: catMap.category,
           expense_type: expenseType,
           ownership,
-          date: tx.date ?? context.currentDate ?? null,
+          // Fix A: missing date must remain null. Never silently use context.currentDate
+          // as a fallback — that conflates "not stated" with "today". A date may only come
+          // from the model's explicit extraction. Application context date is provided to M2
+          // for display purposes only, not injected into persisted records.
+          date: tx.date ?? null,
           description: tx.description ?? null,
           payment_method: tx.payment_method ?? null,
           evidence_type: tx.evidence_type ?? null,
@@ -720,6 +726,27 @@ export function validateExtractionOutput(
   }
 
   // Build clean DTO
+  let clarificationRequired = Boolean(parsed.metadata?.clarification_required);
+  const clarificationQuestions: string[] = Array.isArray(parsed.metadata?.clarification_questions)
+    ? [...parsed.metadata.clarification_questions]
+    : [];
+
+  // Enforce clarification flags for missing critical fields
+  for (const tx of sanitizedTransactions) {
+    if (tx.amount === null) {
+      clarificationRequired = true;
+      if (!clarificationQuestions.some((q) => q.toLowerCase().includes("amount"))) {
+        clarificationQuestions.push("How much was the transaction amount?");
+      }
+    }
+    if (tx.type === "expense" && tx.ownership === "mine" && !tx.expense_type) {
+      clarificationRequired = true;
+      if (!clarificationQuestions.some((q) => q.toLowerCase().includes("living") || q.toLowerCase().includes("work"))) {
+        clarificationQuestions.push("Was this expense for living (personal) or work?");
+      }
+    }
+  }
+
   const dto: ValidatedFinancialExtractionDTO = {
     entry_intent: parsed.entry_intent,
     action_intent: parsed.action_intent,
@@ -731,11 +758,9 @@ export function validateExtractionOutput(
     metadata: {
       input_source: parsed.metadata?.input_source ?? "text",
       certainty: typeof parsed.metadata?.certainty === "number" ? parsed.metadata.certainty : 1.0,
-      clarification_required: Boolean(parsed.metadata?.clarification_required),
+      clarification_required: clarificationRequired,
       clarification_reason: parsed.metadata?.clarification_reason ?? null,
-      clarification_questions: Array.isArray(parsed.metadata?.clarification_questions)
-        ? parsed.metadata.clarification_questions
-        : [],
+      clarification_questions: clarificationQuestions,
       raw_utterance: parsed.metadata?.raw_utterance ?? "",
     },
   };

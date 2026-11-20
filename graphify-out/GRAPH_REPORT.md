@@ -1,17 +1,17 @@
 # Graph Report - FLOVA  (2026-11-21)
 
 ## Corpus Check
-- 151 files · ~78,837 words
+- 162 files · ~90,958 words
 - Verdict: corpus is large enough that graph structure adds value.
-- Unclassified: 5 file(s) not represented in the graph (top: (none) 2, .example 2, .css 1)
+- Unclassified: 6 file(s) not represented in the graph (top: .example 3, (none) 2, .css 1)
 
 ## Summary
-- 958 nodes · 1736 edges · 79 communities (55 shown, 24 thin omitted)
-- Extraction: 91% EXTRACTED · 9% INFERRED · 0% AMBIGUOUS · INFERRED: 161 edges (avg confidence: 0.95)
+- 1049 nodes · 2037 edges · 88 communities (63 shown, 25 thin omitted)
+- Extraction: 91% EXTRACTED · 9% INFERRED · 0% AMBIGUOUS · INFERRED: 174 edges (avg confidence: 0.95)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `7fa0841e`
+- Built from commit: `1930feec`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -45,10 +45,10 @@
 - Tests
 - toPaise
 - FLOVA Financial Engine (M3)
-- index.ts
+- FLOVA — M1 Edge Function Integration Contract (Owner: M3 / AI Engine)
 - Project State
 - Tests
-- Codebase Structure
+- Architecture
 - auth.ts
 - Technology Stack
 - Testing Patterns
@@ -57,7 +57,7 @@
 - Tests
 - 01-01-PLAN.md
 - Plan 02-01: Profile and Onboarding Persistence
-- addTransaction
+- idempotentRetry.test.ts
 - Phase 4: Runway Feed Verification Report
 - data.ts
 - Plan 03-01: Data Capture Hooks and Pages
@@ -65,55 +65,64 @@
 - FLOVA (Udaan 2.0)
 - Goal Achievement
 - v1 Requirements
-- useCommitments.ts
+- useTransactions
 - FLOVA (Udaan 2.0)
 - v1 Requirements
 - FLOVA AI Extraction Contract Specification (v1 · Owner: M3)
 - FLOVA AI Extraction Contract Specification (v1 · Owner: M3)
+- index.ts
 - 1. Locked Decisions & Core Architecture
-- useTransactions.ts
 - Onboarding Summary
 - Tasks
 - Phase 1: Auth Flow Summary
-- Phase 5: Payout Synchronization Hardening & Idempotency Verification Report
+- runway.ts
 - rls-live-check.mjs
 - parseRupees.test.ts
 - External Integrations
 - Phase 1: Auth flow - Context
-- onAuthChange
-- Coding Conventions
-- Implementation Decisions
+- candidateAdapter.ts
+- useSession
+- validation.ts
 - getSession
-- Requirements: FLOVA (M1 Backend & Database)
+- Codebase Structure
+- signOut
+- Key Accomplishments
+- ravi.test.ts
+- Coding Conventions
+- Tasks
+- onAuthChange
+- dates.test.ts
+- Implementation Decisions
+- Phase 5: Payout Synchronization Hardening & Idempotency Verification Report
 
 ## God Nodes (most connected - your core abstractions)
-1. `toPaise()` - 29 edges
-2. `react` - 28 edges
+1. `toPaise()` - 40 edges
+2. `react` - 30 edges
 3. `useSession()` - 27 edges
 4. `loadRunwayInput()` - 23 edges
-5. `RunwayInput` - 20 edges
-6. `formatINR()` - 18 edges
-7. `parseRequiredRupees()` - 18 edges
-8. `SelfSalary` - 17 edges
-9. `App()` - 17 edges
-10. `addTransaction()` - 17 edges
+5. `todayLocalISO()` - 21 edges
+6. `formatINR()` - 21 edges
+7. `parseRequiredRupees()` - 21 edges
+8. `RunwayInput` - 20 edges
+9. `App()` - 18 edges
+10. `useTransactions()` - 18 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `Decision 4: Client-Side Submission Idempotency` --references--> `NewTransaction`  [INFERRED]
-  .planning/phases/05-payout-synchronization-hardening/05-CONTEXT.md → frontend/src/types/contracts.ts
-- `Pattern Overview` --references--> `toPaise()`  [INFERRED]
-  .planning/codebase/ARCHITECTURE.md → frontend/src/lib/money.ts
-- `Pages & App Wiring` --references--> `signOut()`  [INFERRED]
-  .planning/phases/01-auth-flow/01-01-SUMMARY.md → frontend/src/services/auth.ts
-- `4. Authentication Workflows & Form Behavior` --references--> `signOut()`  [INFERRED]
-  .planning/phases/01-auth-flow/01-CONTEXT.md → frontend/src/services/auth.ts
-- `Phase Boundary` --references--> `useSession()`  [INFERRED]
-  .planning/phases/01-auth-flow/01-CONTEXT.md → frontend/src/auth/useSession.ts
+- `6. M1 Backend & Edge Function Integration` --references--> `validateExtractionOutput()`  [INFERRED]
+  ai-engine/EXTRACTION_CONTRACT.md → frontend/src/engine/extractionPrompt.ts
+- `Mode 1: Audio Input (Microphone Recording)` --references--> `FinancialExtractionDTO`  [INFERRED]
+  ai-engine/M1_GROQ_INTEGRATION.md → frontend/src/engine/extractionTypes.ts
+- `Mode 2: Typed Text / Transcript Input (Direct Extraction)` --references--> `FinancialExtractionDTO`  [INFERRED]
+  ai-engine/M1_GROQ_INTEGRATION.md → frontend/src/engine/extractionTypes.ts
+- `Response Body` --references--> `FinancialExtractionDTO`  [INFERRED]
+  ai-engine/M1_GROQ_INTEGRATION.md → frontend/src/engine/extractionTypes.ts
+- `Endpoint` --references--> `FinancialExtractionDTO`  [INFERRED]
+  ai-engine/M1_GROQ_INTEGRATION.md → frontend/src/engine/extractionTypes.ts
 
 ## Import Cycles
 - None detected.
 
-## Communities (79 total, 24 thin omitted)
+## Communities (88 total, 25 thin omitted)
 
 ### Community 0 - "test_engine.py"
 Cohesion: 0.07
@@ -121,7 +130,7 @@ Nodes (36): test_backtest_shape(), test_buffer_never_negative_and_money_is_conse
 
 ### Community 1 - "contracts.ts"
 Cohesion: 0.10
-Nodes (23): ProfileContext, ProfileContextType, APP_LANGUAGES, AppLanguage, COMMITMENT_KINDS, COMMITMENT_STATUSES, CommitmentKind, ENTRY_SOURCES (+15 more)
+Nodes (21): ProfileContext, ProfileContextType, APP_LANGUAGES, AppLanguage, COMMITMENT_KINDS, COMMITMENT_STATUSES, CommitmentKind, ENTRY_SOURCES (+13 more)
 
 ### Community 2 - "VERDICT — pick-f1-irregular-income"
 Cohesion: 0.05
@@ -136,8 +145,8 @@ Cohesion: 0.09
 Nodes (26): dependencies, react@18.3.1, react-dom@18.3.1, react-router-dom@^6.30.6, @supabase/supabase-js@^2.119.2, devDependencies, @types/react@18.3.12, @types/react-dom@18.3.1 (+18 more)
 
 ### Community 5 - "Phase Details"
-Cohesion: 0.08
-Nodes (21): Architectural Constraints, Architecture, Component Responsibilities, Data Flow, Entry Points, Error Handling, Layers, Pattern Overview (+13 more)
+Cohesion: 0.15
+Nodes (12): Overview, Phase 1: Auth flow, Phase 2: Profile & onboarding data, Phase 4: Runway feed, Phase 5: Payout Synchronization Hardening, Phase 6: Demo data, Phase 7: Deployment, Phase 8: Verify & freeze (+4 more)
 
 ### Community 6 - "FLOVA data contract (v1 · owner: M1)"
 Cohesion: 0.08
@@ -184,16 +193,16 @@ Cohesion: 0.10
 Nodes (20): 10. Form state preservation on tab switch, 1. Balance check-in and COD bounds, 1. Currency parser unit tests, 2. Add income and expense transactions, 2. Local date formatting unit tests, 3. Expense Living/Work validation, 3. M3 Engine tests regression suite, 4. COD not-mine transaction (+12 more)
 
 ### Community 34 - "toPaise"
-Cohesion: 0.07
-Nodes (53): Rules everyone follows, App(), AuthProvider(), RedirectIfAuthed(), RequireAuth(), DataVersionProvider(), todayLocalISO(), formatINR() (+45 more)
+Cohesion: 0.06
+Nodes (64): Rules everyone follows, App(), AuthProvider(), RedirectIfAuthed(), RequireAuth(), DataVersionProvider(), todayLocalISO(), formatINR() (+56 more)
 
 ### Community 35 - "FLOVA Financial Engine (M3)"
 Cohesion: 0.20
 Nodes (9): Architectural Principles, Calculation Semantics (Option A), FLOVA Financial Engine (M3), Historical Ravi Fixture Preservation, Key Rules:, Option A: Remaining Daily Budget Logic, Problem Addressed, Results: (+1 more)
 
-### Community 36 - "index.ts"
-Cohesion: 0.09
-Nodes (54): d1, d2, iso1, iso2, calculateConfirmedBalance(), ConfirmedBalanceBreakdown, ConfirmedBalanceResult, ConfirmedBalanceStatus (+46 more)
+### Community 36 - "FLOVA — M1 Edge Function Integration Contract (Owner: M3 / AI Engine)"
+Cohesion: 0.18
+Nodes (10): 2. Canonical Edge Function Endpoint Specification: `process-voice`, 3. Dedicated Receipt Extraction Endpoint: `extract-receipt`, 4. Groq API Implementation Details for M1, 5. End-to-End Sequence Flow, Endpoint, Endpoint, FLOVA — M1 Edge Function Integration Contract (Owner: M3 / AI Engine), Mode 1: Audio Input (Microphone Recording) (+2 more)
 
 ### Community 37 - "Project State"
 Cohesion: 0.40
@@ -203,9 +212,9 @@ Nodes (4): Current Position, Performance Metrics, Project Reference, Project Sta
 Cohesion: 0.13
 Nodes (14): 1. Logged out redirect to /login (B1), 2. Sign up with new email and display name (B2), 3. Session persistence on refresh (B3), 4. Logout and route protection (B4), 5. Login error handling (B5), 6. Redirect authenticated user away from /login (B6), 7. Client-side password length validation (B7), A. Live RLS Test (+6 more)
 
-### Community 39 - "Codebase Structure"
-Cohesion: 0.25
-Nodes (7): WorkProfile, Codebase Structure, Directory Layout, Directory Purposes, Key File Locations, Naming Conventions, Where to Add New Code
+### Community 39 - "Architecture"
+Cohesion: 0.20
+Nodes (9): Architectural Constraints, Architecture, Component Responsibilities, Data Flow, Entry Points, Error Handling, Layers, Pattern Overview (+1 more)
 
 ### Community 40 - "auth.ts"
 Cohesion: 0.31
@@ -220,8 +229,8 @@ Cohesion: 0.29
 Nodes (6): Mocking & Isolation, Required Pre-Shipping Checks, Test File Organization, Test Framework, Test Structure, Testing Patterns
 
 ### Community 43 - "useSession"
-Cohesion: 0.14
-Nodes (21): Service functions (`frontend/src/services/`), useSession(), unwrap(), useProfile(), getLatestCheckin(), getMyProfile(), listPayouts(), loadRunwayInput() (+13 more)
+Cohesion: 0.19
+Nodes (15): Service functions (`frontend/src/services/`), unwrap(), ProfileProvider(), getLatestCheckin(), getMyProfile(), listCommitments(), listPayouts(), loadRunwayInput() (+7 more)
 
 ### Community 44 - "External Integrations"
 Cohesion: 0.29
@@ -231,17 +240,17 @@ Nodes (3): __dirname, __filename, mockSupabasePath
 Cohesion: 0.12
 Nodes (15): 1. Currency parser unit tests, 1. New user signup routing, 2. Blank ₹ fields submission, 2. M3 Engine tests regression suite, 3. Database test suite, 3. Session refresh persistence, 4. Edit profile updates immediately, 5. Client-side validation (+7 more)
 
-### Community 48 - "addTransaction"
-Cohesion: 0.09
-Nodes (26): addTransaction(), receivePayout(), assertStrictEqual(), assertTrue(), it(), runTests(), MockState, mockState (+18 more)
+### Community 48 - "idempotentRetry.test.ts"
+Cohesion: 0.14
+Nodes (16): addTransaction(), assertStrictEqual(), assertTrue(), it(), runTests(), MockState, mockState, supabase (+8 more)
 
 ### Community 49 - "Phase 4: Runway Feed Verification Report"
 Cohesion: 0.33
 Nodes (5): Goal Achievement, Investigation Findings: Previous Aggregate Test Command Failures, M1 Data Layer & M3 Engine Integration Audit, Observable Truths, Phase 4: Runway Feed Verification Report
 
 ### Community 50 - "data.ts"
-Cohesion: 0.28
-Nodes (13): usePayouts(), addCheckin(), addPayout(), money(), setPayoutStatus(), updateMyProfile(), BalanceCheckin, Commitment (+5 more)
+Cohesion: 0.29
+Nodes (11): addCommitment(), addPayout(), money(), setPayoutStatus(), BalanceCheckin, Commitment, NewPayout, Payout (+3 more)
 
 ### Community 52 - "20261120000100_init_schema.sql"
 Cohesion: 0.16
@@ -259,101 +268,133 @@ Nodes (3): Goal Achievement, Observable Truths, Phase 3: Data Capture Hooks Veri
 Cohesion: 0.29
 Nodes (6): PGDATABASE, PGHOST, PGPASSWORD, PGPORT, PGUSER, test-concurrency-postgres.sh script
 
-### Community 57 - "useCommitments.ts"
-Cohesion: 0.17
-Nodes (12): Frontend data hooks (`frontend/src/data/`), useCommitments(), useLatestCheckin(), addCommitment(), listCommitments(), setCommitmentStatus(), CommitmentStatus, NewCommitment (+4 more)
+### Community 57 - "useTransactions"
+Cohesion: 0.18
+Nodes (16): useCommitments(), usePayouts(), useTransactions(), deleteTransaction(), listTransactions(), receivePayout(), setCommitmentStatus(), updateTransaction() (+8 more)
 
 ### Community 58 - "FLOVA (Udaan 2.0)"
 Cohesion: 0.18
 Nodes (10): Business & Problem Context, Constraints & Rules for Every Phase, Core Value, FLOVA (Udaan 2.0), Key Decisions Log, Out of Scope, Requirements, Team Ownership & Boundaries (+2 more)
 
 ### Community 59 - "v1 Requirements"
-Cohesion: 0.29
-Nodes (7): Phase 1: Authentication Flow, Phase 4: Runway Feed & Engine Integration, Phase 5: Secure AI Function (Stretch), Phase 6: Demo Data Seed & Test Fixtures, Phase 7: Deployment & Production Smoke Test, Phase 8: Verify & Release Freeze, v1 Requirements
+Cohesion: 0.18
+Nodes (10): Out of Scope, Phase 1: Authentication Flow, Phase 4: Runway Feed & Engine Integration, Phase 5: Secure AI Function (Stretch), Phase 6: Demo Data Seed & Test Fixtures, Phase 7: Deployment & Production Smoke Test, Phase 8: Verify & Release Freeze, Requirements: FLOVA (M1 Backend & Database) (+2 more)
 
 ### Community 60 - "FLOVA AI Extraction Contract Specification (v1 · Owner: M3)"
-Cohesion: 0.13
-Nodes (14): 1. Overview & Architectural Boundaries, 2. Existing FLOVA Contract Enum Alignment, 3. TypeScript DTO Definitions, 4. Strict JSON Schema (OpenAPI 3.1 / Draft 2020-12 Compatible), 5. Five Concrete Extraction Examples, 6. Ambiguity Handling & Clarification Rules, 7. Mapping to FLOVA Application Contracts (Consumer Adapter), Architectural Rules (+6 more)
+Cohesion: 0.15
+Nodes (12): 1. Overview & Architectural Boundaries, 2. Existing FLOVA Contract Enum Alignment, 3. TypeScript DTO Definitions, 4. Strict JSON Schema (Draft 2020-12 Compatible), 5. Concrete Extraction Examples, 6. M1 Backend & Edge Function Integration, Architectural Rules, Example 1: Multi-Transaction Sentence (Income + Expense) (+4 more)
 
 ### Community 61 - "FLOVA AI Extraction Contract Specification (v1 · Owner: M3)"
-Cohesion: 0.13
-Nodes (14): 1. Overview & Architectural Boundaries, 2. Existing FLOVA Contract Enum Alignment, 3. TypeScript DTO Definitions, 4. Strict JSON Schema (OpenAPI 3.1 / Draft 2020-12 Compatible), 5. Five Concrete Extraction Examples, 6. Ambiguity Handling & Clarification Rules, 7. Mapping to FLOVA Application Contracts (Consumer Adapter), Architectural Rules (+6 more)
+Cohesion: 0.15
+Nodes (12): 1. Overview & Architectural Boundaries, 2. Existing FLOVA Contract Enum Alignment, 3. TypeScript DTO Definitions, 4. Strict JSON Schema (Draft 2020-12 Compatible), 5. Concrete Extraction Examples, 6. M1 Backend & Edge Function Integration, Architectural Rules, Example 1: Multi-Transaction Sentence (Income + Expense) (+4 more)
 
-### Community 62 - "1. Locked Decisions & Core Architecture"
+### Community 62 - "index.ts"
+Cohesion: 0.10
+Nodes (29): ConfirmedBalanceResult, ConfirmedBalanceStatus, adaptExtractedCheckin(), adaptExtractedPayout(), adaptExtractedTransactions(), CategoryMappingResult, CheckinAdaptationResult, CorrectionResolutionResult (+21 more)
+
+### Community 63 - "1. Locked Decisions & Core Architecture"
 Cohesion: 0.22
 Nodes (8): 1. Locked Decisions & Core Architecture, 2. Boundaries & Out-of-Scope, Decision 1: Database Trigger Derived Totals & Row-Level Locking, Decision 2: Status State Machine Transitions, Decision 3: Deadlock-Free Payout Reassignment, Decision 4: Client-Side Submission Idempotency, Decision 5: Security & RLS Invariants, Phase 5: Payout Synchronization Hardening - Context & Decisions
-
-### Community 63 - "useTransactions.ts"
-Cohesion: 0.27
-Nodes (8): DataVersionContext, DataVersionContextType, useDataVersion(), useTransactions(), deleteTransaction(), listTransactions(), updateTransaction(), NewBalanceCheckin
 
 ### Community 64 - "Onboarding Summary"
 Cohesion: 0.29
 Nodes (6): Codebase Context, Docs Context, Onboarding Summary, Project State, Recommended Next Step, Workstream & Rules
 
 ### Community 65 - "Tasks"
-Cohesion: 0.29
-Nodes (6): Objectives, Plan 05-01: Payout Synchronization Hardening & Idempotency, Task 0: Database Migration (`20261121000100_harden_payout_sync.sql`), Task 2: PGlite Comprehensive Regression Suite, Task 3: Real Multi-Connection PostgreSQL Concurrency Test, Tasks
+Cohesion: 0.25
+Nodes (7): Objectives, Plan 05-02: Idempotent Retry UX Fix in `addTransaction`, Task 0: Implement Idempotent Retry in `addTransaction`, Task 1: Add Comprehensive Regression Tests, Task 2: Execute Test Suites, Task 3: Verification & Documentation, Tasks
 
 ### Community 67 - "Phase 1: Auth Flow Summary"
-Cohesion: 0.20
-Nodes (9): 1. Executive Summary, 2. Key Deliverables & Changes, 3. Verification & Quality Gates, 4. Note for M2 (Frontend/UI), 5. Next Steps, Authentication & Routing Infrastructure, Database & Backend Hygiene, Pages & App Wiring (+1 more)
+Cohesion: 0.33
+Nodes (5): 1. Executive Summary, 3. Verification & Quality Gates, 4. Note for M2 (Frontend/UI), 5. Next Steps, Phase 1: Auth Flow Summary
 
-### Community 68 - "Phase 5: Payout Synchronization Hardening & Idempotency Verification Report"
-Cohesion: 0.40
-Nodes (4): Goal Achievement, Observable Truths, Phase 5: Payout Synchronization Hardening & Idempotency Verification Report, Technical Audit & Safety Bounds
+### Community 68 - "runway.ts"
+Cohesion: 0.16
+Nodes (18): calculateConfirmedBalance(), addDays(), calculateDailyRunway(), RunwayProjectionInput, baseProfile, baseProfile, assertMatch(), assertStrictEqual() (+10 more)
 
 ### Community 71 - "parseRupees.test.ts"
 Cohesion: 0.18
 Nodes (10): req650, reqEmpty, reqZero, res200, res995, resAbc, resDec, resEmpty (+2 more)
 
 ### Community 72 - "External Integrations"
-Cohesion: 0.25
-Nodes (7): Authentication & Identity, CI/CD & Deployment, Data Storage, Environment Configuration, External Integrations, Monitoring & Observability, Webhooks & Callbacks
+Cohesion: 0.18
+Nodes (10): handleSubmit(), signIn(), APIs & External Services, Authentication & Identity, CI/CD & Deployment, Data Storage, Environment Configuration, External Integrations (+2 more)
 
 ### Community 73 - "Phase 1: Auth flow - Context"
 Cohesion: 0.25
 Nodes (7): Canonical References, Established Patterns, Existing Code Insights, Integration Points, Phase 1: Auth flow - Context, Phase Boundary, Reusable Assets
 
-### Community 74 - "onAuthChange"
-Cohesion: 0.29
-Nodes (6): onAuthChange(), APIs & External Services, 2. Auth Context & Session Management, Goal Achievement, Observable Truths, Phase 1: Auth Flow Verification Report
+### Community 74 - "candidateAdapter.ts"
+Cohesion: 0.16
+Nodes (28): 1. Overview & Ownership Boundaries, RFC-4122, ConfirmedBalanceBreakdown, candidateToNewTransaction(), confirmCandidateTransaction(), generateUUID(), getTransactionsFromDto(), mapDtoToReceiptCandidates() (+20 more)
 
-### Community 75 - "Coding Conventions"
-Cohesion: 0.29
-Nodes (6): RupeeString, Code Style, Coding Conventions, Database Interaction Conventions, Error Handling, Import Organization
+### Community 75 - "useSession"
+Cohesion: 0.16
+Nodes (15): Frontend data hooks (`frontend/src/data/`), useSession(), DataVersionContext, DataVersionContextType, useDataVersion(), useLatestCheckin(), useRunway(), addCheckin() (+7 more)
 
-### Community 76 - "Implementation Decisions"
-Cohesion: 0.33
-Nodes (6): 1. Routing & Dependencies, 3. Pages & UI Presentation, 4. Authentication Workflows & Form Behavior, 5. Architectural Boundaries, 6. Backend Hygiene & Explicit Permissions, Implementation Decisions
+### Community 76 - "validation.ts"
+Cohesion: 0.47
+Nodes (9): validateExtractionOutput(), isValidISODate(), isValidISOTimestamp(), isValidPaise(), validateBalanceCheckin(), validatePayout(), validateRunwayInput(), validateTransaction() (+1 more)
 
 ### Community 77 - "getSession"
 Cohesion: 0.80
 Nodes (4): SignupPage(), handleSubmit(), getSession(), signUp()
 
-### Community 78 - "Requirements: FLOVA (M1 Backend & Database)"
-Cohesion: 0.50
-Nodes (3): Out of Scope, Requirements: FLOVA (M1 Backend & Database), Traceability Matrix
+### Community 78 - "Codebase Structure"
+Cohesion: 0.25
+Nodes (7): WorkProfile, Codebase Structure, Directory Layout, Directory Purposes, Key File Locations, Naming Conventions, Where to Add New Code
+
+### Community 79 - "signOut"
+Cohesion: 0.29
+Nodes (6): handleLogout(), signOut(), 4. Authentication Workflows & Form Behavior, Goal Achievement, Observable Truths, Phase 1: Auth Flow Verification Report
+
+### Community 81 - "ravi.test.ts"
+Cohesion: 0.20
+Nodes (8): processRunwayFeed(), fridayEntry, mondayEntry, raviInput, result, saturdayEntry, Key Accomplishments, Phase 4: Runway Feed Summary
+
+### Community 82 - "Coding Conventions"
+Cohesion: 0.29
+Nodes (6): RupeeString, Code Style, Coding Conventions, Database Interaction Conventions, Error Handling, Import Organization
+
+### Community 83 - "Tasks"
+Cohesion: 0.29
+Nodes (6): Objectives, Plan 05-01: Payout Synchronization Hardening & Idempotency, Task 0: Database Migration (`20261121000100_harden_payout_sync.sql`), Task 2: PGlite Comprehensive Regression Suite, Task 3: Real Multi-Connection PostgreSQL Concurrency Test, Tasks
+
+### Community 84 - "onAuthChange"
+Cohesion: 0.33
+Nodes (6): onAuthChange(), 2. Key Deliverables & Changes, Authentication & Routing Infrastructure, Database & Backend Hygiene, Pages & App Wiring, 2. Auth Context & Session Management
+
+### Community 85 - "dates.test.ts"
+Cohesion: 0.40
+Nodes (4): d1, d2, iso1, iso2
+
+### Community 86 - "Implementation Decisions"
+Cohesion: 0.40
+Nodes (5): 1. Routing & Dependencies, 3. Pages & UI Presentation, 5. Architectural Boundaries, 6. Backend Hygiene & Explicit Permissions, Implementation Decisions
+
+### Community 87 - "Phase 5: Payout Synchronization Hardening & Idempotency Verification Report"
+Cohesion: 0.40
+Nodes (4): Goal Achievement, Observable Truths, Phase 5: Payout Synchronization Hardening & Idempotency Verification Report, Technical Audit & Safety Bounds
 
 ## Knowledge Gaps
-- **6 isolated node(s):** `udaan-engine`, `PGDATABASE`, `PGHOST`, `PGPASSWORD`, `PGPORT` (+1 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 480 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **24 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **7 isolated node(s):** `RFC-4122`, `udaan-engine`, `PGDATABASE`, `PGHOST`, `PGPASSWORD` (+2 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 501 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **25 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `react` connect `toPaise` to `contracts.ts`, `api.ts`, `frontend/package.json`, `auth.ts`, `getSession`, `data.ts`, `useCommitments.ts`, `useTransactions.ts`?**
-  _High betweenness centrality (0.059) - this node is a cross-community bridge._
+- **Why does `toPaise()` connect `toPaise` to `Architecture`, `candidateAdapter.ts`, `useSession`, `validation.ts`, `idempotentRetry.test.ts`, `data.ts`, `FLOVA AI Extraction Contract Specification (v1 · Owner: M3)`, `FLOVA AI Extraction Contract Specification (v1 · Owner: M3)`, `index.ts`?**
+  _High betweenness centrality (0.076) - this node is a cross-community bridge._
 - **Are the 11 inferred relationships involving `toPaise()` (e.g. with `Architectural Rules` and `Rules everyone follows`) actually correct?**
   _`toPaise()` has 11 INFERRED edges - model-reasoned connections that need verification._
-- **What connects `udaan-engine`, `PGDATABASE`, `PGHOST` to the rest of the system?**
-  _6 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **What connects `RFC-4122`, `udaan-engine`, `PGDATABASE` to the rest of the system?**
+  _7 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `test_engine.py` be split into smaller, more focused modules?**
   _Cohesion score 0.06680080482897384 - nodes in this community are weakly interconnected._
-- **Why does `toPaise()` connect `toPaise` to `Phase Details`, `useSession`, `addTransaction`, `data.ts`, `FLOVA AI Extraction Contract Specification (v1 · Owner: M3)`, `FLOVA AI Extraction Contract Specification (v1 · Owner: M3)`?**
-  _High betweenness centrality (0.051) - this node is a cross-community bridge._
+- **Why does `react` connect `toPaise` to `contracts.ts`, `api.ts`, `frontend/package.json`, `auth.ts`, `useSession`, `getSession`, `data.ts`, `useTransactions`?**
+  _High betweenness centrality (0.065) - this node is a cross-community bridge._
 - **Are the 8 inferred relationships involving `useSession()` (e.g. with `Layers` and `Primary Runway Feed Path`) actually correct?**
   _`useSession()` has 8 INFERRED edges - model-reasoned connections that need verification._
 - **Should `contracts.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.09538461538461539 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.10276679841897234 - nodes in this community are weakly interconnected._

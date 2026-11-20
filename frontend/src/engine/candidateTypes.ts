@@ -19,6 +19,10 @@ import type {
 export interface PendingDraftContext {
   /** Trusted pending draft IDs belonging to the authenticated user. */
   authorizedDraftIds: string[];
+  /** Optional existing candidate IDs for mapping idempotency across repeated runs. */
+  existingCandidateIds?: string[];
+  /** Explicit trusted application date (e.g. client local ISO date) if user context supplies one. */
+  trustedDate?: ISODate;
 }
 
 /**
@@ -36,6 +40,10 @@ export interface VoiceTransactionCandidate {
   expense_type: ExpenseType | null;
   ownership: MoneyOwnership;
   date: ISODate | null;
+  /** Explicit date extracted from user text/utterance, or null if omitted. */
+  extracted_date?: ISODate | null;
+  /** Date supplied by trusted application context, if any. */
+  contextual_date?: ISODate | null;
   description: string | null;
   payment_method: ProposedPaymentMethod | null;
   counterparty: string | null;
@@ -60,6 +68,10 @@ export interface ExtractedReceiptCandidate {
   expense_type: ExpenseType | null;
   ownership: MoneyOwnership;
   date: ISODate | null;
+  /** Explicit date extracted from user text/utterance, or null if omitted. */
+  extracted_date?: ISODate | null;
+  /** Date supplied by trusted application context, if any. */
+  contextual_date?: ISODate | null;
   description: string | null;
   payment_method: ProposedPaymentMethod | null;
   merchant: string | null;

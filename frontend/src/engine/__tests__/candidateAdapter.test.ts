@@ -370,4 +370,193 @@ describe("Phase 7 Candidate Adapter (FinancialExtractionDTO Mapping)", () => {
     };
     assertThrows(() => candidateToNewTransaction(missingExpenseTypeCandidate), /expense_type/);
   });
+
+  it("11. missing date stays null and trusted context can supply date without inventing one", () => {
+    const dtoNoDate: FinancialExtractionDTO = {
+      entry_intent: "transaction",
+      action_intent: "create",
+      transactions: [
+        {
+          type: "expense",
+          amount: "100",
+          category: "food",
+          expense_type: "living",
+          ownership: "mine",
+          date: null, // Model did not extract date
+          description: "Tea and snacks",
+        },
+      ],
+      expected_payout: null,
+      balance_checkin: null,
+      metadata: {
+        input_source: "voice_transcript",
+        certainty: 0.9,
+        clarification_required: false,
+        clarification_reason: null,
+        clarification_questions: [],
+        raw_utterance: "Spent 100 on tea",
+      },
+    };
+
+    // Case A: Without trusted context, date remains null (never new Date() or system date)
+    const [candA] = mapDtoToVoiceCandidates(dtoNoDate);
+    assertStrictEqual(candA?.date, null);
+    assertStrictEqual(candA?.extracted_date, null);
+    assertStrictEqual(candA?.contextual_date, null);
+
+    // Case B: With trusted application context, contextual date is supplied and distinguishable
+    const trustedCtx: PendingDraftContext = {
+      authorizedDraftIds: [],
+      trustedDate: "2026-11-21" as any,
+    };
+    const [candB] = mapDtoToVoiceCandidates(dtoNoDate, trustedCtx);
+    assertStrictEqual(candB?.date, "2026-11-21");
+    assertStrictEqual(candB?.extracted_date, null);
+    assertStrictEqual(candB?.contextual_date, "2026-11-21");
+  });
+
+  it("12. missing expense_type requires clarification and never becomes living", () => {
+    const dtoMissingExpenseType: FinancialExtractionDTO = {
+      entry_intent: "transaction",
+      action_intent: "create",
+      transactions: [
+        {
+          type: "expense",
+          amount: "450",
+          category: "food",
+          expense_type: null, // Missing!
+          ownership: "mine",
+          date: "2026-11-21",
+          description: "Lunch meeting",
+        },
+      ],
+      expected_payout: null,
+      balance_checkin: null,
+      metadata: {
+        input_source: "voice_transcript",
+        certainty: 0.85,
+        clarification_required: false,
+        clarification_reason: null,
+        clarification_questions: [],
+        raw_utterance: "Spent 450 on lunch",
+      },
+    };
+
+    const [cand] = mapDtoToVoiceCandidates(dtoMissingExpenseType);
+    assertStrictEqual(cand?.expense_type, null);
+    assertStrictEqual(cand?.clarification_required, true);
+    assertStrictEqual(
+      cand?.clarification_questions.some((q) => q.includes("living") || q.includes("work")),
+      true
+    );
+
+    // Rejection on confirmation attempt before clarification is resolved
+    assertThrows(() => candidateToNewTransaction(cand!), /expense_type/);
+
+    // Valid expense_type is preserved correctly
+    const validExpenseCand = { ...cand!, expense_type: "work" as const };
+    const validTx = candidateToNewTransaction(validExpenseCand);
+    assertStrictEqual(validTx.expenseType, "work");
+  });
+
+  it("13. missing amount stays null across adapter stages and never converts to zero", () => {
+    // safeConvertRupeeStringToPaise
+    assertStrictEqual(safeConvertRupeeStringToPaise(null), null);
+    assertStrictEqual(safeConvertRupeeStringToPaise(undefined), null);
+
+    const dtoNoAmount: FinancialExtractionDTO = {
+      entry_intent: "transaction",
+      action_intent: "create",
+      transactions: [
+        {
+          type: "expense",
+          amount: null,
+          category: "fuel",
+          expense_type: "work",
+          ownership: "mine",
+          date: "2026-11-21",
+          description: "Filled petrol",
+        },
+      ],
+      expected_payout: null,
+      balance_checkin: null,
+      metadata: {
+        input_source: "voice_transcript",
+        certainty: 0.8,
+        clarification_required: true,
+        clarification_reason: "Amount missing",
+        clarification_questions: ["How much?"],
+        raw_utterance: "Filled petrol",
+      },
+    };
+
+    // Candidate mapping: amount_paise remains strictly null, not 0
+    const [cand] = mapDtoToVoiceCandidates(dtoNoAmount);
+    assertStrictEqual(cand?.amount_paise, null);
+    assertStrictEqual(cand?.amount_rupees, null);
+    assertStrictEqual(cand?.clarification_required, true);
+
+    // Confirmation must reject null amounts (never silent 0 insertion)
+    assertThrows(() => candidateToNewTransaction(cand!), /invalid or missing amount/);
+  });
+
+  it("14. candidate UUID remains stable across repeated mapping and confirmation retries", async () => {
+    const dtoWithDraft: FinancialExtractionDTO = {
+      entry_intent: "transaction",
+      action_intent: "correct",
+      target_draft_id: "draft-stable-uuid-1",
+      transactions: [
+        {
+          type: "expense",
+          amount: "250",
+          category: "fuel",
+          expense_type: "work",
+          ownership: "mine",
+          date: "2026-11-21",
+          description: "Petrol",
+        },
+      ],
+      expected_payout: null,
+      balance_checkin: null,
+      metadata: {
+        input_source: "text",
+        certainty: 0.95,
+        clarification_required: false,
+        clarification_reason: null,
+        clarification_questions: [],
+        raw_utterance: "Petrol 250",
+      },
+    };
+
+    const ctx: PendingDraftContext = {
+      authorizedDraftIds: ["draft-stable-uuid-1"],
+      existingCandidateIds: ["candidate-slot-0"],
+    };
+
+    // Repeated mapping preserves same candidate_id
+    const [run1] = mapDtoToVoiceCandidates(dtoWithDraft, ctx);
+    const [run2] = mapDtoToVoiceCandidates(dtoWithDraft, ctx);
+    assertStrictEqual(run1?.candidate_id, "candidate-slot-0");
+    assertStrictEqual(run2?.candidate_id, "candidate-slot-0");
+    assertStrictEqual(run1?.candidate_id, run2?.candidate_id);
+
+    // Confirmation retries preserve identical transaction ID
+    const tx1 = candidateToNewTransaction(run1!);
+    const tx2 = candidateToNewTransaction(run1!);
+    assertStrictEqual(tx1.id, "draft-stable-uuid-1");
+    assertStrictEqual(tx2.id, "draft-stable-uuid-1");
+    assertStrictEqual(tx1.id, tx2.id);
+
+    // Repeated confirmCandidateTransaction calls send same ID to persistence
+    const receivedIds: string[] = [];
+    const mockPersist = async (tx: any) => {
+      receivedIds.push(tx.id);
+      return tx;
+    };
+
+    await confirmCandidateTransaction(run1!, mockPersist);
+    await confirmCandidateTransaction(run1!, mockPersist);
+    assertStrictEqual(receivedIds.length, 2);
+    assertStrictEqual(receivedIds[0], receivedIds[1]);
+  });
 });

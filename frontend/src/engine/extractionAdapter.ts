@@ -182,18 +182,32 @@ export function adaptExtractedTransactions(dto: FinancialExtractionDTO): NewTran
     return [];
   }
 
-  return dto.transactions.map((tx) => {
+  const results: NewTransaction[] = [];
+  for (const tx of dto.transactions) {
     const sanitized = sanitizeExtractedTransaction(tx);
-    const amountPaise = sanitized.amount ? toPaise(sanitized.amount) : 0;
+
+    // Fix C: null/missing amount must remain absent — never default to 0.
+    if (!sanitized.amount) {
+      // Skip transactions without an amount; callers should use Phase 7 candidates
+      // which carry clarification_required=true for missing amounts.
+      continue;
+    }
+
+    const amountPaise = toPaise(sanitized.amount);
     const type: TransactionType = sanitized.type ?? "expense";
     const ownership: MoneyOwnership = sanitized.ownership ?? "mine";
     let expenseType: ExpenseType | undefined = undefined;
 
     if (type === "expense" && ownership === "mine") {
-      expenseType = sanitized.expense_type ?? "living"; // Own expense requires expense_type
+      // Fix B: never default missing expense_type to "living".
+      // If expense_type is missing for an own expense, skip — requires clarification.
+      if (!sanitized.expense_type) {
+        continue;
+      }
+      expenseType = sanitized.expense_type;
     }
 
-    return {
+    results.push({
       type,
       amount: amountPaise,
       category: sanitized.category ?? "other",
@@ -202,8 +216,9 @@ export function adaptExtractedTransactions(dto: FinancialExtractionDTO): NewTran
       date: sanitized.date ?? undefined,
       description: sanitized.description ?? undefined,
       source: "ai_suggestion",
-    };
-  });
+    });
+  }
+  return results;
 }
 
 /**

@@ -387,7 +387,8 @@ export interface FinancialExtractionDTO {
 ## 6. M1 Backend & Edge Function Integration
 
 See `ai-engine/M1_GROQ_INTEGRATION.md` for full backend specifications:
-- Endpoint: `POST /functions/v1/extract-financial-intent`
+- Canonical voice/text endpoint: `POST /functions/v1/process-voice`
+- Dedicated receipt endpoint: `POST /functions/v1/extract-receipt`
 - Model: `llama-3.3-70b-versatile` (Groq API, JSON mode)
 - Secret key: `GROQ_API_KEY` kept server-side only in Supabase secrets
-- Client passes `input_text` and `input_source`; Edge function runs inference with `EXTRACTION_SYSTEM_PROMPT` and returns raw JSON for M3 client-side validation (`validateExtractionOutput`).
+- Client passes audio blob (Mode 1) or `input_text` JSON (Mode 2); Edge function runs inference with `EXTRACTION_SYSTEM_PROMPT` and returns raw JSON for M3 client-side validation (`validateExtractionOutput`).
