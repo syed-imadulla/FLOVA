@@ -1,6 +1,6 @@
 {
   "0": "test_engine.py",
-  "1": "contracts.ts",
+  "1": "data.ts",
   "2": "VERDICT — pick-f1-irregular-income",
   "3": "api.ts",
   "4": "frontend/package.json",
@@ -31,5 +31,11 @@
   "29": "pick-r1-vibe-code/trial-log.md",
   "30": "pick-r3-token-tax/case.md",
   "31": "pick-r3-token-tax/trial-log.md",
-  "32": "udaan-engine"
+  "32": "udaan-engine",
+  "33": "loader.mjs",
+  "34": "validation.test.ts",
+  "35": "contracts.ts",
+  "36": "money.ts",
+  "37": "Service functions (`frontend/src/services/`)",
+  "38": "rls-live-check.mjs"
 }
