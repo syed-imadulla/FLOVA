@@ -102,8 +102,8 @@
     "semantic_hash": ""
   },
   "frontend/src/App.tsx": {
-    "mtime": 1795216045.5819292,
-    "seen": 1795216134.924364,
+    "mtime": 1795216220.1023285,
+    "seen": 1795217707.1703997,
     "ast_hash": "f3e79633d5aecd8a8cb345c50aef758e",
     "semantic_hash": ""
   },
@@ -450,9 +450,9 @@
     "semantic_hash": ""
   },
   "frontend/src/auth/RedirectIfAuthed.tsx": {
-    "mtime": 1795215977.9878974,
-    "seen": 1795216134.9243677,
-    "ast_hash": "c97cfe14fdbfda7fd7568bc85235c340",
+    "mtime": 1795217694.2009017,
+    "seen": 1795217707.1704547,
+    "ast_hash": "98973a9d11eef2743472b147dfcbc59d",
     "semantic_hash": ""
   },
   "frontend/src/auth/RequireAuth.tsx": {
@@ -576,9 +576,9 @@
     "semantic_hash": ""
   },
   "frontend/src/pages/OnboardingPage.tsx": {
-    "mtime": 1795215978.0025492,
-    "seen": 1795216134.924459,
-    "ast_hash": "5ec05cf4c4fba7a9cea6f51c1af9727c",
+    "mtime": 1795217694.2009017,
+    "seen": 1795217707.1724846,
+    "ast_hash": "957e731b2a451f44d69929ddc40071cf",
     "semantic_hash": ""
   },
   "frontend/src/profile/ProfileProvider.tsx": {
