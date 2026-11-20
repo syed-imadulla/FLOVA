@@ -107,3 +107,13 @@ def test_outlook_warns_in_slow_season_with_empty_buffer():
     assert out["ready"]
     assert out["overall"] == "warning"
     assert all(w["low"] <= w["expected"] <= w["high"] for w in out["weeks"])
+
+
+def test_reasons_match_what_happened():
+    rule = SelfSalary(essentials=3000)
+    for _ in range(6):
+        good = rule.step(5000)
+    assert "goes to the buffer" in good.reasons[0]
+    lean = rule.step(500)
+    assert lean.reasons[0].startswith("Lean week")
+    assert not any("extra is saved" in r for r in lean.reasons)
