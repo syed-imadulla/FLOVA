@@ -7,6 +7,7 @@ import {
   describe,
   it,
 } from "./testUtils";
+import { calculateConfirmedBalance } from "../balance";
 import { calculateDailyRunway } from "../runway";
 import type { RunwayProjectionInput } from "../runway";
 
@@ -390,8 +391,10 @@ describe("Option A: Remaining Daily Budget & Current-Day Regression Suite", () =
   });
 
   it("Test G: Non-owned transactions (not_mine) must not consume personal living or work budgets", () => {
-    // Cash On Delivery remittance of ₹500 (50,000 paise)
-    const input: RunwayProjectionInput = {
+    // Checkin: Cash ₹1,000, Bank ₹1,000, notMine ₹500 (COD liability)
+    // Starting personal balance: (1,000 + 1,000) - 500 = ₹1,500 (150,000 paise)
+    // Starting custodial liability: ₹500 (50,000 paise)
+    const baseInput: RunwayProjectionInput = {
       profile: profileStandard,
       latestCheckin: {
         cash: 100000,
@@ -399,6 +402,22 @@ describe("Option A: Remaining Daily Budget & Current-Day Regression Suite", () =
         notMine: 50000, // ₹500 COD liability
         checkedAt: "2026-11-20T08:00:00Z",
       },
+      transactionsSinceCheckin: [],
+      payouts: [],
+      commitments: [],
+      horizonDays: 2,
+      startDate: "2026-11-20",
+    };
+
+    // 1. Verify baseline state before remittance or collection
+    const balanceBefore = calculateConfirmedBalance(baseInput);
+    assertStrictEqual(balanceBefore.confirmedBalancePaise, 150000); // ₹1,500 personal
+    assertStrictEqual(balanceBefore.custodialOwedPaise, 50000);      // ₹500 custodial liability
+
+    // 2. Case A: COD Remittance (expense, not_mine)
+    // Rider remits ₹500 COD cash to platform
+    const remittanceInput: RunwayProjectionInput = {
+      ...baseInput,
       transactionsSinceCheckin: [
         {
           id: "tx-cod-remit",
@@ -411,17 +430,55 @@ describe("Option A: Remaining Daily Budget & Current-Day Regression Suite", () =
           createdAt: "2026-11-20T10:00:00Z",
         },
       ],
-      payouts: [],
-      commitments: [],
-      horizonDays: 2,
-      startDate: "2026-11-20",
     };
 
-    const res = calculateDailyRunway(input);
-    // not_mine expense does NOT reduce personal living or work estimates
-    assertStrictEqual(res.projections[0].remainingLivingBudgetPaise, 20000);
-    assertStrictEqual(res.projections[0].remainingWorkBudgetPaise, 10000);
-    assertStrictEqual(res.projections[0].essentialExpensePaise, 30000);
+    // Assertions for COD remittance:
+    // a) Confirmed personal balance before and after remittance: strictly unchanged at 150,000 paise
+    const balanceAfterRemit = calculateConfirmedBalance(remittanceInput);
+    assertStrictEqual(balanceAfterRemit.confirmedBalancePaise, 150000);
+    // b) Custodial liability before and after remittance: reduced from 50,000 to 0
+    assertStrictEqual(balanceAfterRemit.custodialOwedPaise, 0);
+
+    // c) No impact on personal Living / Work daily budgets
+    const runwayRemit = calculateDailyRunway(remittanceInput);
+    assertStrictEqual(runwayRemit.startingConfirmedBalancePaise, 150000);
+    assertStrictEqual(runwayRemit.projections[0].remainingLivingBudgetPaise, 20000);
+    assertStrictEqual(runwayRemit.projections[0].remainingWorkBudgetPaise, 10000);
+    assertStrictEqual(runwayRemit.projections[0].essentialExpensePaise, 30000);
+    assertStrictEqual(runwayRemit.projections[0].closingBalancePaise, 120000); // 150k - 30k
+
+    // 3. Case B: COD Collection (income, not_mine)
+    // Rider collects ₹800 COD cash from delivery customer
+    const collectionInput: RunwayProjectionInput = {
+      ...baseInput,
+      transactionsSinceCheckin: [
+        {
+          id: "tx-cod-collect",
+          type: "income",
+          amount: 80000, // ₹800 COD collected
+          ownership: "not_mine",
+          expenseType: null,
+          payoutId: null,
+          date: "2026-11-20",
+          createdAt: "2026-11-20T11:00:00Z",
+        },
+      ],
+    };
+
+    // Assertions for COD collection:
+    // a) Confirmed personal balance before and after collection: strictly unchanged at 150,000 paise
+    const balanceAfterCollect = calculateConfirmedBalance(collectionInput);
+    assertStrictEqual(balanceAfterCollect.confirmedBalancePaise, 150000);
+    // b) Custodial liability before and after collection: increased from 50,000 to 130,000
+    assertStrictEqual(balanceAfterCollect.custodialOwedPaise, 130000);
+
+    // c) No impact on personal Living / Work daily budgets (income does not add to expense budget)
+    const runwayCollect = calculateDailyRunway(collectionInput);
+    assertStrictEqual(runwayCollect.startingConfirmedBalancePaise, 150000);
+    assertStrictEqual(runwayCollect.projections[0].remainingLivingBudgetPaise, 20000);
+    assertStrictEqual(runwayCollect.projections[0].remainingWorkBudgetPaise, 10000);
+    assertStrictEqual(runwayCollect.projections[0].essentialExpensePaise, 30000);
+    assertStrictEqual(runwayCollect.projections[0].closingBalancePaise, 120000); // 150k - 30k
   });
 
   it("Test H: Future days apply full daily estimates even if Day 0 budget was consumed", () => {

@@ -1,17 +1,17 @@
 # Graph Report - FLOVA  (2026-11-20)
 
 ## Corpus Check
-- 125 files · ~64,506 words
+- 125 files · ~64,755 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 5 file(s) not represented in the graph (top: (none) 2, .example 2, .css 1)
 
 ## Summary
-- 765 nodes · 1488 edges · 59 communities (38 shown, 21 thin omitted)
+- 765 nodes · 1490 edges · 59 communities (38 shown, 21 thin omitted)
 - Extraction: 88% EXTRACTED · 12% INFERRED · 0% AMBIGUOUS · INFERRED: 178 edges (avg confidence: 0.95)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `433cfece`
+- Built from commit: `7b54490c`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 

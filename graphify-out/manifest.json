@@ -534,8 +534,8 @@
     "semantic_hash": ""
   },
   "frontend/src/engine/__tests__/runway.test.ts": {
-    "mtime": 1795190690.7044604,
-    "seen": 1795190821.458335,
+    "mtime": 1795190911.2899992,
+    "seen": 1795191263.5268788,
     "ast_hash": "736ac67d6b6d3dd2a51edcdbd06aa7f1",
     "semantic_hash": ""
   },
@@ -564,8 +564,8 @@
     "semantic_hash": ""
   },
   "frontend/src/engine/runway.ts": {
-    "mtime": 1795190658.7717218,
-    "seen": 1795190821.4583414,
+    "mtime": 1795190911.4934382,
+    "seen": 1795191263.5269961,
     "ast_hash": "e45c7d2ad631a7001b9123876a7ebad9",
     "semantic_hash": ""
   },
@@ -756,9 +756,9 @@
     "semantic_hash": ""
   },
   "frontend/src/engine/__tests__/remainingBudget.test.ts": {
-    "mtime": 1795190759.9958928,
-    "seen": 1795190821.458332,
-    "ast_hash": "7dd23b849f4add8ebc48f67a9a955b82",
+    "mtime": 1795191229.5100465,
+    "seen": 1795191263.5268464,
+    "ast_hash": "9fe0dc7b82844b52dfe7f4aed617396b",
     "semantic_hash": ""
   },
   "frontend/src/engine/README.md": {
