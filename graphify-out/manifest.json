@@ -84,8 +84,8 @@
     "semantic_hash": ""
   },
   "backend/scripts/test-db.mjs": {
-    "mtime": 1795185222.1864626,
-    "seen": 1795185445.3904307,
+    "mtime": 1795185542.4304624,
+    "seen": 1795185891.6258562,
     "ast_hash": "ff6aa5a6fd3b3733357489bbab901788",
     "semantic_hash": ""
   },
@@ -102,8 +102,8 @@
     "semantic_hash": ""
   },
   "frontend/src/App.tsx": {
-    "mtime": 1795185427.8615358,
-    "seen": 1795185445.3904345,
+    "mtime": 1795185542.7194595,
+    "seen": 1795185891.6258974,
     "ast_hash": "039caa4b64acba124cde710f54a15f3b",
     "semantic_hash": ""
   },
@@ -336,8 +336,8 @@
     "semantic_hash": ""
   },
   "docs/CONTRACT.md": {
-    "mtime": 1795185241.7352796,
-    "seen": 1795185445.3923247,
+    "mtime": 1795185542.624999,
+    "seen": 1795185891.627463,
     "ast_hash": "37cd38f355f9855098eb039d4061e979",
     "semantic_hash": ""
   },
@@ -384,15 +384,15 @@
     "semantic_hash": ""
   },
   ".planning/ROADMAP.md": {
-    "mtime": 1795182477.1094267,
-    "seen": 1795182523.439385,
-    "ast_hash": "a988d4b40183bdc6a8dc0ec70d3313f2",
+    "mtime": 1795185542.1480129,
+    "seen": 1795185891.6270993,
+    "ast_hash": "0df39396475c3bff916e01bf368ec96b",
     "semantic_hash": ""
   },
   ".planning/STATE.md": {
-    "mtime": 1795185132.6688337,
-    "seen": 1795185445.3918715,
-    "ast_hash": "92f3aaf83847522e82009c1760e72d9f",
+    "mtime": 1795185542.2198691,
+    "seen": 1795185891.6271014,
+    "ast_hash": "631a1d30508f5b3793c712b429f047df",
     "semantic_hash": ""
   },
   ".planning/codebase/ARCHITECTURE.md": {
@@ -501,6 +501,18 @@
     "mtime": 1795184385.0717235,
     "seen": 1795185445.3922334,
     "ast_hash": "5408629a5e79ca06c7781ec09a94108c",
+    "semantic_hash": ""
+  },
+  ".planning/phases/01-auth-flow/01-01-SUMMARY.md": {
+    "mtime": 1795185494.006916,
+    "seen": 1795185891.6273248,
+    "ast_hash": "0bb0d1893981ea870e0a0ab6c04449a2",
+    "semantic_hash": ""
+  },
+  ".planning/phases/01-auth-flow/01-UAT.md": {
+    "mtime": 1795185632.8416152,
+    "seen": 1795185891.6273541,
+    "ast_hash": "2515041f5849137b36e783cecbf31a10",
     "semantic_hash": ""
   }
 }
