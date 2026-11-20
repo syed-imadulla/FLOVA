@@ -141,6 +141,7 @@ export interface NewPayout {
 }
 
 export interface NewTransaction {
+  id?: string;
   type: TransactionType;
   amount: Paise;
   category?: string;

@@ -42,12 +42,55 @@ export async function addTransaction(t: NewTransaction): Promise<Transaction> {
   if (t.type === "expense" && ownership === "mine" && !t.expenseType) {
     throw new Error("Choose whether this expense is living or work.");
   }
-  return unwrap(await supabase.from("transactions").insert({
+  // Idempotency: Ensure a client-generated UUID is always present and retained on t for retries
+  if (!t.id) {
+    if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+      t.id = crypto.randomUUID();
+    } else {
+      throw new Error("Client UUID generator is unavailable; cannot perform idempotent insert.");
+    }
+  }
+
+  const expectedExpenseType = t.type === "expense" && ownership === "mine" ? t.expenseType : null;
+  const insertRes = await supabase.from("transactions").insert({
+    id: t.id,
     type: t.type, amount: money(t.amount), category: t.category ?? "other", description: t.description ?? null,
-    expense_type: t.type === "expense" && ownership === "mine" ? t.expenseType : null,
+    expense_type: expectedExpenseType,
     ownership, payout_id: t.payoutId ?? null, source: t.source ?? "manual",
     ...(t.date ? { transaction_date: t.date } : {}),
-  }).select().single(), "Save transaction");
+  }).select().single();
+
+  if (insertRes.error) {
+    const err = insertRes.error;
+    const isPkeyViolation =
+      (err.code === "23505" || err.message?.includes("23505")) &&
+      (err.message?.includes("transactions_pkey") || err.details?.includes("transactions_pkey"));
+
+    if (isPkeyViolation) {
+      // Query existing transaction via authenticated client (RLS enforced)
+      const { data: existing, error: fetchErr } = await supabase
+        .from("transactions")
+        .select("*")
+        .eq("id", t.id)
+        .maybeSingle();
+
+      if (!fetchErr && existing) {
+        const matchesFinancialFields =
+          existing.type === t.type &&
+          toPaise(existing.amount) === t.amount &&
+          existing.ownership === ownership &&
+          existing.expense_type === expectedExpenseType &&
+          existing.payout_id === (t.payoutId ?? null);
+
+        if (matchesFinancialFields) {
+          return existing as Transaction;
+        }
+        throw new Error("Transaction ID conflict: an existing transaction with this ID has conflicting details.");
+      }
+    }
+  }
+
+  return unwrap(insertRes, "Save transaction");
 }
 
 export async function listTransactions(opts: { from?: string; to?: string; limit?: number } = {}): Promise<Transaction[]> {
@@ -90,8 +133,8 @@ export async function listPayouts(): Promise<Payout[]> {
 }
 
 /** Record money actually received against a payout. The DB trigger updates received_amount and partial/settled. */
-export async function receivePayout(payoutId: string, amount: number, date?: string): Promise<Transaction> {
-  return addTransaction({ type: "income", amount, category: "payout", payoutId, date });
+export async function receivePayout(payoutId: string, amount: number, date?: string, idempotencyId?: string): Promise<Transaction> {
+  return addTransaction({ id: idempotencyId, type: "income", amount, category: "payout", payoutId, date });
 }
 
 export async function setPayoutStatus(id: string, status: Extract<PayoutStatus, "scheduled" | "estimated" | "unearned" | "cancelled">): Promise<Payout> {
