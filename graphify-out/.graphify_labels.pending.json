@@ -8,7 +8,7 @@
   "6": "FLOVA data contract (v1 · owner: M1)",
   "7": "backend/package.json",
   "8": "STATEMENTS — The Big Hack 2.0",
-  "9": "auth.ts",
+  "9": "App.tsx",
   "10": "compilerOptions",
   "11": "BRIEF — The Big Hack 2.0",
   "12": "BRIEF — The Big Hack 2.0",
@@ -34,12 +34,16 @@
   "32": "udaan-engine",
   "33": "contracts.ts",
   "34": "loadRunwayInput",
-  "35": "Naming Patterns",
-  "36": "Phase Details",
+  "35": "Coding Conventions",
+  "36": "Implementation Decisions",
   "37": "Project State",
   "38": "toPaise",
   "39": "Codebase Structure",
   "40": "Architecture",
   "41": "Technology Stack",
-  "42": "Testing Patterns"
+  "42": "Testing Patterns",
+  "43": "FLOVA data contract (v1 · owner: M1)",
+  "44": "External Integrations",
+  "45": "rls-live-check.mjs",
+  "46": "01-01-PLAN.md"
 }

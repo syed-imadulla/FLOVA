@@ -8,7 +8,7 @@ Work is executed exclusively on branch `feature/backend` and shipped as pull req
 
 ## Phases
 
-- [ ] **Phase 1: Auth flow** - AuthProvider + useSession, protected routes, minimal login/sign-up/logout screens.
+- [x] **Phase 1: Auth flow** - AuthProvider + useSession, protected routes, minimal login/sign-up/logout screens. (Completed 2026-11-20)
 - [ ] **Phase 2: Profile & onboarding data** - useProfile hook, save onboarding fields, route by onboarding_completed.
 - [ ] **Phase 3: Data capture hooks** - Check-ins, transactions, payouts (receivePayout), commitments, history edit/delete, error states.
 - [ ] **Phase 4: Runway feed** - Wire loadRunwayInput() to M3's engine interface, same-day check-in rule, Ravi fixture test (expect −₹1,170 on Saturday).
@@ -31,7 +31,7 @@ Work is executed exclusively on branch `feature/backend` and shipped as pull req
 **Plans**: 1 plan
 
 Plans:
-- [ ] 01-01: Build `AuthContext`, `useSession` hook, protected route wrapper, and minimal login/sign-up/logout screens.
+- [x] 01-01: Build `AuthContext`, `useSession` hook, protected route wrapper, and minimal login/sign-up/logout screens. (Completed 2026-11-20)
 
 ### Phase 2: Profile & onboarding data
 **Goal**: Deliver reactive profile management hook (`useProfile`), persist worker profile attributes and daily expense estimates in integer paise, and route users based on onboarding completion status.

@@ -84,9 +84,9 @@
     "semantic_hash": ""
   },
   "backend/scripts/test-db.mjs": {
-    "mtime": 1795180984.7923853,
-    "seen": 1795181064.1096559,
-    "ast_hash": "07136d5b58a075544a043eb3c3e0bd44",
+    "mtime": 1795185222.1864626,
+    "seen": 1795185445.3904307,
+    "ast_hash": "ff6aa5a6fd3b3733357489bbab901788",
     "semantic_hash": ""
   },
   "backend/supabase/migrations/20261120000100_init_schema.sql": {
@@ -96,15 +96,15 @@
     "semantic_hash": ""
   },
   "frontend/package.json": {
-    "mtime": 1795181006.773566,
-    "seen": 1795181064.1096594,
-    "ast_hash": "d0bd1911f8122b372876d2d4cfaddf97",
+    "mtime": 1795185275.3989642,
+    "seen": 1795185445.3904333,
+    "ast_hash": "6eec4e39e152b34c559206d7c5ee6e88",
     "semantic_hash": ""
   },
   "frontend/src/App.tsx": {
-    "mtime": 1795180869.0190244,
-    "seen": 1795181064.109661,
-    "ast_hash": "df1c439f75d763e023223377f0a66bcb",
+    "mtime": 1795185427.8615358,
+    "seen": 1795185445.3904345,
+    "ast_hash": "039caa4b64acba124cde710f54a15f3b",
     "semantic_hash": ""
   },
   "frontend/src/api.ts": {
@@ -330,15 +330,15 @@
     "semantic_hash": ""
   },
   "backend/README.md": {
-    "mtime": 1795180987.1935904,
-    "seen": 1795181064.1097305,
-    "ast_hash": "6511766cc42b1abd78f0dfc9ab5a4de7",
+    "mtime": 1795185241.6742802,
+    "seen": 1795185445.392322,
+    "ast_hash": "67c7df38d97610d9b0fe0db9b34fa1a2",
     "semantic_hash": ""
   },
   "docs/CONTRACT.md": {
-    "mtime": 1795180990.3654828,
-    "seen": 1795181064.1097324,
-    "ast_hash": "eb5d1df208b5ba03ec3e5947ad1fb0a4",
+    "mtime": 1795185241.7352796,
+    "seen": 1795185445.3923247,
+    "ast_hash": "37cd38f355f9855098eb039d4061e979",
     "semantic_hash": ""
   },
   "frontend/README.md": {
@@ -390,9 +390,9 @@
     "semantic_hash": ""
   },
   ".planning/STATE.md": {
-    "mtime": 1795182477.1284266,
-    "seen": 1795182523.4393866,
-    "ast_hash": "bab9a56d933928c77767b9903cb921af",
+    "mtime": 1795185132.6688337,
+    "seen": 1795185445.3918715,
+    "ast_hash": "92f3aaf83847522e82009c1760e72d9f",
     "semantic_hash": ""
   },
   ".planning/codebase/ARCHITECTURE.md": {
@@ -441,6 +441,66 @@
     "mtime": 1795182477.1494262,
     "seen": 1795182523.4394004,
     "ast_hash": "6b6f838274e90ec39026167dea7153a8",
+    "semantic_hash": ""
+  },
+  "frontend/src/auth/AuthProvider.tsx": {
+    "mtime": 1795185303.1027045,
+    "seen": 1795185445.390463,
+    "ast_hash": "909235877da0d2e6e17eddb1806a1edf",
+    "semantic_hash": ""
+  },
+  "frontend/src/auth/RedirectIfAuthed.tsx": {
+    "mtime": 1795185303.2127035,
+    "seen": 1795185445.3904645,
+    "ast_hash": "c97cfe14fdbfda7fd7568bc85235c340",
+    "semantic_hash": ""
+  },
+  "frontend/src/auth/RequireAuth.tsx": {
+    "mtime": 1795185303.172704,
+    "seen": 1795185445.3904657,
+    "ast_hash": "58f8e48f7ce23541bf723a2496cda7f4",
+    "semantic_hash": ""
+  },
+  "frontend/src/auth/useSession.ts": {
+    "mtime": 1795185303.1377044,
+    "seen": 1795185445.3904672,
+    "ast_hash": "fab8bd99de2344264700c379dc652e1b",
+    "semantic_hash": ""
+  },
+  "frontend/src/pages/HomePlaceholder.tsx": {
+    "mtime": 1795185406.8737323,
+    "seen": 1795185445.3906572,
+    "ast_hash": "4bb62fbd3c41bb9186e8835b76ad0158",
+    "semantic_hash": ""
+  },
+  "frontend/src/pages/OnboardingPlaceholder.tsx": {
+    "mtime": 1795185406.906732,
+    "seen": 1795185445.3906586,
+    "ast_hash": "0940c21b3471d49c29e4dc5b9beae4c4",
+    "semantic_hash": ""
+  },
+  "frontend/src/pages/auth/LoginPage.tsx": {
+    "mtime": 1795185406.8107328,
+    "seen": 1795185445.3906596,
+    "ast_hash": "3690b33644ff76b2d6fbd81319a5a9a3",
+    "semantic_hash": ""
+  },
+  "frontend/src/pages/auth/SignupPage.tsx": {
+    "mtime": 1795185406.8417327,
+    "seen": 1795185445.3906608,
+    "ast_hash": "ff92b3ab9f1545679980e6dfaecadf08",
+    "semantic_hash": ""
+  },
+  ".planning/phases/01-auth-flow/01-01-PLAN.md": {
+    "mtime": 1795184804.1553793,
+    "seen": 1795185445.3922317,
+    "ast_hash": "82b2bbf5ad00d1f831b4abcd6fc14f03",
+    "semantic_hash": ""
+  },
+  ".planning/phases/01-auth-flow/01-CONTEXT.md": {
+    "mtime": 1795184385.0717235,
+    "seen": 1795185445.3922334,
+    "ast_hash": "5408629a5e79ca06c7781ec09a94108c",
     "semantic_hash": ""
   }
 }
