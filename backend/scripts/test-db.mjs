@@ -20,13 +20,18 @@ await db.exec(`
   grant usage on schema auth to authenticated, anon;
   grant execute on function auth.uid() to authenticated, anon;
 `);
-await db.exec(fs.readFileSync(process.argv[2] ?? new URL("../supabase/migrations/20261120000100_init_schema.sql", import.meta.url), "utf8"));
+
+const migrationsDir = new URL("../supabase/migrations", import.meta.url);
+const files = fs.readdirSync(migrationsDir).filter((f) => f.endsWith(".sql")).sort();
+for (const file of files) {
+  await db.exec(fs.readFileSync(new URL(`../supabase/migrations/${file}`, import.meta.url), "utf8"));
+}
+
 await db.exec(`
   grant usage on schema public to authenticated, anon;
-  grant select, insert, update, delete on all tables in schema public to authenticated;
   grant execute on all functions in schema public to authenticated;
 `);
-console.log("migration applied");
+console.log(`applied ${files.length} migration(s): ${files.join(", ")}`);
 
 // sign-up trigger
 await db.exec(`insert into auth.users (id, raw_user_meta_data) values ('${A}', '{"display_name":"Ravi"}'), ('${B}', '{}');`);
