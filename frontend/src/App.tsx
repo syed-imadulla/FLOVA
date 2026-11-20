@@ -11,6 +11,7 @@ import { HomePlaceholder } from "./pages/HomePlaceholder";
 import { OnboardingPage } from "./pages/OnboardingPage";
 import { PayoutsPage } from "./pages/PayoutsPage";
 import { VoiceCapturePage } from "./pages/VoiceCapturePage";
+import { WishPage } from "./wish/WishPage";
 import { LoginPage } from "./pages/auth/LoginPage";
 import { SignupPage } from "./pages/auth/SignupPage";
 import { ProfileProvider } from "./profile/ProfileProvider";
@@ -113,6 +114,16 @@ export default function App() {
                   <RequireAuth>
                     <RequireOnboarded>
                       <VoiceCapturePage />
+                    </RequireOnboarded>
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/wish"
+                element={
+                  <RequireAuth>
+                    <RequireOnboarded>
+                      <WishPage />
                     </RequireOnboarded>
                   </RequireAuth>
                 }
