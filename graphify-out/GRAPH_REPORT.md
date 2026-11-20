@@ -1,23 +1,23 @@
 # Graph Report - FLOVA  (2026-11-20)
 
 ## Corpus Check
-- 70 files · ~38,471 words
+- 71 files · ~39,582 words
 - Verdict: corpus is large enough that graph structure adds value.
-- Unclassified: 6 file(s) not represented in the graph (top: (none) 2, .example 2, .css 1)
+- Unclassified: 7 file(s) not represented in the graph (top: (none) 2, .example 2, .css 2)
 
 ## Summary
-- 464 nodes · 773 edges · 39 communities (20 shown, 19 thin omitted)
+- 467 nodes · 779 edges · 36 communities (18 shown, 18 thin omitted)
 - Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 20 edges (avg confidence: 0.9)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `886e7ade`
+- Built from commit: `1aed4870`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - test_engine.py
-- data.ts
+- contracts.ts
 - VERDICT — pick-f1-irregular-income
 - api.ts
 - frontend/package.json
@@ -43,10 +43,7 @@
 - pick-r3-token-tax/prosecution.md
 - udaan-engine
 - validation.test.ts
-- contracts.ts
-- money.ts
-- Service functions (`frontend/src/services/`)
-- rls-live-check.mjs
+- Tables
 
 ## God Nodes (most connected - your core abstractions)
 1. `SelfSalary` - 17 edges
@@ -58,7 +55,7 @@
 7. `VERDICT — pick-f1-irregular-income` - 11 edges
 8. `VERDICT — pick-r1-vibe-code` - 11 edges
 9. `VERDICT — pick-r3-token-tax` - 11 edges
-10. `calculateDailyRunway()` - 9 edges
+10. `RunwayInput` - 9 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `Service functions (`frontend/src/services/`)` --references--> `getSession()`  [INFERRED]
@@ -75,23 +72,23 @@
 ## Import Cycles
 - None detected.
 
-## Communities (39 total, 19 thin omitted)
+## Communities (36 total, 18 thin omitted)
 
 ### Community 0 - "test_engine.py"
 Cohesion: 0.07
 Nodes (36): test_backtest_shape(), test_buffer_never_negative_and_money_is_conserved(), test_estimate_ignores_one_big_week(), test_estimate_with_little_history_is_cautious(), test_generate_year_is_reproducible(), test_lean_week_is_covered_by_buffer(), test_low_income_is_not_called_a_timing_problem(), test_negative_income_week_handled() (+28 more)
 
-### Community 1 - "data.ts"
-Cohesion: 0.13
-Nodes (23): unwrap(), addCheckin(), addCommitment(), addPayout(), addTransaction(), listTransactions(), money(), receivePayout() (+15 more)
+### Community 1 - "contracts.ts"
+Cohesion: 0.05
+Nodes (60): FLOVA data contract (v1 · owner: M1), How to record each money situation, Rules everyone follows, Rules for M3's runway engine (from the master plan), Service functions (`frontend/src/services/`), paiseToRupeeString(), toPaise(), toPaiseOrNull() (+52 more)
 
 ### Community 2 - "VERDICT — pick-f1-irregular-income"
 Cohesion: 0.05
 Nodes (40): An alternative approach (same problem, same user), Contradictions between jurors, If I were your team…, Next experiment (30 min), Ranked improvements, Ratings /10, VERDICT — pick-f1-irregular-income, Votes (+32 more)
 
 ### Community 3 - "api.ts"
-Cohesion: 0.12
-Nodes (26): api, BacktestRow, OutlookWeek, Plan, Profile, Rider, rs(), Status (+18 more)
+Cohesion: 0.11
+Nodes (28): api, BacktestRow, OutlookWeek, Plan, Profile, Rider, rs(), Status (+20 more)
 
 ### Community 4 - "frontend/package.json"
 Cohesion: 0.10
@@ -102,8 +99,8 @@ Cohesion: 0.16
 Nodes (21): balance_checkins_user_time, commitments_updated_at, commitments_user_due, on_auth_user_created, payouts_guard_received, payouts_updated_at, payouts_user_date, profiles_updated_at (+13 more)
 
 ### Community 6 - "FLOVA data contract (v1 · owner: M1)"
-Cohesion: 0.08
-Nodes (22): Branches, Definition of done for any pull request, Every working session, Graphify: required for everyone, One-time setup (each member, each laptop), Who owns what, Working on FLOVA (team rules for the 24-hour build), `balance_checkins` (actual cash + bank at a moment) (+14 more)
+Cohesion: 0.12
+Nodes (13): Branches, Definition of done for any pull request, Every working session, Graphify: required for everyone, One-time setup (each member, each laptop), Who owns what, Working on FLOVA (team rules for the 24-hour build), Evidence (backtest, 50 simulated years per rider type) (+5 more)
 
 ### Community 7 - "backend/package.json"
 Cohesion: 0.12
@@ -114,8 +111,8 @@ Cohesion: 0.12
 Nodes (15): Dropped, First read: fit with our team and the booklet rubric [AI], ⚠ Rubric conflict (resolved 14:15 IST: team uses the booklet rubric), Statement B1: Know what you're signing, Statement B2: Fair tickets, Statement B3: Logs the attacker can't erase, Statement F1: The irregular income problem, Statement F2: Credit for the credit-invisible (+7 more)
 
 ### Community 9 - "auth.ts"
-Cohesion: 0.22
-Nodes (6): publishableKey, supabase, url, getSession(), signIn(), signOut()
+Cohesion: 0.16
+Nodes (8): client(), login(), publishableKey, supabase, url, getSession(), signIn(), signOut()
 
 ### Community 10 - "compilerOptions"
 Cohesion: 0.14
@@ -145,27 +142,19 @@ Nodes (4): All assumptions, ASSUMPTIONS — F1 irregular income (idea not chosen
 Cohesion: 0.16
 Nodes (32): calculateConfirmedBalance(), ConfirmedBalanceBreakdown, ConfirmedBalanceResult, ConfirmedBalanceStatus, addDays(), calculateDailyRunway(), DailyProjectionEntry, RunwayProjectionInput (+24 more)
 
-### Community 35 - "contracts.ts"
-Cohesion: 0.08
-Nodes (23): APP_LANGUAGES, AppLanguage, COMMITMENT_KINDS, COMMITMENT_STATUSES, CommitmentKind, ENTRY_SOURCES, EntrySource, EXPENSE_TYPES (+15 more)
-
-### Community 36 - "money.ts"
-Cohesion: 0.38
-Nodes (5): Rules everyone follows, paiseToRupeeString(), toPaise(), toPaiseOrNull(), RupeeString
-
-### Community 37 - "Service functions (`frontend/src/services/`)"
-Cohesion: 0.53
-Nodes (6): Service functions (`frontend/src/services/`), getLatestCheckin(), getMyProfile(), listCommitments(), listPayouts(), loadRunwayInput()
+### Community 35 - "Tables"
+Cohesion: 0.33
+Nodes (6): `balance_checkins` (actual cash + bank at a moment), `commitments` (bills and debts), `payouts` (money expected, **not cash until received**), `profiles` (one per user, created automatically at sign-up), Tables, `transactions` (money that actually moved)
 
 ## Knowledge Gaps
 - **1 isolated node(s):** `udaan-engine`
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 224 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **19 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 225 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **18 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `FLOVA data contract (v1 · owner: M1)` connect `FLOVA data contract (v1 · owner: M1)` to `money.ts`, `Service functions (`frontend/src/services/`)`?**
+- **Why does `FLOVA data contract (v1 · owner: M1)` connect `contracts.ts` to `Tables`, `FLOVA data contract (v1 · owner: M1)`?**
   _High betweenness centrality (0.028) - this node is a cross-community bridge._
 - **Are the 2 inferred relationships involving `backtest_profile()` (e.g. with `RiderProfile` and `.mean_weekly_income()`) actually correct?**
   _`backtest_profile()` has 2 INFERRED edges - model-reasoned connections that need verification._
@@ -173,9 +162,9 @@ _Questions this graph is uniquely positioned to answer:_
   _1 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `test_engine.py` be split into smaller, more focused modules?**
   _Cohesion score 0.06680080482897384 - nodes in this community are weakly interconnected._
-- **Why does `Service functions (`frontend/src/services/`)` connect `Service functions (`frontend/src/services/`)` to `auth.ts`, `validation.test.ts`, `FLOVA data contract (v1 · owner: M1)`?**
-  _High betweenness centrality (0.028) - this node is a cross-community bridge._
-- **Should `data.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.13333333333333333 - nodes in this community are weakly interconnected._
-- **Why does `RunwayInput` connect `validation.test.ts` to `data.ts`, `contracts.ts`, `Service functions (`frontend/src/services/`)`?**
+- **Why does `Service functions (`frontend/src/services/`)` connect `contracts.ts` to `auth.ts`, `validation.test.ts`?**
+  _High betweenness centrality (0.027) - this node is a cross-community bridge._
+- **Should `contracts.ts` be split into smaller, more focused modules?**
+  _Cohesion score 0.05480769230769231 - nodes in this community are weakly interconnected._
+- **Why does `RunwayInput` connect `validation.test.ts` to `contracts.ts`?**
   _High betweenness centrality (0.025) - this node is a cross-community bridge._

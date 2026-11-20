@@ -1,6 +1,6 @@
 {
   "0": "test_engine.py",
-  "1": "data.ts",
+  "1": "contracts.ts",
   "2": "VERDICT — pick-f1-irregular-income",
   "3": "api.ts",
   "4": "frontend/package.json",
@@ -34,8 +34,5 @@
   "32": "udaan-engine",
   "33": "loader.mjs",
   "34": "validation.test.ts",
-  "35": "contracts.ts",
-  "36": "money.ts",
-  "37": "Service functions (`frontend/src/services/`)",
-  "38": "rls-live-check.mjs"
+  "35": "Tables"
 }

@@ -1,3 +1,5 @@
+@import "./hero.css";
+
 :root {
   --bg: #f6f7f4;
   --card: #ffffff;
@@ -118,3 +120,49 @@ td.bad { color: var(--bad); font-weight: 600; }
 .bubble.flova { align-self: flex-start; background: var(--accent-soft); }
 .phone .row input { flex: 1; width: auto; }
 code { background: var(--accent-soft); padding: 1px 5px; border-radius: 4px; }
+
+/* Bridge between Landing Hero and Workspace */
+.flova-root {
+  min-height: 100vh;
+  background-color: var(--hero-bg, #F8F7F4);
+}
+
+.app-stage-wrapper {
+  background: var(--bg);
+  border-top: 1px solid var(--line);
+  padding: 48px 16px 80px;
+  position: relative;
+  z-index: 10;
+}
+
+.app-sub-header {
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 20px;
+  margin-bottom: 28px;
+}
+
+.app-stage-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  background: var(--accent-soft);
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+.app-stage-title {
+  font-size: 26px;
+  margin: 0 0 4px;
+  color: var(--text);
+  font-family: var(--hero-font-serif, serif);
+}
+
+.app-tabs-nav {
+  display: flex;
+  gap: 8px;
+}
+
