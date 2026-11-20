@@ -23,6 +23,7 @@ export function PayoutsPage() {
   // Receiving inline modal / state
   const [receivingPayoutId, setReceivingPayoutId] = useState<string | null>(null);
   const [receiveAmountText, setReceiveAmountText] = useState("");
+  const [receiveIdempotencyId, setReceiveIdempotencyId] = useState<string | null>(null);
 
   async function handleAddPayout(e: React.FormEvent) {
     e.preventDefault();
@@ -59,6 +60,7 @@ export function PayoutsPage() {
     setError(null);
     setSavedMessage(null);
     setReceivingPayoutId(p.id);
+    setReceiveIdempotencyId(typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : null);
     const expPaise = toPaise(p.expected_amount);
     const recPaise = toPaise(p.received_amount);
     const remaining = Math.max(0, expPaise - recPaise);
@@ -84,9 +86,10 @@ export function PayoutsPage() {
 
     setSaving(true);
     try {
-      await receive(p.id, parsed.paise, todayLocalISO());
+      await receive(p.id, parsed.paise, todayLocalISO(), receiveIdempotencyId || undefined);
       setSavedMessage(`Received ${formatINR(parsed.paise)} recorded!`);
       setReceivingPayoutId(null);
+      setReceiveIdempotencyId(null);
       setReceiveAmountText("");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to record payout receipt");

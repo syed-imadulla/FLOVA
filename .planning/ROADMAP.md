@@ -11,8 +11,8 @@ Work is executed exclusively on branch `feature/backend` and shipped as pull req
 - [x] **Phase 1: Auth flow** - AuthProvider + useSession, protected routes, minimal login/sign-up/logout screens. (Completed 2026-11-20)
 - [x] **Phase 2: Profile & onboarding data** - useProfile hook, save onboarding fields, route by onboarding_completed. (Completed 2026-11-20)
 - [x] **Phase 3: Data capture hooks** - Check-ins, transactions, payouts (receivePayout), commitments, history edit/delete, error states. (Completed 2026-11-20)
-- [ ] **Phase 4: Runway feed** - Wire loadRunwayInput() to M3's engine interface, same-day check-in rule, Ravi fixture test (expect −₹1,170 on Saturday).
-- [ ] **Phase 5: Secure AI function (stretch)** - Vercel server-side Gemini function; JSON validation, limits, user confirmation before saving.
+- [x] **Phase 4: Runway feed** - Wire loadRunwayInput() to M3's engine interface, same-day check-in rule, Ravi fixture test (expect −₹1,170 on Saturday). (Completed 2026-11-20)
+- [x] **Phase 5: Payout Synchronization Hardening** - Row-level locking on payouts, status state machine, canonical deadlock-free reassignment, client submission idempotency. (Completed 2026-11-21)
 - [ ] **Phase 6: Demo data** - Local seed/reset script for a fictional demo account using the service-role key (never shipped).
 - [ ] **Phase 7: Deployment** - Vercel project, env vars, Supabase auth redirect URLs, production smoke test.
 - [ ] **Phase 8: Verify & freeze** - Quality gates from the master plan, merge dev into main, tag release.
@@ -73,20 +73,23 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 04-01: Connect `loadRunwayInput` to M3 engine contract, apply check-in cutoff logic, and write the Ravi fixture verification test.
+- [x] 04-01: Connect `loadRunwayInput` to M3 engine contract, apply check-in cutoff logic, and write the Ravi fixture verification test. (Completed 2026-11-20)
 
-### Phase 5: Secure AI function (stretch)
-**Goal**: Create a secure Vercel serverless function proxying Google Gemini API for natural language financial text/receipt parsing with strict schema validation and user confirmation before saving.
+### Phase 5: Payout Synchronization Hardening
+**Goal**: Harden PostgreSQL trigger synchronization for `payouts.received_amount` and status lifecycle, eliminate concurrency lost updates via row-level locking, prevent re-assignment deadlocks via canonical lock ordering, and implement frontend submission idempotency.
 **Depends on**: Phase 4
-**Requirements**: AIFN-01, AIFN-02, AIFN-03
+**Requirements**: PAYOUT-01, PAYOUT-02, PAYOUT-03
 **Success Criteria** (what must be TRUE):
-  1. Serverless endpoint (`/api/gemini`) accepts user input and parses entries using server-side `GEMINI_API_KEY`.
-  2. Output conforms to strict JSON schema for transactions and check-ins; invalid outputs and oversized inputs are rejected.
-  3. Parsed items are presented to the worker for explicit confirmation and cannot write to the database automatically.
+  1. `sync_payout_received()` serializes concurrent payout updates using `FOR NO KEY UPDATE` without conflicting with foreign-key share locks.
+  2. `received_amount` is always accurately derived from `SUM(amount)` across all linked income transactions.
+  3. Payout status transitions adhere to the lifecycle: partial (0 < rec < exp), settled (rec >= exp), scheduled (rec = 0), and preserves cancelled/estimated/unearned.
+  4. Moving transactions between payouts uses canonical ascending UUID ordering to eliminate cross-update deadlocks.
+  5. Transaction insertion in frontend uses client-generated UUIDs that persist across retries to prevent duplicate financial entries.
 **Plans**: 1 plan
 
 Plans:
-- [ ] 05-01: Implement Vercel serverless Gemini function with schema validation, rate limits, and client confirmation dialog.
+- [x] 05-01: Implement hardened migration, client idempotency in data services and UI, and comprehensive concurrency test suite. (Completed 2026-11-20)
+- [x] 05-02: Implement idempotent retry UX recovery in addTransaction with full test coverage. (Completed 2026-11-21)
 
 ### Phase 6: Demo data
 **Goal**: Implement a local seed script for a fictional demo worker account using the Supabase service-role key to support judge demonstrations and offline-like local walkthroughs without compromising production keys.

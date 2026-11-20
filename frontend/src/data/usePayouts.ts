@@ -53,9 +53,9 @@ export function usePayouts() {
   );
 
   const receive = useCallback(
-    async (id: string, amountPaise: number, date?: string): Promise<Transaction> => {
+    async (id: string, amountPaise: number, date?: string, idempotencyId?: string): Promise<Transaction> => {
       try {
-        const tx = await receivePayout(id, amountPaise, date);
+        const tx = await receivePayout(id, amountPaise, date, idempotencyId);
         bump();
         return tx;
       } catch (err) {
