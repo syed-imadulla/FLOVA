@@ -9,7 +9,7 @@ Work is executed exclusively on branch `feature/backend` and shipped as pull req
 ## Phases
 
 - [x] **Phase 1: Auth flow** - AuthProvider + useSession, protected routes, minimal login/sign-up/logout screens. (Completed 2026-11-20)
-- [ ] **Phase 2: Profile & onboarding data** - useProfile hook, save onboarding fields, route by onboarding_completed.
+- [x] **Phase 2: Profile & onboarding data** - useProfile hook, save onboarding fields, route by onboarding_completed. (Completed 2026-11-20)
 - [ ] **Phase 3: Data capture hooks** - Check-ins, transactions, payouts (receivePayout), commitments, history edit/delete, error states.
 - [ ] **Phase 4: Runway feed** - Wire loadRunwayInput() to M3's engine interface, same-day check-in rule, Ravi fixture test (expect −₹1,170 on Saturday).
 - [ ] **Phase 5: Secure AI function (stretch)** - Vercel server-side Gemini function; JSON validation, limits, user confirmation before saving.
@@ -44,7 +44,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 02-01: Implement `useProfile` hook, onboarding form data persistence, and onboarding routing guard.
+- [x] 02-01: Implement `useProfile` hook, onboarding form data persistence, and onboarding routing guard. (Completed 2026-11-20)
 
 ### Phase 3: Data capture hooks
 **Goal**: Build React mutation and query hooks for balance check-ins, income and expense transactions, payout receipts (`receivePayout`), commitments, and history management with truthful error handling.
