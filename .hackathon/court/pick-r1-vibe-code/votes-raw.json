@@ -1,0 +1,170 @@
+[
+ {
+  "juror": "The actual end user",
+  "vote": "INSUFFICIENT EVIDENCE",
+  "confidence": 6,
+  "evidence_strength": "medium",
+  "reason": "The flaws are verified as real, but I don't notice them day to day. Lovable already checks at publish. Nothing shows I'd run an extra tool when I'm busy.",
+  "weakest_assumption": "That a beginner shipping fast will run a separate checker they never felt they needed.",
+  "missing_info": "Interviews or trial runs with student Cursor/Copilot developers on whether they'd run it, and when.",
+  "fix": {
+   "change": "Target Cursor/Copilot users outside Lovable. Run it automatically as a pre-push hook or GitHub Action with no setup, showing plain-language fixes.",
+   "impact": "high",
+   "effort": "medium"
+  }
+ },
+ {
+  "juror": "The least-digital user",
+  "vote": "INSUFFICIENT EVIDENCE",
+  "confidence": 6,
+  "evidence_strength": "weak",
+  "reason": "The risk to beginners is real [V], but nobody says how a first-year student who has never heard of RLS finds this tool, runs it, or understands what it reports. Lovable already checks at publish.",
+  "weakest_assumption": "That a beginner who doesn't know the risk will install and run an extra scanner on their own.",
+  "missing_info": "Where it runs (IDE, CI, publish step), and whether findings are explained in plain or regional language.",
+  "fix": {
+   "change": "Run it automatically as a GitHub Action or pre-push hook. Explain each finding in plain Hindi or English, and re-test access after any one-click fix.",
+   "impact": "high",
+   "effort": "medium"
+  }
+ },
+ {
+  "juror": "The front-line worker",
+  "vote": "INSUFFICIENT EVIDENCE",
+  "confidence": 6,
+  "evidence_strength": "medium",
+  "reason": "The harm is verified, but nothing shows where the check runs, how many steps it adds, or what happens when it blocks a deploy or a fix is wrong.",
+  "weakest_assumption": "One-click fix removes work and doesn't create false confidence, rework or blocked deploys mid-push.",
+  "missing_info": "Where it runs (IDE, pre-commit, CI), false-alarm rate, and what happens when it fails or blocks.",
+  "fix": {
+   "change": "Ship it as one pre-commit/CI step that only warns, never blocks, showing plain-language findings; target Cursor/Copilot users that Lovable's publish scan misses.",
+   "impact": "high",
+   "effort": "low"
+  }
+ },
+ {
+  "juror": "The domain professional",
+  "vote": "NOT GUILTY",
+  "confidence": 5,
+  "evidence_strength": "medium",
+  "reason": "Verified sources show the flaws are real and severe (CVE, Lovable RLS scan, GitGuardian). Lovable's own checks don't cover Cursor/Copilot users. But a structural RLS check gives false confidence.",
+  "weakest_assumption": "That checking whether RLS is on, plus auto-fixing it, makes the data safe.",
+  "missing_info": "Baseline results showing Semgrep and Gitleaks actually miss these patterns on apps not built by Lovable.",
+  "fix": {
+   "change": "Replace the static RLS check with an active probe that tries anon-key reads and writes against your own Supabase. Fixes become reviewed diffs, not one-click.",
+   "impact": "high",
+   "effort": "medium"
+  }
+ },
+ {
+  "juror": "The person using today's workaround",
+  "vote": "GUILTY",
+  "confidence": 6,
+  "evidence_strength": "medium",
+  "reason": "Lovable already scans RLS, blocks keys, and flags unprotected routes at publish [V]; free Gitleaks/GitHub scanning cover secrets. A third alert list is different, not clearly better.",
+  "weakest_assumption": "Existing free scanners and Lovable's built-in checks miss these AI-specific patterns often enough to matter.",
+  "missing_info": "Measured miss rate of Lovable checks, Semgrep and Gitleaks on Cursor/Copilot apps; whether students would run anything extra.",
+  "fix": {
+   "change": "Target the gap: test whether RLS policies actually block access (catch using(true)) on non-Lovable Cursor/Copilot apps, shipped as a drop-in GitHub Action.",
+   "impact": "high",
+   "effort": "medium"
+  }
+ },
+ {
+  "juror": "The root-cause analyst",
+  "vote": "GUILTY",
+  "confidence": 6,
+  "evidence_strength": "medium",
+  "reason": "The root causes are insecure AI defaults and no review step. An optional extra scanner only detects symptoms. Lovable already scans at publish [V], and structural RLS checks can be passed while data still leaks.",
+  "weakest_assumption": "Beginners who skip review will choose to run an extra scanner and understand what it tells them.",
+  "missing_info": "Whether Semgrep/Gitleaks or Lovable's scan miss these patterns on real Cursor/Copilot apps.",
+  "fix": {
+   "change": "Run it inside the AI coding loop or CI by default, and test that policies actually block unauthenticated reads. Feed findings back to the agent to regenerate secure code.",
+   "impact": "high",
+   "effort": "medium"
+  }
+ },
+ {
+  "juror": "The safety and ethics reviewer",
+  "vote": "NOT GUILTY",
+  "confidence": 6,
+  "evidence_strength": "medium",
+  "reason": "Verified harm is real: CVE-2025-48757, ~10% of Lovable apps leaking personal and payment data. A rule-based checker reduces that harm, as long as auto-fixes don't create false confidence.",
+  "weakest_assumption": "A one-click fix makes access rules secure instead of just turning the warning off, like a using(true) policy does.",
+  "missing_info": "Whether fixes are shown as a diff and approved by the developer. Also whether the checker tests that a policy actually blocks access.",
+  "fix": {
+   "change": "Show every fix as a diff the developer must approve. After applying it, run an anonymous read/write test that proves the RLS policy actually blocks access.",
+   "impact": "high",
+   "effort": "medium"
+  }
+ },
+ {
+  "juror": "The engineer",
+  "vote": "NOT GUILTY",
+  "confidence": 6,
+  "evidence_strength": "medium",
+  "reason": "The problem is backed by [V] sources. Three narrow rule-based checks, a fixed Semgrep+Gitleaks baseline and seeded apps can give one honest journey in 21h with four roles.",
+  "weakest_assumption": "A one-click fix for RLS and auth can be generated correctly and shown live without breaking the app.",
+  "missing_info": "Which stacks the scanner parses (Supabase migrations? Next.js routes?) and whether the seeded apps already exist.",
+  "fix": {
+   "change": "Check RLS by firing real anon-key queries at the team's own Supabase app instead of only checking config. Show the fix as a diff and re-test after it.",
+   "impact": "high",
+   "effort": "medium"
+  }
+ },
+ {
+  "juror": "The statement-owner judge",
+  "vote": "NOT GUILTY",
+  "confidence": 6,
+  "evidence_strength": "medium",
+  "reason": "Fits the statement and track rules (hypothesis, baseline, failure analysis, not only prompting). Innovation is weak because Lovable already checks the same three patterns, and seeded evaluation weakens Evidence.",
+  "weakest_assumption": "Static checks of these three patterns beat Lovable's built-in publish-time scanner and free Semgrep/Gitleaks.",
+  "missing_info": "Whether Semgrep/Gitleaks or Lovable's scanner miss these patterns on non-Lovable Cursor/Copilot apps.",
+  "fix": {
+   "change": "Test policies live: send anon-key read/write probes against each table to catch using(true) leaks that config-only checks miss. Report results against the baseline.",
+   "impact": "high",
+   "effort": "medium"
+  }
+ },
+ {
+  "juror": "The systems person",
+  "vote": "NOT GUILTY",
+  "confidence": 6,
+  "evidence_strength": "medium",
+  "reason": "Verified incidents show real harm. A rule-based checker can run next to Semgrep, Gitleaks and pre-commit with no new hardware, though Lovable already covers the same checks at publish.",
+  "weakest_assumption": "That developers who ignore today's free scanners will add one more step to their pipeline.",
+  "missing_info": "Whether Semgrep/Gitleaks rules already catch RLS-off and frontend keys in Cursor/Copilot Supabase projects.",
+  "fix": {
+   "change": "Ship as a pre-commit hook and GitHub Action that outputs SARIF into existing code scanning. Target non-Lovable Cursor/Copilot Supabase repos and test RLS policies live.",
+   "impact": "high",
+   "effort": "medium"
+  }
+ },
+ {
+  "juror": "The sceptic",
+  "vote": "INSUFFICIENT EVIDENCE",
+  "confidence": 6,
+  "evidence_strength": "medium",
+  "reason": "Verified sources show the problem is real and severe. Lovable already scans for RLS, keys and auth [V], and no evidence yet shows this checker catches anything free tools miss.",
+  "weakest_assumption": "Existing free scanners and Lovable's own publish-time checks miss these AI-specific patterns.",
+  "missing_info": "Baseline run of Semgrep, Gitleaks and Lovable's scanner on real AI-built apps, plus any student adoption signal.",
+  "fix": {
+   "change": "Target Cursor/Copilot plus Supabase apps that Lovable doesn't cover. Test whether RLS policies actually block access (e.g. catch using(true)), not just whether RLS is switched on.",
+   "impact": "high",
+   "effort": "medium"
+  }
+ },
+ {
+  "juror": "The 'already exists' researcher",
+  "vote": "GUILTY",
+  "confidence": 6,
+  "evidence_strength": "medium",
+  "reason": "A verified source shows Lovable already scans RLS, blocks hard-coded keys and flags unprotected endpoints before every publish. The team hasn't shown what it catches that this, Supabase Advisor, Semgrep or Gitleaks miss.",
+  "weakest_assumption": "That Semgrep, Gitleaks and Lovable or Supabase checks miss the three headline AI-specific patterns.",
+  "missing_info": "No one has run the existing tools on real AI-built apps to see what they actually miss.",
+  "fix": {
+   "change": "Target Cursor/Copilot users outside Lovable and check whether RLS policies really block access (e.g. catch using(true)), proven by a test where Supabase Advisor passes but data leaks.",
+   "impact": "high",
+   "effort": "medium"
+  }
+ }
+]

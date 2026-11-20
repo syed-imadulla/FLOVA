@@ -1,0 +1,170 @@
+[
+ {
+  "juror": "The domain professional",
+  "vote": "NOT GUILTY",
+  "confidence": 6,
+  "evidence_strength": "medium",
+  "reason": "The Kannada token tax is real and verified, still 2.72x even under o200k. Measuring tokenizer fertility and the quality trade-off on CPU is legitimate, useful work for Kannada developers.",
+  "weakest_assumption": "That vocab extension with short CPU continued training produces quality-loss numbers a practitioner would trust.",
+  "missing_info": "Which small open model, which Kannada eval set, and whether CPU perplexity evaluation fits in 21h.",
+  "fix": {
+   "change": "Measure against o200k and an Indic tokenizer, not just cl100k. Initialise new embeddings from mean subword embeddings (no training). Report perplexity on a held-out Kannada set.",
+   "impact": "high",
+   "effort": "medium"
+  }
+ },
+ {
+  "juror": "The person using today's workaround",
+  "vote": "GUILTY",
+  "confidence": 6,
+  "evidence_strength": "medium",
+  "reason": "My workaround is picking a newer tokenizer (o200k cuts Kannada to 2.72x) or an Indic model. A CPU-trained toy extension isn't clearly better, and I can't adopt it with hosted APIs.",
+  "weakest_assumption": "That developers would swap tokenizers on a small open model instead of choosing an existing Indic or o200k model.",
+  "missing_info": "Head-to-head numbers against o200k_base and existing Indic tokenizers, not cl100k, on real Kannada app text.",
+  "fix": {
+   "change": "Use o200k_base and an Indic tokenizer as baselines. Ship a CPU tool that picks the cheapest tokenizer or model for a developer's own Kannada data.",
+   "impact": "medium",
+   "effort": "low"
+  }
+ },
+ {
+  "juror": "The actual end user",
+  "vote": "GUILTY",
+  "confidence": 6,
+  "evidence_strength": "weak",
+  "reason": "The token gap is real [V], but I never see per-token bills. Current tokenizers cut Kannada to 2.72x. A CPU benchmark on a toy model changes nothing in my chatbot.",
+  "weakest_assumption": "That Kannada chatbot users notice token cost or slowness on a normal day.",
+  "missing_info": "Any evidence that Kannada users notice higher cost, slower replies or truncated chats in today's apps.",
+  "fix": {
+   "change": "Show a side-by-side Kannada chat demo against o200k_base: the same long conversation remembered longer, or a reply arriving faster, after the fix.",
+   "impact": "high",
+   "effort": "medium"
+  }
+ },
+ {
+  "juror": "The root-cause analyst",
+  "vote": "NOT GUILTY",
+  "confidence": 5,
+  "evidence_strength": "medium",
+  "reason": "Root cause is an English-heavy vocabulary; the gap remains at 2.72x even with o200k [V]. Vocab extension goes at that cause, but the transliteration pre-pass only treats the symptom.",
+  "weakest_assumption": "Without a GPU, the new token embeddings get too little training to show the cause was really fixed.",
+  "missing_info": "Which path the team picks, and whether CPU continued training gives a real quality measurement.",
+  "fix": {
+   "change": "Drop the transliteration pre-pass. Train a Kannada SentencePiece vocabulary and benchmark it against o200k_base, not cl100k. Report quality loss honestly as limited by CPU training.",
+   "impact": "high",
+   "effort": "medium"
+  }
+ },
+ {
+  "juror": "The front-line worker",
+  "vote": "INSUFFICIENT EVIDENCE",
+  "confidence": 6,
+  "evidence_strength": "medium",
+  "reason": "The tax is real [V]. But a developer on a hosted API can't swap tokenizers, the pre-pass's quality loss is unknown, and nothing shows what breaks mid-production.",
+  "weakest_assumption": "That a developer can drop in a new tokenizer or pre-pass without retraining or quality loss.",
+  "missing_info": "Measured quality loss on real Kannada prompts, and how a developer would deploy it on their current stack.",
+  "fix": {
+   "change": "Ship a no-retrain drop-in pre-pass library tested against o200k_base, with a quality check and automatic fallback to raw text when meaning degrades.",
+   "impact": "high",
+   "effort": "medium"
+  }
+ },
+ {
+  "juror": "The least-digital user",
+  "vote": "INSUFFICIENT EVIDENCE",
+  "confidence": 6,
+  "evidence_strength": "weak",
+  "reason": "A tokenizer fix needs nothing from me: no new app, no typing, no English. But nothing shows I'd feel faster replies on slow data, and transliteration could quietly garble my Kannada.",
+  "weakest_assumption": "Fewer input tokens means a Kannada-only user on slow mobile data actually waits less.",
+  "missing_info": "Measured end-to-end response time on 2G/3G, and whether Kannada answer quality holds after the fix.",
+  "fix": {
+   "change": "Measure output-side token savings and end-to-end latency on a throttled mobile connection, and have native Kannada speakers check answer quality.",
+   "impact": "high",
+   "effort": "medium"
+  }
+ },
+ {
+  "juror": "The statement-owner judge",
+  "vote": "NOT GUILTY",
+  "confidence": 6,
+  "evidence_strength": "medium",
+  "reason": "It directly answers the challenge: a tokenizer-level fix, measured against a baseline, with costs and failure analysis. Innovation is weak, though, because vocabulary extension is already-published work.",
+  "weakest_assumption": "That CPU-only continued training can give quality-loss numbers that mean something within 21 hours.",
+  "missing_info": "Whether the baseline will be o200k_base rather than the outdated cl100k, and a CPU training-time estimate.",
+  "fix": {
+   "change": "Benchmark against o200k_base and XLM-R. Lead with a reproducible Kannada tokens, rupees and context-gained table, plus a failure map on code-mixed text.",
+   "impact": "high",
+   "effort": "low"
+  }
+ },
+ {
+  "juror": "The 'already exists' researcher",
+  "vote": "GUILTY",
+  "confidence": 6,
+  "evidence_strength": "medium",
+  "reason": "o200k_base (2.72x) and XLM-R (1.86x) already shrink the Kannada gap [V]. Vocab extension is published work. A CPU replication against cl100k gives developers little new.",
+  "weakest_assumption": "That a cl100k baseline still shows the real cost gap Kannada users face today.",
+  "missing_info": "Opened sources on Sarvam/PARAM-1 tokenizers and their measured Kannada fertility and quality trade-offs.",
+  "fix": {
+   "change": "Benchmark against o200k_base, XLM-R and Indic tokenizers (Sarvam/PARAM-1) on Kannada, then publish a reproducible cost-and-quality trade-off table for developers.",
+   "impact": "high",
+   "effort": "medium"
+  }
+ },
+ {
+  "juror": "The safety and ethics reviewer",
+  "vote": "NOT GUILTY",
+  "confidence": 6,
+  "evidence_strength": "medium",
+  "reason": "The Kannada token tax is real [V] and the planned output is a measurement table, not live advice. The track already requires quality-loss and failure analysis, which limits harm.",
+  "weakest_assumption": "That a transliteration pre-pass won't quietly change Kannada meaning in ways the quality metrics miss.",
+  "missing_info": "Which Kannada quality check is used and whether native speakers will review sample outputs.",
+  "fix": {
+   "change": "Report savings against o200k_base, not only cl100k. Add a native-speaker check of meaning on 30-50 outputs. Flag any meaning-changing errors as failures.",
+   "impact": "high",
+   "effort": "low"
+  }
+ },
+ {
+  "juror": "The engineer",
+  "vote": "NOT GUILTY",
+  "confidence": 6,
+  "evidence_strength": "medium",
+  "reason": "The core journey can be built on CPU in 21h: train a SentencePiece Kannada vocab, count tokens against cl100k/o200k, report rupees and context gained, and list failure cases. Quality loss is the risky part.",
+  "weakest_assumption": "Continued training on CPU will give quality-loss numbers that mean anything.",
+  "missing_info": "CPU timing for SentencePiece training plus a tiny-model eval on a Kannada corpus",
+  "fix": {
+   "change": "Make the no-retrain tokenizer benchmark (vs o200k too) the guaranteed demo. Add a time-boxed tiny-model perplexity check as the quality proxy, and pre-compute results offline.",
+   "impact": "high",
+   "effort": "low"
+  }
+ },
+ {
+  "juror": "The sceptic",
+  "vote": "INSUFFICIENT EVIDENCE",
+  "confidence": 6,
+  "evidence_strength": "medium",
+  "reason": "The tax is real and backed by a verified source, but o200k already shrinks Kannada to 2.72x. Latency harm, rupee savings and CPU-trainable quality results are all unsourced or unknown.",
+  "weakest_assumption": "That a short CPU-only continued-training run gives quality-loss numbers a developer can trust.",
+  "missing_info": "Results against the o200k/XLM-R baseline; a CPU training-time pilot; any measured latency or data-cost effect.",
+  "fix": {
+   "change": "Use o200k_base and an Indic tokenizer as baselines instead of cl100k. Run a one-hour CPU pilot first to prove quality loss can be measured.",
+   "impact": "high",
+   "effort": "low"
+  }
+ },
+ {
+  "juror": "The systems person",
+  "vote": "GUILTY",
+  "confidence": 6,
+  "evidence_strength": "medium",
+  "reason": "Vocab extension means self-hosting a retrained model, which is a big process change. Developers on hosted APIs can't swap tokenizers. Only the risky pre-pass works as a drop-in.",
+  "weakest_assumption": "Kannada app developers can swap tokenizers or self-host a retrained small open model.",
+  "missing_info": "What stack Kannada developers actually deploy on: hosted APIs (o200k-era) or self-hosted open models.",
+  "fix": {
+   "change": "Ship the no-retrain pre-pass as a drop-in proxy in front of hosted APIs, measured against o200k_base with a Kannada quality check.",
+   "impact": "high",
+   "effort": "medium"
+  }
+ }
+]

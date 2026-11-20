@@ -1,0 +1,170 @@
+[
+ {
+  "juror": "The root-cause analyst",
+  "vote": "GUILTY",
+  "confidence": 6,
+  "evidence_strength": "medium",
+  "reason": "[V] evidence (40% earn under ₹15k, about ₹75/h net) suggests income is too low, not just uneven. A buffer you don't have to follow, and that thin surpluses can't fill, only shows the shortfall.",
+  "weakest_assumption": "That good weeks leave enough spare money to fill a buffer, and that riders won't spend it under pressure.",
+  "missing_info": "Real rider week-by-week income: how often lean months hit and how big the dips are.",
+  "fix": {
+   "change": "Test the rule on real or published income-volatility data and report the share of workers whose good weeks can actually fill a buffer.",
+   "impact": "high",
+   "effort": "medium"
+  }
+ },
+ {
+  "juror": "The actual end user",
+  "vote": "INSUFFICIENT EVIDENCE",
+  "confidence": 6,
+  "evidence_strength": "medium",
+  "reason": "Lean weeks pushing me into loans is real [V]. But a buffer that's only a number on screen, with the cash still in my pocket, may not stop me spending it. Nothing shows riders would follow it.",
+  "weakest_assumption": "Riders have leftover money in good weeks and will leave the buffer cash untouched under pressure.",
+  "missing_info": "Real rider weekly income swings, and whether any rider sticks to a self-salary rule.",
+  "fix": {
+   "change": "Move good-week surplus automatically into the worker's own bank account, such as a recurring deposit set up by UPI autopay. The tool never holds the money. Also read earnings from a screenshot of the platform payout screen.",
+   "impact": "high",
+   "effort": "medium"
+  }
+ },
+ {
+  "juror": "Compliance officer",
+  "vote": "NOT GUILTY",
+  "confidence": 6,
+  "evidence_strength": "medium",
+  "reason": "The tool only gives advice and never holds money, so it avoids regulated payments and KYC. There is little room for fraud. The [V] evidence shows a real problem of borrowing in lean times.",
+  "weakest_assumption": "That storing workers' income logs and Kannada voice notes needs no consent or data-protection controls.",
+  "missing_info": "No consent flow, data retention policy, audit records or DPDP Act 2023 handling for personal income data.",
+  "fix": {
+   "change": "Add explicit consent capture, a time-stamped audit log of the rule's outputs, and a short data-retention and deletion policy in line with the DPDP Act.",
+   "impact": "medium",
+   "effort": "low"
+  }
+ },
+ {
+  "juror": "Fraud analyst",
+  "vote": "NOT GUILTY",
+  "confidence": 5,
+  "evidence_strength": "medium",
+  "reason": "Shocks pushing workers into borrowing are verified, and the tool holding no money limits fraud loss. But a Kannada WhatsApp bot for low-literacy users is easy for scammers to impersonate.",
+  "weakest_assumption": "Low-literacy users can tell the real WhatsApp bot apart from scammers copying it to steal UPI PINs.",
+  "missing_info": "Who stores voice notes and income logs, and whether union or NGO staff can see them.",
+  "fix": {
+   "change": "Use one verified WhatsApp number that never asks for money, OTP, PIN or links. End every message with a spoken Kannada warning about this.",
+   "impact": "high",
+   "effort": "low"
+  }
+ },
+ {
+  "juror": "The least-digital user",
+  "vote": "GUILTY",
+  "confidence": 6,
+  "evidence_strength": "medium",
+  "reason": "A Kannada-only vendor with a keypad phone can't use WhatsApp. Kannada voice input is a plan, not built. Help from a union or NGO is only 'could'. She is left out.",
+  "weakest_assumption": "That a basic or shared phone can send WhatsApp voice notes and receive warnings she can follow.",
+  "missing_info": "A non-smartphone channel (IVR, missed call, SMS); who logs cash income for her; a Kannada voice test",
+  "fix": {
+   "change": "Add a Kannada IVR or missed-call line with spoken weekly self-salary amounts and warnings, plus a mode where an NGO helper enters income for her.",
+   "impact": "high",
+   "effort": "medium"
+  }
+ },
+ {
+  "juror": "The front-line worker",
+  "vote": "GUILTY",
+  "confidence": 5,
+  "evidence_strength": "medium",
+  "reason": "The cash-flow pain is real [V], but the worker runs this alone. They log by hand every day, and the buffer is just a number they can ignore. Nothing covers missed logs.",
+  "weakest_assumption": "Tired riders and vendors will log income by voice every day without fail.",
+  "missing_info": "How many taps or voice notes per week, and what happens when logs are missed or misheard",
+  "fix": {
+   "change": "Make it one weekly voice note. Riders read out their platform payout total. If no note arrives, carry last week's figure forward and flag it.",
+   "impact": "high",
+   "effort": "low"
+  }
+ },
+ {
+  "juror": "The safety and ethics reviewer",
+  "vote": "NOT GUILTY",
+  "confidence": 6,
+  "evidence_strength": "medium",
+  "reason": "Verified distress borrowing makes the problem real. The core is a rule a person can check, holds no money, so worst-case harm is low. Risks are false warnings and income-data privacy.",
+  "weakest_assumption": "Lean-month warnings fitted to synthetic data won't push riders into needless cuts to food or fuel.",
+  "missing_info": "Where income logs and voice notes are stored, who can see them, and the consent flow.",
+  "fix": {
+   "change": "Show each warning as a range with its plain reasoning. Keep income data on the device or behind clear consent, and never share it with lenders or platforms.",
+   "impact": "medium",
+   "effort": "low"
+  }
+ },
+ {
+  "juror": "The 'already exists' researcher",
+  "vote": "INSUFFICIENT EVIDENCE",
+  "confidence": 6,
+  "evidence_strength": "weak",
+  "reason": "Problem is real [V], but the only prior-art evidence is unopened snippets [AI]. Nobody checked whether existing income-smoothing apps already serve Kannada-speaking riders, so what is actually new can't be judged.",
+  "weakest_assumption": "That existing budgeting or gig-finance apps lack self-salary smoothing and Kannada voice input.",
+  "missing_info": "A named check of existing income-smoothing apps and Indian gig-worker finance tools, and what they lack.",
+  "fix": {
+   "change": "Spend one hour opening 3-5 existing income-smoothing or gig-finance tools. Show in a side-by-side table that Kannada voice input for cash earners is the real gap.",
+   "impact": "high",
+   "effort": "low"
+  }
+ },
+ {
+  "juror": "The statement-owner judge",
+  "vote": "NOT GUILTY",
+  "confidence": 7,
+  "evidence_strength": "medium",
+  "reason": "It answers F1 directly: a timing fix for uneven income, a labelled synthetic backtest for Evidence, and Kannada voice for the least-digital user. The tool never holds money, as the rule requires.",
+  "weakest_assumption": "Synthetic income patterns are realistic enough that the backtest result means something for real riders.",
+  "missing_info": "Real or published rider weekly income variance to calibrate the synthetic data",
+  "fix": {
+   "change": "Base synthetic income on published figures (IDInsight ₹75/h, seasonal and monsoon dips). Backtest difficult cases such as back-to-back lean weeks and an emergency withdrawal.",
+   "impact": "high",
+   "effort": "low"
+  }
+ },
+ {
+  "juror": "Financial literacy trainer",
+  "vote": "NOT GUILTY",
+  "confidence": 5,
+  "evidence_strength": "medium",
+  "reason": "Workers do borrow when income dips [V]. 'Pay yourself a fixed ₹X weekly' is a plain, teachable rule, and Kannada voice lowers the barrier. Nobody has tested whether users understand it.",
+  "weakest_assumption": "Untrained users will grasp a buffer that's only a number on screen and stick to it.",
+  "missing_info": "Any test of whether Kannada-speaking vendors or riders understand the warnings without a trainer.",
+  "fix": {
+   "change": "Send the weekly message as a short, plain Kannada voice note: 'Keep ₹X aside, spend ₹Y'. Test it with 3-5 real vendors or riders through an SHG or union.",
+   "impact": "high",
+   "effort": "low"
+  }
+ },
+ {
+  "juror": "The engineer",
+  "vote": "NOT GUILTY",
+  "confidence": 6,
+  "evidence_strength": "medium",
+  "reason": "The core is a deterministic self-salary and buffer rule plus a backtest on labelled synthetic data. Four people can build and demo that in 21h. The problem is backed by [V] sources.",
+  "weakest_assumption": "That Kannada voice and WhatsApp input will work reliably live, within 21h, with no real data.",
+  "missing_info": "Which speech-to-text and WhatsApp APIs they will use, and whether access is already set up.",
+  "fix": {
+   "change": "Build the rule engine and backtest first. Keep a typed Kannada text fallback and pre-recorded voice clips, and treat live WhatsApp as a stretch goal.",
+   "impact": "high",
+   "effort": "low"
+  }
+ },
+ {
+  "juror": "The sceptic",
+  "vote": "INSUFFICIENT EVIDENCE",
+  "confidence": 6,
+  "evidence_strength": "weak",
+  "reason": "Distress borrowing is verified [V], but the premise that timing, not low income, is the cause has no source. Lean-month frequency and adherence are unknown; synthetic backtest is circular.",
+  "weakest_assumption": "Riders' yearly income covers needs, so smoothing alone prevents shortfalls and debt.",
+  "missing_info": "Real week-to-week rider income variance and size of dips; any evidence riders keep self-managed buffers.",
+  "fix": {
+   "change": "Base synthetic income on published rider earnings figures (IDInsight ₹75/h, seasonal dips), and show the rule fails when a good week leaves no surplus.",
+   "impact": "high",
+   "effort": "medium"
+  }
+ }
+]
