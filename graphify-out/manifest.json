@@ -102,9 +102,9 @@
     "semantic_hash": ""
   },
   "frontend/src/App.tsx": {
-    "mtime": 1795192062.7226052,
-    "seen": 1795192377.194432,
-    "ast_hash": "a4f81d2f7bc895759a6f7f5526bea03c",
+    "mtime": 1795196798.8164773,
+    "seen": 1795196834.3715298,
+    "ast_hash": "ba329c43fe743f09d3da0322d788065d",
     "semantic_hash": ""
   },
   "frontend/src/api.ts": {
@@ -426,9 +426,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/HeroSection.tsx": {
-    "mtime": 1795187059.3339682,
-    "seen": 1795187156.3959527,
-    "ast_hash": "9a8999035abe2d53362d852d46acc54e",
+    "mtime": 1795196783.1881478,
+    "seen": 1795196834.3715298,
+    "ast_hash": "487cdb7ccb98a7c58932a64cb5f7c943",
     "semantic_hash": ""
   },
   "frontend/public/hero/centerpiece.png": {
@@ -465,6 +465,24 @@
     "mtime": 1795196289.6113598,
     "seen": 1795196320.010573,
     "ast_hash": "d3e76252f2fecf0a259171fed208433e",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/LandingSections.tsx": {
+    "mtime": 1795196569.870221,
+    "seen": 1795196834.3715298,
+    "ast_hash": "bf74150b0677845fdd60f6f5153dae2f",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/OneRupeeCoin.tsx": {
+    "mtime": 1795196485.9523942,
+    "seen": 1795196834.3715298,
+    "ast_hash": "ead422414e30807eca8e045cd8ea0e05",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/OneRupeeMorphBridge.tsx": {
+    "mtime": 1795196504.2781386,
+    "seen": 1795196834.3715298,
+    "ast_hash": "80a918e56035016869c4f1849dc2393d",
     "semantic_hash": ""
   },
   "backend/package-lock.json": {

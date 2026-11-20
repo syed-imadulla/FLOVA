@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import { OneRupeeCoin } from "./OneRupeeCoin";
 
 interface HeroSectionProps {
   onLaunch?: () => void;
@@ -100,21 +101,24 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           >
             Intro
           </a>
+          <a
+            href="#how-it-works"
+            className="hero-nav-link"
+            onClick={(e) => {
+              e.preventDefault();
+              const target = document.getElementById("how-it-works");
+              if (target) {
+                target.scrollIntoView({ behavior: "smooth" });
+              }
+            }}
+          >
+            How It Works
+          </a>
           <button
             type="button"
             className={`hero-nav-link ${activeTab === "evidence" ? "active" : ""}`}
             onClick={() => {
               if (onSelectTab) onSelectTab("evidence");
-              scrollToApp();
-            }}
-          >
-            How It Works
-          </button>
-          <button
-            type="button"
-            className={`hero-nav-link ${activeTab === "week" ? "active" : ""}`}
-            onClick={() => {
-              if (onSelectTab) onSelectTab("week");
               scrollToApp();
             }}
           >
@@ -261,9 +265,13 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         <button
           type="button"
           className="hero-scroll-emblem"
-          onClick={scrollToApp}
-          title="Scroll to FLOVA interactive runway"
-          aria-label="Scroll down to app"
+          onClick={() => {
+            const el = document.getElementById("how-it-works");
+            if (el) el.scrollIntoView({ behavior: "smooth" });
+            else scrollToApp();
+          }}
+          title="Scroll to FLOVA interactive runway &amp; architecture"
+          aria-label="Scroll down to details"
           style={{
             transform: `translate3d(${mousePos.x * -1}px, ${mousePos.y * -1}px, 0)`,
           }}
@@ -324,19 +332,15 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           <span className="sketch-mark mark-castling">0-0</span>
         </div>
 
-        {/* Circular Roman Coin Graphic entering from top right and rolling down */}
+        {/* Circular Indian 1-Rupee Coin Graphic entering from top right and rolling down */}
         <div
           className="hero-coin-container"
           style={{
             transform: `translate3d(${mousePos.x * 16}px, ${mousePos.y * 16}px, 0)`,
           }}
-          aria-hidden="true"
+          aria-label="Indian 1-Rupee Coin Medallion"
         >
-          <img
-            src="/hero/coin.png"
-            alt="Antique Coin Medallion"
-            className="hero-coin-img"
-          />
+          <OneRupeeCoin size={84} />
         </div>
 
         {/* Partial Corner Card/Note Peeking Up from Bottom-Left Corner */}

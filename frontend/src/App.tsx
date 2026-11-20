@@ -3,6 +3,8 @@ import { EvidenceView } from "./components/EvidenceView";
 import { RiderView } from "./components/RiderView";
 import { SmsView } from "./components/SmsView";
 import { HeroSection } from "./components/HeroSection";
+import { OneRupeeMorphBridge } from "./components/OneRupeeMorphBridge";
+import { LandingSections } from "./components/LandingSections";
 
 type Tab = "week" | "sms" | "evidence";
 
@@ -44,6 +46,15 @@ export default function App() {
         onLaunch={handleLaunch}
         onSelectTab={handleSelectTab}
         activeTab={tab}
+      />
+
+      {/* Scroll-Driven Indian 1-Rupee Coin Morph Bridge */}
+      <OneRupeeMorphBridge />
+
+      {/* Follow-Up Feature & Editorial Bands (Choreographed to 20261120-1548-29 reference) */}
+      <LandingSections
+        onLaunchWorkspace={handleLaunch}
+        onOpenSimulator={handleLaunch}
       />
 
       {/* Interactive Worker Workspace Stage */}
