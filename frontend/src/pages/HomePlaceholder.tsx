@@ -45,6 +45,12 @@ export function HomePlaceholder() {
       <div style={{ margin: "1.5rem 0", padding: "1rem", backgroundColor: "#f5f5f5", borderRadius: "4px" }}>
         <h2 style={{ fontSize: "1.1rem", marginTop: 0 }}>Money Actions</h2>
         <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem" }}>
+          <Link to="/overview" style={{ padding: "0.6rem 1rem", background: "#1e3a8a", border: "none", textDecoration: "none", color: "#fff", borderRadius: "6px", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "0.4rem" }}>
+            📊 Money Overview
+          </Link>
+          <Link to="/activity" style={{ padding: "0.6rem 1rem", background: "#0f766e", border: "none", textDecoration: "none", color: "#fff", borderRadius: "6px", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "0.4rem" }}>
+            📋 Financial Activity
+          </Link>
           <Link to="/voice" style={{ padding: "0.6rem 1rem", background: "#dc2626", border: "none", textDecoration: "none", color: "#fff", borderRadius: "6px", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "0.4rem" }}>
             🎙 Voice Entry
           </Link>
@@ -56,6 +62,9 @@ export function HomePlaceholder() {
           </Link>
           <Link to="/add" style={{ padding: "0.5rem 1rem", background: "#fff", border: "1px solid #ccc", textDecoration: "none", color: "#333", borderRadius: "3px" }}>
             Add Transaction
+          </Link>
+          <Link to="/catch" style={{ padding: "0.5rem 1rem", background: "var(--accent-soft, #d9efe7)", border: "1px solid var(--accent, #0f7b5f)", textDecoration: "none", color: "#1c2321", borderRadius: "3px", fontWeight: 600 }}>
+            ⚡ FLOVA Catch (Receipt)
           </Link>
           <Link to="/payouts" style={{ padding: "0.5rem 1rem", background: "#fff", border: "1px solid #ccc", textDecoration: "none", color: "#333", borderRadius: "3px" }}>
             Expected Payouts
