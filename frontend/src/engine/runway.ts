@@ -19,6 +19,8 @@ export interface DailyProjectionEntry {
   netChangePaise: number;
   closingBalancePaise: number;
   commitmentsApplied: Array<{ id: string; title: string; amount: Paise }>;
+  remainingLivingBudgetPaise?: Paise;
+  remainingWorkBudgetPaise?: Paise;
 }
 
 export type RunwayProjectionStatus =
@@ -166,7 +168,38 @@ export function calculateDailyRunway(input: RunwayProjectionInput): RunwayProjec
     }
   }
 
-  // 5. Day-by-day cash flow projection
+  // 5. Option A — Remaining Daily Budget Calculation for Current Projection Date (Day 0)
+  // Deduct only estimated daily expenses that the worker has not already spent today.
+  // This prevents double-counting expenses already included in the confirmed available balance.
+  let livingExpensesSpentToday: Paise = 0;
+  let workExpensesSpentToday: Paise = 0;
+
+  const seenExpenseTxIds = new Set<string>();
+  if (Array.isArray(input.transactionsSinceCheckin)) {
+    for (const tx of input.transactionsSinceCheckin) {
+      if (!tx || seenExpenseTxIds.has(tx.id)) {
+        continue;
+      }
+      seenExpenseTxIds.add(tx.id);
+
+      // Count user's own expenses occurring on the current projection date (startDate)
+      // Note: Counted even if created before check-in because they consume today's budget allocation.
+      if (tx.date === startDate && tx.ownership === "mine" && tx.type === "expense") {
+        if (tx.expenseType === "living") {
+          livingExpensesSpentToday = safeAdd(livingExpensesSpentToday, tx.amount);
+        } else if (tx.expenseType === "work") {
+          workExpensesSpentToday = safeAdd(workExpensesSpentToday, tx.amount);
+        }
+      }
+    }
+  }
+
+  // Budgets cannot be negative; overspending in one category does not create additional spending
+  const remainingLiving = Math.max(0, safeSub(dailyLivingEstimate, livingExpensesSpentToday));
+  const remainingWork = Math.max(0, safeSub(dailyWorkEstimate, workExpensesSpentToday));
+  const remainingDailyBudget = safeAdd(remainingLiving, remainingWork);
+
+  // 6. Day-by-day cash flow projection
   const projections: DailyProjectionEntry[] = [];
   let currentBalance: number = balanceResult.confirmedBalancePaise!;
   let firstShortfallDate: ISODate | null = null;
@@ -185,8 +218,11 @@ export function calculateDailyRunway(input: RunwayProjectionInput): RunwayProjec
       dayCommitmentTotal = safeAdd(dayCommitmentTotal, comm.amount);
     }
 
-    // Baseline living + work expenses
-    const totalOutflow = safeAdd(dailyEssentialExpense, dayCommitmentTotal);
+    // Option A: On Day 0 (current projection date), deduct only the remaining daily budget.
+    // From tomorrow onward (d > 0), apply the full daily living + work baseline.
+    const dayEssentialExpense = d === 0 ? remainingDailyBudget : dailyEssentialExpense;
+
+    const totalOutflow = safeAdd(dayEssentialExpense, dayCommitmentTotal);
     const otherAdjustments = 0; // Pure confirmed-only scenario: no speculative income
 
     const netChange = safeSub(otherAdjustments, totalOutflow);
@@ -196,12 +232,16 @@ export function calculateDailyRunway(input: RunwayProjectionInput): RunwayProjec
       dayIndex: d,
       date: currentDate,
       openingBalancePaise: openingBalance,
-      essentialExpensePaise: dailyEssentialExpense,
+      essentialExpensePaise: dayEssentialExpense,
       commitmentDeductionPaise: dayCommitmentTotal,
       otherTransactionAdjustmentPaise: otherAdjustments,
       netChangePaise: netChange,
       closingBalancePaise: closingBalance,
       commitmentsApplied: [...dayCommitments],
+      ...(d === 0 ? {
+        remainingLivingBudgetPaise: remainingLiving,
+        remainingWorkBudgetPaise: remainingWork,
+      } : {}),
     });
 
     if (closingBalance < minClosingBalance) {
