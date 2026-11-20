@@ -25,6 +25,7 @@ export {
   safeAdd,
   safeSub,
   validateBalanceCheckin,
+  validatePayout,
   validateRunwayInput,
   validateTransaction,
   type ValidationResult,

@@ -6,6 +6,7 @@
 import "./validation.test";
 import "./balance.test";
 import "./runway.test";
+import "./lifecycle.test";
 import { runAllTests } from "./testUtils";
 
 void runAllTests().then(({ failed }) => {
