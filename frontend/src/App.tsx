@@ -169,8 +169,6 @@ export default function App() {
                   </RequireAuth>
                 }
               />
-
-              {/* Fallback to Home */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </DataVersionProvider>
