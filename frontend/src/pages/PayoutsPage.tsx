@@ -5,6 +5,7 @@ import { usePayouts } from "../data/usePayouts";
 import { formatINR, toPaise } from "../lib/money";
 import { parseRequiredRupees } from "../profile/parseRupees";
 import type { Payout, PayoutKind, PayoutStatus } from "../types/contracts";
+import { AppShell } from "../components/layout/AppShell";
 
 export function PayoutsPage() {
   const { items, loading, error: loadError, add, receive, setStatus } = usePayouts();
@@ -45,7 +46,7 @@ export function PayoutsPage() {
         expectedDate: expectedDate || undefined,
         status,
       });
-      setSavedMessage("Expected payout added successfully!");
+      setSavedMessage("Expected payout recorded cleanly!");
       setExpectedAmountText("");
       setSource("");
       setExpectedDate("");
@@ -58,258 +59,313 @@ export function PayoutsPage() {
 
   function startReceive(p: Payout) {
     setError(null);
-    setSavedMessage(null);
     setReceivingPayoutId(p.id);
+    const remainingPaise = toPaise(p.expected_amount) - toPaise(p.received_amount);
+    setReceiveAmountText(String(Math.max(0, remainingPaise) / 100));
     setReceiveIdempotencyId(typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : null);
-    const expPaise = toPaise(p.expected_amount);
-    const recPaise = toPaise(p.received_amount);
-    const remaining = Math.max(0, expPaise - recPaise);
-    setReceiveAmountText(String(remaining / 100));
   }
 
-  async function handleConfirmReceive(p: Payout) {
+  async function handleConfirmReceive(payoutId: string) {
     setError(null);
-    const parsed = parseRequiredRupees(receiveAmountText);
-    if (!parsed.ok) {
-      setError(parsed.message);
-      return;
-    }
-
-    const expPaise = toPaise(p.expected_amount);
-    const recPaise = toPaise(p.received_amount);
-    const remaining = Math.max(0, expPaise - recPaise);
-
-    if (parsed.paise > remaining) {
-      setError(`Cannot receive more than remaining balance of ${formatINR(remaining)}`);
+    const amountRes = parseRequiredRupees(receiveAmountText);
+    if (!amountRes.ok) {
+      setError(amountRes.message);
       return;
     }
 
     setSaving(true);
     try {
-      await receive(p.id, parsed.paise, todayLocalISO(), receiveIdempotencyId || undefined);
-      setSavedMessage(`Received ${formatINR(parsed.paise)} recorded!`);
+      await receive(payoutId, amountRes.paise, todayLocalISO(), receiveIdempotencyId || undefined);
       setReceivingPayoutId(null);
-      setReceiveIdempotencyId(null);
       setReceiveAmountText("");
+      setReceiveIdempotencyId(null);
+      setSavedMessage("Payout receipt confirmed and added to your available cash!");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to record payout receipt");
+      setError(err instanceof Error ? err.message : "Failed to record received payout");
     } finally {
       setSaving(false);
     }
   }
 
-  async function handleCancel(p: Payout) {
-    if (!window.confirm("Cancel this expected payout?")) return;
-    setError(null);
+  async function handleSetStatus(id: string, s: Extract<PayoutStatus, "scheduled" | "estimated" | "unearned" | "cancelled">) {
     try {
-      await setStatus(p.id, "cancelled");
+      await setStatus(id, s);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to cancel payout");
+      setError(err instanceof Error ? err.message : "Failed to update status");
     }
   }
 
   return (
-    <div style={{ padding: "2rem", maxWidth: "680px", margin: "0 auto" }}>
-      <p><Link to="/">← Back to Home</Link></p>
-      <h1>Expected Payouts</h1>
-      <p style={{ color: "#555" }}>
-        Track upcoming platform earnings, incentives, and client payments.
-      </p>
+    <AppShell activeNav="plan">
+      <div className="space-y-8 max-w-4xl mx-auto">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E5E2DC]">
+          <div>
+            <span className="text-xs font-mono font-bold uppercase tracking-wider text-[#7A7468]">
+              Expected Inflow
+            </span>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#16181D]">
+              Platform Payouts
+            </h1>
+          </div>
 
-      {(error || loadError) && (
-        <div role="alert" style={{ color: "red", marginBottom: "1rem" }}>
-          {error || loadError}
-        </div>
-      )}
-
-      {savedMessage && (
-        <div style={{ color: "green", marginBottom: "1rem" }}>
-          {savedMessage}
-        </div>
-      )}
-
-      {/* Add Expected Payout Form */}
-      <form onSubmit={handleAddPayout} style={{ border: "1px solid #ccc", padding: "1.25rem", marginBottom: "2rem" }}>
-        <h2 style={{ fontSize: "1.2rem", marginTop: 0 }}>Add Expected Payout</h2>
-
-        <div style={{ marginBottom: "1rem" }}>
-          <label htmlFor="payout-amount" style={{ display: "block", marginBottom: "0.25rem" }}>
-            Expected Amount (₹)
-          </label>
-          <input
-            id="payout-amount"
-            type="text"
-            inputMode="decimal"
-            placeholder="e.g. 1800"
-            value={expectedAmountText}
-            onChange={(e) => setExpectedAmountText(e.target.value)}
-            disabled={saving}
-            style={{ width: "100%", padding: "0.75rem", fontSize: "1rem", boxSizing: "border-box" }}
-          />
-        </div>
-
-        <div style={{ marginBottom: "1rem" }}>
-          <label htmlFor="payout-kind" style={{ display: "block", marginBottom: "0.25rem" }}>
-            Kind
-          </label>
-          <select
-            id="payout-kind"
-            value={kind}
-            onChange={(e) => setKind(e.target.value as PayoutKind)}
-            disabled={saving}
-            style={{ width: "100%", padding: "0.75rem", fontSize: "1rem", minHeight: "48px" }}
+          <Link
+            to="/commitments"
+            className="text-xs font-bold text-[#0F5C4C] hover:underline"
           >
-            <option value="platform_payout">Platform payout</option>
-            <option value="incentive">Incentive</option>
-            <option value="client_payment">Client payment</option>
-            <option value="advance">Advance</option>
-            <option value="other">Other</option>
-          </select>
+            ← View Bills &amp; Commitments
+          </Link>
         </div>
 
-        <div style={{ marginBottom: "1rem" }}>
-          <label htmlFor="payout-source" style={{ display: "block", marginBottom: "0.25rem" }}>
-            Source / Platform (optional)
-          </label>
-          <input
-            id="payout-source"
-            type="text"
-            placeholder="e.g. Swiggy, Zomato"
-            value={source}
-            onChange={(e) => setSource(e.target.value)}
-            disabled={saving}
-            style={{ width: "100%", padding: "0.75rem", fontSize: "1rem", boxSizing: "border-box" }}
-          />
+        {(error || loadError) && (
+          <div role="alert" className="p-4 rounded-2xl bg-red-50 border border-red-200 text-xs text-red-900 font-medium leading-relaxed">
+            {error || loadError}
+          </div>
+        )}
+
+        {savedMessage && (
+          <div role="status" className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-950 font-bold">
+            {savedMessage}
+          </div>
+        )}
+
+        {/* Info notice about expected payouts */}
+        <div className="p-5 rounded-3xl bg-[#FFF8EB] border border-[#FDE68A] text-xs text-[#92400E]">
+          <div className="font-bold mb-1">💡 FLOVA Strict Cash Rule</div>
+          <p className="leading-relaxed">
+            Expected payouts are never added to your available cash balance until they are settled into your bank account. Once received, click &quot;Receive Cash&quot; below to settle the payout and update your confirmed runway.
+          </p>
         </div>
 
-        <div style={{ marginBottom: "1rem" }}>
-          <label htmlFor="payout-date" style={{ display: "block", marginBottom: "0.25rem" }}>
-            Expected Date (optional, leave blank if unknown)
-          </label>
-          <input
-            id="payout-date"
-            type="date"
-            value={expectedDate}
-            onChange={(e) => setExpectedDate(e.target.value)}
-            disabled={saving}
-            style={{ width: "100%", padding: "0.75rem", fontSize: "1rem", boxSizing: "border-box" }}
-          />
+        {/* Add Payout Form */}
+        <div className="p-6 sm:p-8 rounded-3xl bg-white border border-[#E5E2DC] shadow-sm">
+          <h2 className="text-lg font-bold text-[#16181D] mb-4">Log Expected Platform Payout</h2>
+          <form onSubmit={handleAddPayout} className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="po-amount" className="block text-xs font-bold uppercase tracking-wider text-[#5A554A] mb-1.5">
+                  Expected Amount (₹)
+                </label>
+                <input
+                  id="po-amount"
+                  type="number"
+                  step="any"
+                  required
+                  placeholder="e.g. 5200"
+                  value={expectedAmountText}
+                  onChange={(e) => setExpectedAmountText(e.target.value)}
+                  disabled={saving}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D5D0C5] bg-[#FCFBF8] text-sm font-mono tabular-nums text-[#16181D] focus:outline-none focus:border-[#0F5C4C]"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="po-source" className="block text-xs font-bold uppercase tracking-wider text-[#5A554A] mb-1.5">
+                  Platform / Client Source
+                </label>
+                <input
+                  id="po-source"
+                  type="text"
+                  placeholder="e.g. Swiggy, Zomato, Zepto"
+                  value={source}
+                  onChange={(e) => setSource(e.target.value)}
+                  disabled={saving}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D5D0C5] bg-[#FCFBF8] text-sm text-[#16181D] focus:outline-none focus:border-[#0F5C4C]"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label htmlFor="po-date" className="block text-xs font-bold uppercase tracking-wider text-[#5A554A] mb-1.5">
+                  Expected Date (Optional)
+                </label>
+                <input
+                  id="po-date"
+                  type="date"
+                  value={expectedDate}
+                  onChange={(e) => setExpectedDate(e.target.value)}
+                  disabled={saving}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D5D0C5] bg-[#FCFBF8] text-sm text-[#16181D] focus:outline-none focus:border-[#0F5C4C]"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="po-kind" className="block text-xs font-bold uppercase tracking-wider text-[#5A554A] mb-1.5">
+                  Payout Kind
+                </label>
+                <select
+                  id="po-kind"
+                  value={kind}
+                  onChange={(e) => setKind(e.target.value as PayoutKind)}
+                  disabled={saving}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D5D0C5] bg-[#FCFBF8] text-sm text-[#16181D] capitalize focus:outline-none focus:border-[#0F5C4C]"
+                >
+                  <option value="platform_payout">Platform Weekly Payout</option>
+                  <option value="incentive">Delivery Incentive / Surge</option>
+                  <option value="advance">Earned Salary Advance</option>
+                  <option value="client_payment">Client Payment</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+
+              <div>
+                <label htmlFor="po-status" className="block text-xs font-bold uppercase tracking-wider text-[#5A554A] mb-1.5">
+                  Confidence Status
+                </label>
+                <select
+                  id="po-status"
+                  value={status}
+                  onChange={(e) => setStatusValue(e.target.value as any)}
+                  disabled={saving}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D5D0C5] bg-[#FCFBF8] text-sm text-[#16181D] focus:outline-none focus:border-[#0F5C4C]"
+                >
+                  <option value="scheduled">Scheduled (Platform Date Confirmed)</option>
+                  <option value="estimated">Estimated (Projected Shifts)</option>
+                  <option value="unearned">Unearned (Requires Orders)</option>
+                </select>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={saving}
+              className="py-3 px-6 rounded-xl bg-[#0F5C4C] hover:bg-[#0c4a3d] text-white text-xs font-bold tracking-wide shadow-sm transition-all active:scale-95 disabled:opacity-60 cursor-pointer"
+            >
+              {saving ? "Saving Payout..." : "+ Log Expected Payout"}
+            </button>
+          </form>
         </div>
 
-        <div style={{ marginBottom: "1.25rem" }}>
-          <label htmlFor="payout-status" style={{ display: "block", marginBottom: "0.25rem" }}>
-            Certainty Status
-          </label>
-          <select
-            id="payout-status"
-            value={status}
-            onChange={(e) => setStatusValue(e.target.value as any)}
-            disabled={saving}
-            style={{ width: "100%", padding: "0.75rem", fontSize: "1rem", minHeight: "48px" }}
-          >
-            <option value="scheduled">Scheduled (confirmed by platform)</option>
-            <option value="estimated">Estimated (likely but variable)</option>
-            <option value="unearned">Unearned (target not yet hit)</option>
-          </select>
-        </div>
+        {/* Existing Payouts List */}
+        <div className="bg-white rounded-3xl border border-[#E5E2DC] shadow-sm overflow-hidden">
+          <div className="p-5 border-b border-[#E5E2DC]">
+            <h2 className="text-base font-bold text-[#16181D]">Logged Payouts</h2>
+          </div>
 
-        <button
-          type="submit"
-          disabled={saving}
-          style={{ width: "100%", padding: "0.75rem", fontSize: "1rem", minHeight: "48px", cursor: saving ? "not-allowed" : "pointer" }}
-        >
-          {saving ? "Adding..." : "Add Expected Payout"}
-        </button>
-      </form>
+          {loading ? (
+            <div className="p-12 text-center text-xs text-[#7A7468] animate-pulse">
+              Loading payouts...
+            </div>
+          ) : items.length === 0 ? (
+            <div className="p-12 text-center text-xs text-[#7A7468]">
+              No expected payouts on record.
+            </div>
+          ) : (
+            <div className="divide-y divide-[#E5E2DC]">
+              {items.map((p) => {
+                const expPaise = toPaise(p.expected_amount);
+                const recPaise = toPaise(p.received_amount);
+                const isSettled = p.status === "settled";
+                const isPartial = p.status === "partial";
+                const isCancelled = p.status === "cancelled";
 
-      {/* Payouts list */}
-      <h2>Your Payouts</h2>
-      {loading && items.length === 0 ? (
-        <p>Loading payouts...</p>
-      ) : items.length === 0 ? (
-        <p>No payouts recorded yet.</p>
-      ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-          {items.map((p) => {
-            const expPaise = toPaise(p.expected_amount);
-            const recPaise = toPaise(p.received_amount);
-            const remaining = Math.max(0, expPaise - recPaise);
-            const isReceiving = receivingPayoutId === p.id;
-
-            return (
-              <div key={p.id} style={{ border: "1px solid #ddd", padding: "1rem", borderRadius: "4px" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-                  <h3 style={{ margin: "0 0 0.5rem 0" }}>
-                    {formatINR(expPaise)} — {p.source || p.kind}
-                  </h3>
-                  <span style={{ padding: "0.25rem 0.5rem", fontSize: "0.85rem", background: "#eee", borderRadius: "3px" }}>
-                    {p.status.toUpperCase()}
-                  </span>
-                </div>
-                <p style={{ margin: "0.25rem 0" }}>
-                  <strong>Received:</strong> {formatINR(recPaise)} | <strong>Remaining:</strong> {formatINR(remaining)}
-                </p>
-                <p style={{ margin: "0.25rem 0", color: "#666", fontSize: "0.9rem" }}>
-                  Expected date: {p.expected_date || "Date unknown"}
-                </p>
-
-                {/* Actions */}
-                {p.status !== "settled" && p.status !== "cancelled" && (
-                  <div style={{ marginTop: "1rem" }}>
-                    {!isReceiving ? (
-                      <div style={{ display: "flex", gap: "0.5rem" }}>
-                        <button
-                          onClick={() => startReceive(p)}
-                          style={{ padding: "0.5rem 1rem", fontSize: "0.9rem", minHeight: "40px", cursor: "pointer" }}
+                return (
+                  <div key={p.id} className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-[#FAF7F2] transition-colors">
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm font-bold text-[#16181D]">
+                          {p.source || "Platform Payout"}
+                        </span>
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 capitalize">
+                          {p.kind.replace("_", " ")}
+                        </span>
+                        <span
+                          className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${
+                            isSettled
+                              ? "bg-emerald-100 text-emerald-800"
+                              : isPartial
+                              ? "bg-amber-100 text-amber-900"
+                              : isCancelled
+                              ? "bg-slate-200 text-slate-700"
+                              : "bg-blue-100 text-blue-900"
+                          }`}
                         >
-                          Mark received
-                        </button>
-                        <button
-                          onClick={() => handleCancel(p)}
-                          style={{ padding: "0.5rem 1rem", fontSize: "0.9rem", minHeight: "40px", cursor: "pointer", color: "#666" }}
-                        >
-                          Cancel
-                        </button>
+                          {p.status.toUpperCase()}
+                        </span>
                       </div>
-                    ) : (
-                      <div style={{ background: "#f0f8ff", padding: "0.75rem", marginTop: "0.5rem", borderRadius: "4px" }}>
-                        <label htmlFor={`receive-${p.id}`} style={{ display: "block", marginBottom: "0.25rem" }}>
-                          Amount Received (₹):
-                        </label>
-                        <input
-                          id={`receive-${p.id}`}
-                          type="text"
-                          inputMode="decimal"
-                          value={receiveAmountText}
-                          onChange={(e) => setReceiveAmountText(e.target.value)}
-                          disabled={saving}
-                          style={{ width: "100%", padding: "0.5rem", fontSize: "1rem", marginBottom: "0.5rem" }}
-                        />
-                        <div style={{ display: "flex", gap: "0.5rem" }}>
+                      <div className="text-[11px] text-[#7A7468] mt-0.5">
+                        Expected: {p.expected_date || "Date unknown"} • Received so far: {formatINR(recPaise)}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 self-end sm:self-auto">
+                      <div className="text-right font-mono tabular-nums">
+                        <div className="text-base font-black text-[#0F5C4C]">
+                          {formatINR(expPaise)}
+                        </div>
+                        <div className="text-[10px] text-[#7A7468]">Expected</div>
+                      </div>
+
+                      {!isSettled && !isCancelled && (
+                        <div className="flex items-center gap-1.5">
                           <button
-                            onClick={() => handleConfirmReceive(p)}
-                            disabled={saving}
-                            style={{ padding: "0.5rem 1rem", cursor: saving ? "not-allowed" : "pointer" }}
+                            onClick={() => startReceive(p)}
+                            className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs cursor-pointer"
                           >
-                            {saving ? "Saving..." : "Confirm Received"}
+                            Receive Cash
                           </button>
                           <button
-                            onClick={() => setReceivingPayoutId(null)}
-                            disabled={saving}
-                            style={{ padding: "0.5rem 1rem" }}
+                            onClick={() => handleSetStatus(p.id, "cancelled")}
+                            className="px-2 py-1 rounded-lg hover:bg-slate-100 text-slate-500 text-xs"
                           >
-                            Dismiss
+                            Cancel
                           </button>
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
-                )}
-              </div>
-            );
-          })}
+                );
+              })}
+            </div>
+          )}
         </div>
-      )}
-    </div>
+
+        {/* Receive Inline Dialog */}
+        {receivingPayoutId && (
+          <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="bg-white rounded-3xl p-6 w-full max-w-md border border-[#E5E2DC] shadow-2xl space-y-4">
+              <h3 className="text-base font-bold text-[#16181D]">
+                Confirm Money Received in Bank / Cash
+              </h3>
+              <p className="text-xs text-[#7A7468]">
+                Enter the exact amount settled into your account. The database trigger will calculate any partial balance.
+              </p>
+
+              <div>
+                <label className="block text-xs font-bold uppercase text-[#5A554A] mb-1">
+                  Received Amount (₹)
+                </label>
+                <input
+                  type="number"
+                  step="any"
+                  value={receiveAmountText}
+                  onChange={(e) => setReceiveAmountText(e.target.value)}
+                  disabled={saving}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D5D0C5] text-base font-mono font-bold"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setReceivingPayoutId(null)}
+                  className="px-4 py-2 rounded-xl bg-white border border-[#D5D0C5] text-xs font-bold text-[#5A554A]"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={saving}
+                  onClick={() => handleConfirmReceive(receivingPayoutId)}
+                  className="px-4 py-2 rounded-xl bg-[#0F5C4C] text-white text-xs font-bold"
+                >
+                  {saving ? "Confirming..." : "Confirm & Settle"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </AppShell>
   );
 }

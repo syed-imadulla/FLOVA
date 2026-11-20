@@ -8,7 +8,9 @@ import { AddTransactionPage } from "./pages/AddTransactionPage";
 import { CheckinPage } from "./pages/CheckinPage";
 import { CommitmentsPage } from "./pages/CommitmentsPage";
 import { HistoryPage } from "./pages/HistoryPage";
-import { HomePlaceholder } from "./pages/HomePlaceholder";
+import { HomeRunwayView } from "./pages/HomeRunwayView";
+import { InsightsView } from "./pages/InsightsView";
+import { ProfileSettingsView } from "./pages/ProfileSettingsView";
 import { OnboardingPage } from "./pages/OnboardingPage";
 import { PayoutsPage } from "./pages/PayoutsPage";
 import { VoiceCapturePage } from "./pages/VoiceCapturePage";
@@ -66,7 +68,7 @@ export default function App() {
                 element={
                   <RequireAuth>
                     <RequireOnboarded>
-                      <HomePlaceholder />
+                      <HomeRunwayView />
                     </RequireOnboarded>
                   </RequireAuth>
                 }
@@ -76,7 +78,37 @@ export default function App() {
                 element={
                   <RequireAuth>
                     <RequireOnboarded>
-                      <HomePlaceholder />
+                      <HomeRunwayView />
+                    </RequireOnboarded>
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/insights"
+                element={
+                  <RequireAuth>
+                    <RequireOnboarded>
+                      <InsightsView />
+                    </RequireOnboarded>
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <RequireAuth>
+                    <RequireOnboarded>
+                      <ProfileSettingsView />
+                    </RequireOnboarded>
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/settings"
+                element={
+                  <RequireAuth>
+                    <RequireOnboarded>
+                      <ProfileSettingsView />
                     </RequireOnboarded>
                   </RequireAuth>
                 }
@@ -169,6 +201,8 @@ export default function App() {
                   </RequireAuth>
                 }
               />
+              <Route path="/plan" element={<Navigate to="/commitments" replace />} />
+              <Route path="/transactions" element={<Navigate to="/history" replace />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </DataVersionProvider>

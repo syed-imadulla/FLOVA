@@ -92,8 +92,20 @@ async function call<T>(path: string, init?: RequestInit): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+export const FALLBACK_PROFILES: Profile[] = [
+  { key: "food_delivery", label: "Food Delivery Partner", mean_weekly_income: 6200, essentials_per_week: 3800, notes: "Zomato / Swiggy delivery" },
+  { key: "cab_driver", label: "Cab / Auto Driver", mean_weekly_income: 7500, essentials_per_week: 4500, notes: "Uber / Ola partner" },
+  { key: "quick_commerce", label: "Quick Commerce Rider", mean_weekly_income: 5800, essentials_per_week: 3600, notes: "Blinkit / Zepto partner" },
+];
+
 export const api = {
-  profiles: () => call<Profile[]>("/profiles"),
+  profiles: async () => {
+    try {
+      return await call<Profile[]>("/profiles");
+    } catch {
+      return FALLBACK_PROFILES;
+    }
+  },
   createRider: (body: { name: string; essentials_per_week: number; phone?: string; start_week?: number }) =>
     call<Rider>("/riders", { method: "POST", body: JSON.stringify(body) }),
   demoRider: (profile: string) => call<Rider>(`/riders/demo?profile=${encodeURIComponent(profile)}&weeks=10`, { method: "POST" }),
