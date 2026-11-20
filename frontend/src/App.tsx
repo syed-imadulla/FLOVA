@@ -3,11 +3,13 @@ import { AuthProvider } from "./auth/AuthProvider";
 import { RedirectIfAuthed } from "./auth/RedirectIfAuthed";
 import { RequireAuth } from "./auth/RequireAuth";
 import { DataVersionProvider } from "./data/DataVersionProvider";
+import { ActivityPage } from "./pages/ActivityPage";
 import { AddTransactionPage } from "./pages/AddTransactionPage";
 import { CheckinPage } from "./pages/CheckinPage";
 import { CommitmentsPage } from "./pages/CommitmentsPage";
-import { HistoryPage } from "./pages/HistoryPage";
+import { FlovaCatchPage } from "./pages/FlovaCatchPage";
 import { HomePlaceholder } from "./pages/HomePlaceholder";
+import { MoneyOverviewPage } from "./pages/MoneyOverviewPage";
 import { OnboardingPage } from "./pages/OnboardingPage";
 import { PayoutsPage } from "./pages/PayoutsPage";
 import { VoiceCapturePage } from "./pages/VoiceCapturePage";
@@ -79,6 +81,16 @@ export default function App() {
                 }
               />
               <Route
+                path="/catch"
+                element={
+                  <RequireAuth>
+                    <RequireOnboarded>
+                      <FlovaCatchPage />
+                    </RequireOnboarded>
+                  </RequireAuth>
+                }
+              />
+              <Route
                 path="/payouts"
                 element={
                   <RequireAuth>
@@ -99,11 +111,31 @@ export default function App() {
                 }
               />
               <Route
+                path="/overview"
+                element={
+                  <RequireAuth>
+                    <RequireOnboarded>
+                      <MoneyOverviewPage />
+                    </RequireOnboarded>
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/activity"
+                element={
+                  <RequireAuth>
+                    <RequireOnboarded>
+                      <ActivityPage />
+                    </RequireOnboarded>
+                  </RequireAuth>
+                }
+              />
+              <Route
                 path="/history"
                 element={
                   <RequireAuth>
                     <RequireOnboarded>
-                      <HistoryPage />
+                      <ActivityPage />
                     </RequireOnboarded>
                   </RequireAuth>
                 }

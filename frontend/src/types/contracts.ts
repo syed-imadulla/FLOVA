@@ -180,3 +180,84 @@ export interface RunwayInput {
   }>;
   commitments: Array<{ id: string; title: string; amount: Paise; dueDate: ISODate; kind: CommitmentKind }>;
 }
+
+// ---------- Candidate DTOs (Receipt & Voice Extraction) ----------
+export type {
+  FinancialExtractionDTO,
+  ExtractionEntryIntent,
+  ExtractionActionIntent,
+  ExtractedTransactionData,
+  ExtractedPayoutData,
+  ExtractedCheckinData,
+  ExtractedQueryData,
+  ExtractionMetadata,
+} from "../engine/extractionTypes";
+
+/**
+ * Extracted receipt candidate before user confirmation.
+ * Missing/uncertain data is represented as null (never invented).
+ */
+export interface ExtractedReceiptCandidate {
+  id?: string;
+  merchant: string | null;
+  amountPaise: Paise | null;
+  category: string | null;
+  expenseType: ExpenseType | null;
+  date: ISODate | null;
+  description?: string | null;
+  notes?: string | null; // Optional alias for backward compatibility
+  confidence?: number;
+  needsReview: boolean;
+  missingFields: string[];
+  rawExtractedData?: Record<string, unknown>;
+}
+
+/**
+ * Extracted voice transaction candidate before user confirmation.
+ * Missing/uncertain data is represented as null (never invented).
+ */
+export interface VoiceTransactionCandidate {
+  id?: string;
+  transcript: string;
+  type: TransactionType | null;
+  amountPaise: Paise | null;
+  category: string | null;
+  expenseType: ExpenseType | null;
+  date: ISODate | null;
+  ownership: MoneyOwnership;
+  confidence?: number;
+  needsReview: boolean;
+  missingFields: string[];
+}
+
+// ---------- Activity Timeline (Phase 7 & 10) ----------
+export type ActivityItemKind = "transaction" | "checkin" | "payout_receipt" | "expected_payout";
+
+/**
+ * Unified item for the Activity and Money Overview timelines.
+ * Strictly distinguishes balance check-ins and expected payouts from income/expenses.
+ */
+export interface ActivityItem {
+  id: string;
+  kind: ActivityItemKind;
+  type: TransactionType | "checkin" | "expected_payout";
+  timestamp: ISOTimestamp;
+  date: ISODate;
+  title: string;
+  category?: string;
+  ownership?: MoneyOwnership;
+  expenseType?: ExpenseType | null;
+  amountPaise?: Paise;
+  rupeeAmount?: RupeeString;
+  snapshot?: {
+    cashPaise: Paise;
+    bankPaise: Paise;
+    notMinePaise: Paise;
+    totalPersonalPaise: Paise;
+  };
+  payoutId?: string | null;
+  payoutStatus?: PayoutStatus;
+  expectedDate?: ISODate | null;
+  source?: EntrySource | "system";
+  note?: string | null;
+}

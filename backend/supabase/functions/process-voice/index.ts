@@ -1,0 +1,316 @@
+// =====================================================================
+// Supabase Edge Function: process-voice (Owner: M1)
+// Secure, server-side voice transcription and financial intent extraction
+// using Groq Whisper (whisper-large-v3-turbo) and Groq Llama 3.3 (llama-3.3-70b-versatile).
+// Strictly read-only inference. Never mutates database tables.
+// Zero Gemini or unapproved AI providers.
+// =====================================================================
+
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
+interface ProcessVoiceRequest {
+  audioBase64?: string;
+  mimeType?: string;
+  text?: string;
+  candidateId?: string;
+  language?: string;
+}
+
+Deno.serve(async (req: Request) => {
+  // 1. CORS Preflight
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
+  if (req.method !== "POST") {
+    return new Response(JSON.stringify({ error: "Method not allowed. Use POST." }), {
+      status: 405,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  try {
+    // 2. Authentication check: Validate user JWT
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Missing Authorization header." }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const token = authHeader.replace(/^Bearer\s+/i, "");
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+
+    if (supabaseUrl && supabaseAnonKey) {
+      const supabase = createClient(supabaseUrl, supabaseAnonKey);
+      const { data: { user }, error: authErr } = await supabase.auth.getUser(token);
+      if (authErr || !user) {
+        return new Response(JSON.stringify({ error: "Unauthorized. Invalid user token." }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
+    // 3. API Key check
+    const groqApiKey = Deno.env.get("GROQ_API_KEY");
+    if (!groqApiKey) {
+      return new Response(
+        JSON.stringify({ error: "GROQ_API_KEY is not configured in Edge Function secrets." }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // 4. Validate input payload & enforce limits
+    const body = (await req.json()) as ProcessVoiceRequest;
+    const hasAudio = typeof body.audioBase64 === "string" && body.audioBase64.length > 50;
+    const hasText = typeof body.text === "string" && body.text.trim().length > 0;
+
+    if (!hasAudio && !hasText) {
+      return new Response(
+        JSON.stringify({ error: "Provide either an audioBase64 string or transcript text." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // 10MB base64 payload limit check (~7.5MB raw audio)
+    if (hasAudio && body.audioBase64!.length > 10 * 1024 * 1024) {
+      return new Response(
+        JSON.stringify({ error: "Audio payload exceeds maximum limit of 10MB." }),
+        { status: 413, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    let transcript = "";
+
+    // 5. Audio Transcription via Groq Whisper
+    if (hasAudio) {
+      const rawBase64 = body.audioBase64!.replace(/^data:audio\/[a-zA-Z0-9.-]+;base64,/, "");
+      const binaryString = atob(rawBase64);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+
+      const mime = body.mimeType || "audio/webm";
+      let extension = "webm";
+      if (mime.includes("mp4") || mime.includes("m4a")) extension = "m4a";
+      else if (mime.includes("ogg")) extension = "ogg";
+      else if (mime.includes("wav")) extension = "wav";
+
+      const audioBlob = new Blob([bytes], { type: mime });
+      const formData = new FormData();
+      formData.append("file", audioBlob, `recording.${extension}`);
+      formData.append("model", "whisper-large-v3-turbo");
+      formData.append("response_format", "json");
+      if (body.language && body.language !== "auto") {
+        formData.append("language", body.language.toLowerCase());
+      }
+
+      const whisperRes = await fetch("https://api.groq.com/openai/v1/audio/transcriptions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${groqApiKey}`,
+        },
+        body: formData,
+      });
+
+      if (!whisperRes.ok) {
+        const errText = await whisperRes.text();
+        return new Response(
+          JSON.stringify({ error: `Groq Whisper transcription failed (${whisperRes.status}): ${errText}` }),
+          { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const whisperData = await whisperRes.json();
+      transcript = (whisperData.text || "").trim();
+      if (!transcript) {
+        return new Response(
+          JSON.stringify({ error: "No audible speech was recognized in the audio recording." }),
+          { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    } else {
+      transcript = body.text!.trim();
+    }
+
+    // 6. Financial Intent Extraction via Groq Llama 3.3
+    const systemPrompt = `You are the specialized AI Financial Intent Extraction Engine for FLOVA, a personal finance assistant for Indian gig and delivery workers.
+Your task is to analyze the user's spoken utterance (which may be in English, Hindi, Kannada, Urdu, Telugu, or code-switched Hinglish/Kanglish) and return a strictly structured JSON object matching the canonical FinancialExtractionDTO.
+
+Follow these strict rules:
+1. Intent Classification:
+   - "transaction": The worker mentions spending or earning money (e.g., "Spent 120 rupees on petrol", "Earned 650 tip", "आज पेट्रोल पर 300 रुपये खर्च किए", "ಇವತ್ತು ಪೆಟ್ರೋಲ್ಗೆ 300 ರೂಪಾಯಿ ಖರ್ಚು ಮಾಡಿದೆ", "آج پیٹرول پر 300 روپے خرچ کیے", "ఈరోజు పెట్రోల్ కోసం 300 రూపాయలు ఖర్చు చేశాను", "चाय और समोसे पर 40 रुपये खर्च किए").
+   - "expected_payout": The worker mentions a future platform payout or client payment that has NOT yet been received into their bank (e.g., "Swiggy payout 1800 on Wednesday", "Expecting 2400 from Zomato", "स्विग्गी से सोमवार को 1800 आएंगे", "ಸ್ವಿಗ್ಗಿಯಿಂದ ಸೋಮವಾರ 1800 ಬರುತ್ತೆ", "سوئگی سے پیر کو 1800 ملیں گے", "సోమవారం స్విగ్గీ నుండి 1800 వస్తుంది"). NEVER convert expected payouts into transactions or ordinary income.
+   - "balance_checkin": The worker states their current cash-in-hand or bank balance (e.g., "I have 500 in cash and 2500 in bank", "मेरे पास नकद 500 और बैंक में 2000 हैं", "ನನ್ನ ಹತ್ತಿರ 500 ನಗದು ಮತ್ತು ಬ್ಯಾಂಕ್ ನಲ್ಲಿ 2000 ಇದೆ", "میرے پاس نقد 500 اور بینک میں 2000 ہیں", "నా దగ్గర 500 నగదు మరియు బ్యాంకులో 2000 ఉంది").
+   - "financial_query": The worker asks a question about their financial status, runway, balance, or ability to pay bills (e.g., "How much money do I have left?", "कितना पैसा बचा है?", "ಎಷ್ಟು ದುಡ್ಡು ಉಳಿದಿದೆ?", "کتنے پیسے بچے ہیں؟", "ఎంత డబ్బు మిగిలి ఉంది?", "Can I pay rent on Saturday?").
+   - "unknown": Unrelated chatter, incomprehensible text, or non-financial statements.
+
+2. Multilingual & Script Handling:
+   - Accurately parse numbers and financial terms across English, Hindi (Devanagari), Kannada (ಕನ್ನಡ), Urdu (اردو), and Telugu (తెలుగు), including transliterated/code-switching (e.g., "300 roopayalu petrol ki", "oota 120 rupayi").
+   - Amounts in Indic scripts/words (e.g., "३००", "300 रुपये", "300 ರೂಪಾಯಿ", "300 روپے", "300 రూపాయలు") MUST be extracted as standard decimal rupee strings (e.g. "300").
+   - Work expenses: Petrol/diesel/fuel/cng, bike maintenance/repairs, phone recharge -> expense_type="work", category="fuel"|"maintenance"|"phone".
+   - Living expenses: Food, tea, chai, snacks, breakfast, lunch, dinner, ration, groceries -> expense_type="living", category="food".
+   - ALWAYS preserve the user's raw utterance in metadata.raw_utterance. Do NOT translate or discard the original script.
+
+3. Anti-Hallucination & Truthful Uncertainty (CRITICAL):
+   - NEVER INVENT OR GUESS NUMBERS, AMOUNTS, DATES, OR WORK CLASSIFICATIONS.
+   - If amount is missing (e.g., "ಪೆಟ್ರೋಲ್ ಹಾಕಿಸಿದೆ" without specifying amount), set amount to null, set clarification_required to true, and add targeted question to clarification_questions.
+   - For expenses (type="expense" and ownership="mine"), expense_type MUST be specified as "living" (food, tea, personal) or "work" (petrol, bike repair, phone recharge). If ambiguous, set expense_type to null and clarification_required to true.
+   - For income, expense_type MUST be null (never living or work).
+   - For Cash On Delivery (COD) collections or platform handovers, set ownership to "not_mine".
+   - If intent is "financial_query", DO NOT attempt to answer or calculate balances in the LLM. Set entry_intent="financial_query", populate financial_query.query_type ("runway_check", "balance_check", "payout_check", "commitment_check", or "general"), and leave transaction=null.
+   - All amounts in the DTO MUST be decimal rupee strings (e.g. "120" or "450.50") or null.
+
+4. Output Schema (JSON only):
+{
+  "entry_intent": "transaction" | "expected_payout" | "balance_checkin" | "financial_query" | "unknown",
+  "action_intent": "create" | "correct" | "clarify" | "cancel" | "unknown",
+  "target_id": null,
+  "transaction": {
+    "type": "income" | "expense" | null,
+    "amount": string | null,
+    "category": string | null,
+    "expense_type": "living" | "work" | null,
+    "ownership": "mine" | "not_mine" | null,
+    "date": "YYYY-MM-DD" | null,
+    "description": string | null
+  } | null,
+  "expected_payout": {
+    "expected_amount": string | null,
+    "kind": "platform_payout" | "incentive" | "client_payment" | "advance" | "other" | null,
+    "source": string | null,
+    "expected_date": "YYYY-MM-DD" | null,
+    "status": "scheduled" | "estimated" | "unearned" | null,
+    "note": string | null
+  } | null,
+  "balance_checkin": {
+    "cash_amount": string | null,
+    "bank_amount": string | null,
+    "not_mine_amount": string | null,
+    "note": string | null,
+    "checked_at": string | null
+  } | null,
+  "financial_query": {
+    "query_type": "runway_check" | "balance_check" | "payout_check" | "commitment_check" | "general",
+    "target_date": string | null,
+    "target_entity": string | null
+  } | null,
+  "metadata": {
+    "certainty": number,
+    "clarification_required": boolean,
+    "clarification_reason": string | null,
+    "clarification_questions": string[],
+    "raw_utterance": string
+  }
+}`;
+
+    const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${groqApiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "llama-3.3-70b-versatile",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: `Spoken utterance:\n"${transcript}"` },
+        ],
+        response_format: { type: "json_object" },
+        temperature: 0.1,
+      }),
+    });
+
+    if (!groqRes.ok) {
+      const errText = await groqRes.text();
+      return new Response(
+        JSON.stringify({ error: `Groq intent extraction failed (${groqRes.status}): ${errText}` }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const groqData = await groqRes.json();
+    const rawContent = groqData.choices?.[0]?.message?.content;
+    if (!rawContent) {
+      return new Response(
+        JSON.stringify({ error: "Empty response received from Groq extraction engine." }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const extraction = JSON.parse(rawContent);
+    extraction.metadata = extraction.metadata || {
+      certainty: 0.7,
+      clarification_required: false,
+      clarification_reason: null,
+      clarification_questions: [],
+      raw_utterance: transcript,
+    };
+    extraction.metadata.raw_utterance = transcript;
+
+    // 7. Construct candidate for transaction intents
+    let candidate = null;
+    if (extraction.entry_intent === "transaction" && extraction.transaction) {
+      const tx = extraction.transaction;
+      let amountPaise: number | null = null;
+      if (tx.amount !== null && tx.amount !== undefined) {
+        const num = Number(tx.amount);
+        if (!isNaN(num) && num > 0) {
+          amountPaise = Math.round(num * 100);
+        }
+      }
+
+      const missingFields: string[] = [];
+      if (amountPaise === null) missingFields.push("amount");
+      if (!tx.type) missingFields.push("type");
+      if (tx.type === "expense" && (!tx.ownership || tx.ownership === "mine") && !tx.expense_type) {
+        missingFields.push("expenseType");
+      }
+
+      const needsReview =
+        missingFields.length > 0 ||
+        extraction.metadata.clarification_required ||
+        (typeof extraction.metadata.certainty === "number" && extraction.metadata.certainty < 0.85);
+
+      const candidateId = body.candidateId || crypto.randomUUID();
+
+      candidate = {
+        id: candidateId,
+        transcript,
+        type: tx.type === "income" || tx.type === "expense" ? tx.type : null,
+        amountPaise,
+        category: tx.category || (tx.type === "income" ? "earnings" : "other"),
+        expenseType: tx.type === "expense" && (tx.expense_type === "living" || tx.expense_type === "work") ? tx.expense_type : null,
+        date: tx.date || new Date().toISOString().slice(0, 10),
+        ownership: tx.ownership === "not_mine" ? "not_mine" : "mine",
+        confidence: typeof extraction.metadata.certainty === "number" ? extraction.metadata.certainty : 0.8,
+        needsReview,
+        missingFields,
+      };
+    }
+
+    return new Response(
+      JSON.stringify({
+        transcript,
+        extraction,
+        candidate,
+      }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  } catch (err: any) {
+    return new Response(JSON.stringify({ error: err.message || "Internal voice processing error." }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+});
