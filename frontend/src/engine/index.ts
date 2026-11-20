@@ -66,10 +66,15 @@ export type {
 } from "./candidateTypes";
 
 export {
+  RFC_4122_UUID_REGEX,
   candidateToNewTransaction,
   confirmCandidateTransaction,
+  deriveDeterministicUUID,
+  generateUUID,
+  isValidUUID,
   mapDtoToReceiptCandidates,
   mapDtoToVoiceCandidates,
+  resolveCandidateId,
   safeConvertRupeeStringToPaise,
 } from "./candidateAdapter";
 

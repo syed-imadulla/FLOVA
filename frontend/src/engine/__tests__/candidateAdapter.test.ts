@@ -8,9 +8,12 @@
 import {
   candidateToNewTransaction,
   confirmCandidateTransaction,
+  deriveDeterministicUUID,
+  isValidUUID,
   mapDtoToReceiptCandidates,
   mapDtoToVoiceCandidates,
   safeConvertRupeeStringToPaise,
+  RFC_4122_UUID_REGEX,
   type FinancialExtractionDTO,
   type PendingDraftContext,
 } from "../index";
@@ -297,9 +300,10 @@ describe("Phase 7 Candidate Adapter (FinancialExtractionDTO Mapping)", () => {
   });
 
   it("9. candidate confirmation continues through persistence flow without adapter-side writes", async () => {
+    const testCandidateUUID = "550e8400-e29b-41d4-a716-446655440000";
     const candidate = {
-      candidate_id: "cand-1",
-      draft_id: "draft-abc",
+      candidate_id: testCandidateUUID,
+      draft_id: testCandidateUUID,
       type: "income" as const,
       amount_paise: 250000,
       amount_rupees: "2500",
@@ -319,7 +323,8 @@ describe("Phase 7 Candidate Adapter (FinancialExtractionDTO Mapping)", () => {
 
     // 1. Adapting candidate to NewTransaction
     const newTx = candidateToNewTransaction(candidate);
-    assertStrictEqual(newTx.id, "draft-abc");
+    assertStrictEqual(newTx.id, testCandidateUUID);
+    assertStrictEqual(isValidUUID(newTx.id), true);
     assertStrictEqual(newTx.type, "income");
     assertStrictEqual(newTx.amount, 250000);
     assertStrictEqual(newTx.category, "earnings");
@@ -339,9 +344,9 @@ describe("Phase 7 Candidate Adapter (FinancialExtractionDTO Mapping)", () => {
   });
 
   it("10. confirmation rejects candidates with missing amount or missing expense_type", () => {
-    // Missing amount
+    // Missing amount (valid candidate_id to test amount validation in isolation)
     const invalidAmountCandidate = {
-      candidate_id: "cand-err-1",
+      candidate_id: "550e8400-e29b-41d4-a716-446655440010",
       draft_id: null,
       type: "income" as const,
       amount_paise: null, // Missing!
@@ -501,10 +506,12 @@ describe("Phase 7 Candidate Adapter (FinancialExtractionDTO Mapping)", () => {
   });
 
   it("14. candidate UUID remains stable across repeated mapping and confirmation retries", async () => {
+    const draftUUID = "550e8400-e29b-41d4-a716-446655440000";
+    const retainedUUID = "123e4567-e89b-12d3-a456-426614174000";
     const dtoWithDraft: FinancialExtractionDTO = {
       entry_intent: "transaction",
       action_intent: "correct",
-      target_draft_id: "draft-stable-uuid-1",
+      target_draft_id: draftUUID,
       transactions: [
         {
           type: "expense",
@@ -529,23 +536,25 @@ describe("Phase 7 Candidate Adapter (FinancialExtractionDTO Mapping)", () => {
     };
 
     const ctx: PendingDraftContext = {
-      authorizedDraftIds: ["draft-stable-uuid-1"],
-      existingCandidateIds: ["candidate-slot-0"],
+      authorizedDraftIds: [draftUUID],
+      existingCandidateIds: [retainedUUID],
     };
 
     // Repeated mapping preserves same candidate_id
     const [run1] = mapDtoToVoiceCandidates(dtoWithDraft, ctx);
     const [run2] = mapDtoToVoiceCandidates(dtoWithDraft, ctx);
-    assertStrictEqual(run1?.candidate_id, "candidate-slot-0");
-    assertStrictEqual(run2?.candidate_id, "candidate-slot-0");
+    assertStrictEqual(run1?.candidate_id, retainedUUID);
+    assertStrictEqual(run2?.candidate_id, retainedUUID);
     assertStrictEqual(run1?.candidate_id, run2?.candidate_id);
+    assertStrictEqual(isValidUUID(run1?.candidate_id), true);
 
     // Confirmation retries preserve identical transaction ID
     const tx1 = candidateToNewTransaction(run1!);
     const tx2 = candidateToNewTransaction(run1!);
-    assertStrictEqual(tx1.id, "draft-stable-uuid-1");
-    assertStrictEqual(tx2.id, "draft-stable-uuid-1");
+    assertStrictEqual(tx1.id, retainedUUID);
+    assertStrictEqual(tx2.id, retainedUUID);
     assertStrictEqual(tx1.id, tx2.id);
+    assertStrictEqual(isValidUUID(tx1.id), true);
 
     // Repeated confirmCandidateTransaction calls send same ID to persistence
     const receivedIds: string[] = [];
@@ -558,5 +567,434 @@ describe("Phase 7 Candidate Adapter (FinancialExtractionDTO Mapping)", () => {
     await confirmCandidateTransaction(run1!, mockPersist);
     assertStrictEqual(receivedIds.length, 2);
     assertStrictEqual(receivedIds[0], receivedIds[1]);
+    assertStrictEqual(isValidUUID(receivedIds[0]), true);
+  });
+
+  it("15. one transaction with a draft ID produces a valid, stable RFC 4122 UUID matching draft ID", () => {
+    const draftUUID = "a1b2c3d4-e5f6-4a1b-8c2d-3e4f5a6b7c8d";
+    const dto: FinancialExtractionDTO = {
+      entry_intent: "transaction",
+      action_intent: "create",
+      target_draft_id: draftUUID,
+      transactions: [
+        {
+          type: "income",
+          amount: "1500",
+          category: "earnings",
+          expense_type: null,
+          ownership: "mine",
+          date: "2026-11-21",
+          description: "Consulting fee",
+        },
+      ],
+      expected_payout: null,
+      balance_checkin: null,
+      metadata: {
+        input_source: "voice_transcript",
+        certainty: 0.98,
+        clarification_required: false,
+        clarification_reason: null,
+        clarification_questions: [],
+        raw_utterance: "Earned 1500 consulting",
+      },
+    };
+
+    const ctx: PendingDraftContext = { authorizedDraftIds: [draftUUID] };
+    const [cand] = mapDtoToVoiceCandidates(dto, ctx);
+    assertStrictEqual(isValidUUID(cand?.candidate_id), true);
+    assertStrictEqual(cand?.candidate_id, draftUUID);
+
+    const newTx = candidateToNewTransaction(cand!);
+    assertStrictEqual(isValidUUID(newTx.id), true);
+    assertStrictEqual(newTx.id, draftUUID);
+  });
+
+  it("16. multiple transactions with a draft ID produce distinct valid RFC 4122 UUIDs without string appending", () => {
+    const draftUUID = "b2c3d4e5-f6a7-4b2c-9d3e-4f5a6b7c8d9e";
+    const dto: FinancialExtractionDTO = {
+      entry_intent: "transaction",
+      action_intent: "create",
+      target_draft_id: draftUUID,
+      transactions: [
+        {
+          type: "income",
+          amount: "2500",
+          category: "earnings",
+          expense_type: null,
+          ownership: "mine",
+          date: "2026-11-21",
+          description: "Customer payment",
+        },
+        {
+          type: "expense",
+          amount: "300",
+          category: "fuel",
+          expense_type: "work",
+          ownership: "mine",
+          date: "2026-11-21",
+          description: "Petrol for delivery",
+        },
+      ],
+      expected_payout: null,
+      balance_checkin: null,
+      metadata: {
+        input_source: "voice_transcript",
+        certainty: 0.96,
+        clarification_required: false,
+        clarification_reason: null,
+        clarification_questions: [],
+        raw_utterance: "Received 2500 from customer and spent 300 on petrol",
+      },
+    };
+
+    const ctx: PendingDraftContext = { authorizedDraftIds: [draftUUID] };
+    const candidates = mapDtoToVoiceCandidates(dto, ctx);
+    assertStrictEqual(candidates.length, 2);
+
+    const c0 = candidates[0]!;
+    const c1 = candidates[1]!;
+
+    // Both IDs must be valid RFC 4122 UUIDs
+    assertStrictEqual(isValidUUID(c0.candidate_id), true);
+    assertStrictEqual(isValidUUID(c1.candidate_id), true);
+
+    // Primary key safety: candidates MUST NOT share the same UUID
+    assertStrictEqual(c0.candidate_id !== c1.candidate_id, true);
+
+    // Rule: MUST NOT append string suffixes like '-tx-N' to UUIDs
+    assertStrictEqual(c0.candidate_id.includes("-tx-"), false);
+    assertStrictEqual(c1.candidate_id.includes("-tx-"), false);
+
+    // Candidate 0 reuses valid draft UUID; Candidate 1 has a distinct deterministic UUID
+    assertStrictEqual(c0.candidate_id, draftUUID);
+    assertStrictEqual(c1.candidate_id, deriveDeterministicUUID(`${draftUUID}:tx:1`));
+
+    // Re-mapping produces identical deterministic UUIDs (idempotency)
+    const [c0_again, c1_again] = mapDtoToVoiceCandidates(dto, ctx);
+    assertStrictEqual(c0.candidate_id, c0_again!.candidate_id);
+    assertStrictEqual(c1.candidate_id, c1_again!.candidate_id);
+
+    // Confirming each candidate produces distinct valid UUID transactions
+    const tx0 = candidateToNewTransaction(c0);
+    const tx1 = candidateToNewTransaction(c1);
+    assertStrictEqual(isValidUUID(tx0.id), true);
+    assertStrictEqual(isValidUUID(tx1.id), true);
+    assertStrictEqual(tx0.id !== tx1.id, true);
+  });
+
+  it("17. missing draft ID produces distinct valid RFC 4122 UUIDs for each candidate", () => {
+    const dto: FinancialExtractionDTO = {
+      entry_intent: "transaction",
+      action_intent: "create",
+      target_draft_id: null,
+      transactions: [
+        {
+          type: "income",
+          amount: "500",
+          category: "earnings",
+          expense_type: null,
+          ownership: "mine",
+          date: "2026-11-21",
+          description: "Shop sales",
+        },
+        {
+          type: "expense",
+          amount: "100",
+          category: "food",
+          expense_type: "living",
+          ownership: "mine",
+          date: "2026-11-21",
+          description: "Lunch",
+        },
+      ],
+      expected_payout: null,
+      balance_checkin: null,
+      metadata: {
+        input_source: "voice_transcript",
+        certainty: 0.95,
+        clarification_required: false,
+        clarification_reason: null,
+        clarification_questions: [],
+        raw_utterance: "Made 500 sales and spent 100 on lunch",
+      },
+    };
+
+    const candidates = mapDtoToVoiceCandidates(dto);
+    assertStrictEqual(candidates.length, 2);
+
+    const c0 = candidates[0]!;
+    const c1 = candidates[1]!;
+
+    assertStrictEqual(isValidUUID(c0.candidate_id), true);
+    assertStrictEqual(isValidUUID(c1.candidate_id), true);
+    assertStrictEqual(c0.candidate_id !== c1.candidate_id, true);
+
+    const tx0 = candidateToNewTransaction(c0);
+    const tx1 = candidateToNewTransaction(c1);
+    assertStrictEqual(isValidUUID(tx0.id), true);
+    assertStrictEqual(isValidUUID(tx1.id), true);
+    assertStrictEqual(tx0.id !== tx1.id, true);
+  });
+
+  it("18. repeated mapping with retained candidate IDs preserves exact candidate identity", () => {
+    const retained0 = "c3d4e5f6-a7b8-4c3d-ae4f-5a6b7c8d9e0f";
+    const retained1 = "d4e5f6a7-b8c9-4d4e-bf5a-6b7c8d9e0f1a";
+
+    const dto: FinancialExtractionDTO = {
+      entry_intent: "transaction",
+      action_intent: "create",
+      target_draft_id: null,
+      transactions: [
+        {
+          type: "expense",
+          amount: "200",
+          category: "fuel",
+          expense_type: "work",
+          ownership: "mine",
+          date: "2026-11-21",
+          description: "Petrol",
+        },
+        {
+          type: "expense",
+          amount: "50",
+          category: "food",
+          expense_type: "living",
+          ownership: "mine",
+          date: "2026-11-21",
+          description: "Chai",
+        },
+      ],
+      expected_payout: null,
+      balance_checkin: null,
+      metadata: {
+        input_source: "text",
+        certainty: 0.9,
+        clarification_required: false,
+        clarification_reason: null,
+        clarification_questions: [],
+        raw_utterance: "Petrol 200 and chai 50",
+      },
+    };
+
+    const ctx: PendingDraftContext = {
+      authorizedDraftIds: [],
+      existingCandidateIds: [retained0, retained1],
+    };
+
+    const firstRun = mapDtoToVoiceCandidates(dto, ctx);
+    assertStrictEqual(firstRun[0]?.candidate_id, retained0);
+    assertStrictEqual(firstRun[1]?.candidate_id, retained1);
+
+    const secondRun = mapDtoToVoiceCandidates(dto, ctx);
+    assertStrictEqual(secondRun[0]?.candidate_id, retained0);
+    assertStrictEqual(secondRun[1]?.candidate_id, retained1);
+    assertStrictEqual(firstRun[0]?.candidate_id, secondRun[0]?.candidate_id);
+    assertStrictEqual(firstRun[1]?.candidate_id, secondRun[1]?.candidate_id);
+  });
+
+  it("19. UUID validity for every candidate across voice and receipt modes", () => {
+    const voiceDto: FinancialExtractionDTO = {
+      entry_intent: "transaction",
+      action_intent: "create",
+      transactions: [
+        {
+          type: "income",
+          amount: "2000",
+          category: "earnings",
+          expense_type: null,
+          ownership: "mine",
+          date: "2026-11-21",
+          description: "Voice income",
+        },
+      ],
+      expected_payout: null,
+      balance_checkin: null,
+      metadata: {
+        input_source: "voice_transcript",
+        certainty: 0.9,
+        clarification_required: false,
+        clarification_reason: null,
+        clarification_questions: [],
+        raw_utterance: "Voice income 2000",
+      },
+    };
+
+    const receiptDto: FinancialExtractionDTO = {
+      entry_intent: "transaction",
+      action_intent: "create",
+      transactions: [
+        {
+          type: "expense",
+          amount: "650",
+          category: "maintenance",
+          expense_type: "work",
+          ownership: "mine",
+          date: "2026-11-21",
+          description: "Bike oil change",
+          evidence_type: "receipt_image",
+          verification_status: "receipt_reported",
+        },
+      ],
+      expected_payout: null,
+      balance_checkin: null,
+      metadata: {
+        input_source: "shared_receipt_image",
+        certainty: 0.98,
+        clarification_required: false,
+        clarification_reason: null,
+        clarification_questions: [],
+        raw_utterance: "Receipt 650 bike oil",
+      },
+    };
+
+    const [voiceCand] = mapDtoToVoiceCandidates(voiceDto);
+    const [receiptCand] = mapDtoToReceiptCandidates(receiptDto);
+
+    assertStrictEqual(isValidUUID(voiceCand?.candidate_id), true);
+    assertStrictEqual(isValidUUID(receiptCand?.candidate_id), true);
+    assertStrictEqual(RFC_4122_UUID_REGEX.test(voiceCand!.candidate_id), true);
+    assertStrictEqual(RFC_4122_UUID_REGEX.test(receiptCand!.candidate_id), true);
+  });
+
+  it("20. confirmation retry using same candidate identity preserves identical transaction UUID", async () => {
+    const dto: FinancialExtractionDTO = {
+      entry_intent: "transaction",
+      action_intent: "create",
+      transactions: [
+        {
+          type: "income",
+          amount: "3200",
+          category: "earnings",
+          expense_type: null,
+          ownership: "mine",
+          date: "2026-11-21",
+          description: "Project milestone",
+        },
+      ],
+      expected_payout: null,
+      balance_checkin: null,
+      metadata: {
+        input_source: "text",
+        certainty: 0.95,
+        clarification_required: false,
+        clarification_reason: null,
+        clarification_questions: [],
+        raw_utterance: "Got 3200 milestone",
+      },
+    };
+
+    const [candidate] = mapDtoToVoiceCandidates(dto);
+    const candidateUUID = candidate!.candidate_id;
+    assertStrictEqual(isValidUUID(candidateUUID), true);
+
+    // Initial adaptation and retry adaptation yield identical valid UUIDs
+    const txAttempt1 = candidateToNewTransaction(candidate!);
+    const txAttempt2 = candidateToNewTransaction(candidate!);
+    assertStrictEqual(txAttempt1.id, candidateUUID);
+    assertStrictEqual(txAttempt2.id, candidateUUID);
+    assertStrictEqual(txAttempt1.id, txAttempt2.id);
+    assertStrictEqual(isValidUUID(txAttempt1.id), true);
+
+    // Persistence delegation across retries receives the exact same UUID
+    const deliveredIds: string[] = [];
+    const mockPersist = async (tx: any) => {
+      deliveredIds.push(tx.id);
+      return tx;
+    };
+
+    await confirmCandidateTransaction(candidate!, mockPersist);
+    await confirmCandidateTransaction(candidate!, mockPersist);
+    await confirmCandidateTransaction(candidate!, mockPersist);
+
+    assertStrictEqual(deliveredIds.length, 3);
+    assertStrictEqual(deliveredIds[0], candidateUUID);
+    assertStrictEqual(deliveredIds[1], candidateUUID);
+    assertStrictEqual(deliveredIds[2], candidateUUID);
+  });
+
+  it("21. candidateToNewTransaction strictly rejects invalid or missing candidate IDs without draft_id fallback", () => {
+    const validDraftUUID = "550e8400-e29b-41d4-a716-446655440000";
+
+    const baseCandidate = {
+      type: "income" as const,
+      amount_paise: 100000,
+      amount_rupees: "1000",
+      category: "earnings",
+      expense_type: null,
+      ownership: "mine" as const,
+      date: "2026-11-21" as any,
+      description: "Test income",
+      payment_method: "cash" as const,
+      counterparty: null,
+      evidence_type: "voice_transcript" as const,
+      verification_status: "user_asserted" as const,
+      clarification_required: false,
+      clarification_questions: [],
+      raw_utterance: "Received 1000 cash",
+    };
+
+    // 1. Missing candidate_id throws clear error
+    assertThrows(
+      () =>
+        candidateToNewTransaction({
+          ...baseCandidate,
+          candidate_id: "" as any,
+          draft_id: null,
+        }),
+      /Cannot confirm candidate transaction: candidate_id '' is missing or not a valid RFC 4122 UUID/
+    );
+
+    // 2. Non-UUID candidate_id throws clear error
+    assertThrows(
+      () =>
+        candidateToNewTransaction({
+          ...baseCandidate,
+          candidate_id: "not-a-uuid-string" as any,
+          draft_id: null,
+        }),
+      /Cannot confirm candidate transaction: candidate_id 'not-a-uuid-string' is missing or not a valid RFC 4122 UUID/
+    );
+
+    // 3. Invariant: NEVER falls back to draft_id when candidate_id is invalid or missing
+    // Even if draft_id is a perfectly valid RFC 4122 UUID, candidate_id must still be valid
+    assertThrows(
+      () =>
+        candidateToNewTransaction({
+          ...baseCandidate,
+          candidate_id: "invalid-id" as any,
+          draft_id: validDraftUUID,
+        }),
+      /Cannot confirm candidate transaction: candidate_id 'invalid-id' is missing or not a valid RFC 4122 UUID/
+    );
+
+    assertThrows(
+      () =>
+        candidateToNewTransaction({
+          ...baseCandidate,
+          candidate_id: "" as any,
+          draft_id: validDraftUUID,
+        }),
+      /Cannot confirm candidate transaction: candidate_id '' is missing or not a valid RFC 4122 UUID/
+    );
+  });
+
+  it("22. deterministic fallback stability and sibling disambiguation", () => {
+    const seed1 = "test-draft-uuid:tx:1";
+    const seed2 = "test-draft-uuid:tx:2";
+
+    // 1. Output conforms to RFC 4122 format
+    const uuid1 = deriveDeterministicUUID(seed1);
+    const uuid2 = deriveDeterministicUUID(seed2);
+    assertStrictEqual(isValidUUID(uuid1), true);
+    assertStrictEqual(isValidUUID(uuid2), true);
+    assertStrictEqual(RFC_4122_UUID_REGEX.test(uuid1), true);
+    assertStrictEqual(RFC_4122_UUID_REGEX.test(uuid2), true);
+
+    // 2. Deterministic stability across calls
+    const uuid1_again = deriveDeterministicUUID(seed1);
+    assertStrictEqual(uuid1, uuid1_again);
+
+    // 3. Sibling indices produce distinct UUIDs
+    assertStrictEqual(uuid1 !== uuid2, true);
   });
 });

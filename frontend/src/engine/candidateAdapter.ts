@@ -26,39 +26,113 @@ import type {
 import { isValidPaise } from "./validation";
 
 /**
- * Generates a standard RFC4122 v4 UUID string.
- * Uses crypto.randomUUID() when available (modern browser, Deno, Node 19+).
- * Falls back to RFC4122 v4 UUID generator for environments without crypto.randomUUID.
+ * RFC 4122 UUID validation regex (versions 1-5, case-insensitive).
  */
-function generateUUID(): string {
-  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
-    return crypto.randomUUID();
-  }
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
-    const v = c === "x" ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
+export const RFC_4122_UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+export function isValidUUID(id: unknown): id is string {
+  return typeof id === "string" && RFC_4122_UUID_REGEX.test(id.trim());
 }
 
 /**
- * Resolves or creates a stable candidate ID.
- * Hierarchy:
- * 1. If trusted context supplies existingCandidateIds for this slot, reuse it.
- * 2. If a draft ID was authorized and exists, reuse it.
- * 3. Generate once at candidate creation and retain in draft lifecycle.
+ * Generates a standard RFC 4122 v4 random UUID string.
+ * Uses crypto.randomUUID() when available (modern browser, Deno, Node 19+).
+ * Falls back to RFC 4122 v4 generator for environments without crypto.randomUUID.
  */
-function resolveCandidateId(
+export function generateUUID(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID().toLowerCase();
+  }
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"
+    .replace(/[xy]/g, (c) => {
+      const r = (Math.random() * 16) | 0;
+      const v = c === "x" ? r : (r & 0x3) | 0x8;
+      return v.toString(16);
+    })
+    .toLowerCase();
+}
+
+/**
+ * 32-bit FNV-1a non-cryptographic hash for deterministic seed derivation.
+ *
+ * Guarantees & Limitations:
+ * - Determinism: Identical inputs produce identical 32-bit integer values across runs.
+ * - Non-cryptographic: FNV-1a is designed for fast hashing, NOT cryptographic security or collision resistance.
+ * - Sibling disambiguation: Intended solely for disambiguating sibling transaction candidates in a multi-transaction draft.
+ * - Collisions: Collisions are theoretically possible (birthday bound ~2^16 for 32-bit space). It does NOT offer 122-bit cryptographic collision resistance.
+ */
+function fnv1a32(str: string, seed = 0x811c9dc5): number {
+  let h = seed;
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  return h >>> 0;
+}
+
+/**
+ * Derives a deterministic RFC 4122 v4-formatted UUID from a seed string.
+ *
+ * Guarantees & Limitations:
+ * - Format compliance: Returns a string structurally conforming to RFC 4122 UUID layout (version 4 nibble, variant bits 10xx).
+ * - Determinism: Identical seed strings yield identical UUID-formatted strings across runtime sessions.
+ * - Non-cryptographic: Does NOT provide cryptographic randomness or 122 bits of cryptographic collision resistance.
+ * - Sibling disambiguation: Intended as a synchronous fallback to disambiguate sibling transactions in a multi-transaction draft (`${draftId}:tx:${index}`) without appending non-UUID suffixes like '-tx-1'.
+ * - Collisions: Collisions across different arbitrary seed strings are theoretically possible.
+ */
+export function deriveDeterministicUUID(seed: string): string {
+  const h1 = fnv1a32(seed, 0x811c9dc5).toString(16).padStart(8, "0");
+  const h2 = fnv1a32(`${seed}:1`, 0x9e3779b9).toString(16).padStart(8, "0");
+  const h3 = fnv1a32(`${seed}:2`, 0x6a09e667).toString(16).padStart(8, "0");
+  const h4 = fnv1a32(`${seed}:3`, 0xbb67ae85).toString(16).padStart(8, "0");
+
+  const time_low = h1;
+  const time_mid = h2.slice(0, 4);
+  const time_hi_and_version = `4${h2.slice(5, 8)}`;
+  const clock_seq_hi = (((parseInt(h3[0], 16) || 0) & 0x3) | 0x8).toString(16);
+  const clock_seq = `${clock_seq_hi}${h3.slice(1, 4)}`;
+  const node = `${h4}${h3.slice(4, 8)}`;
+
+  return `${time_low}-${time_mid}-${time_hi_and_version}-${clock_seq}-${node}`.toLowerCase();
+}
+
+/**
+ * Resolves or creates a stable, valid RFC 4122 UUID for a candidate transaction.
+ *
+ * Rules:
+ * 1. If trusted context supplies existingCandidateIds for this slot, reuse it.
+ * 2. If a draft ID was authorized and provided:
+ *    - For single transaction (index === 0): reuse draftId if it is a valid UUID, otherwise derive deterministic UUID.
+ *    - For multiple transactions (index > 0): deterministically derive a distinct valid UUID from `${draftId}:tx:${index}`.
+ *    - NEVER appends string suffixes like "-tx-N" to UUIDs.
+ * 3. If neither is supplied: generate a fresh random RFC 4122 v4 UUID.
+ */
+export function resolveCandidateId(
   draftId: string | null,
   index: number,
   context?: PendingDraftContext
 ): string {
   if (context?.existingCandidateIds && context.existingCandidateIds[index]) {
-    return context.existingCandidateIds[index];
+    const existing = context.existingCandidateIds[index].trim();
+    if (isValidUUID(existing)) {
+      return existing.toLowerCase();
+    }
+    return deriveDeterministicUUID(existing);
   }
+
   if (draftId) {
-    return index === 0 ? draftId : `${draftId}-tx-${index}`;
+    const cleanDraftId = draftId.trim();
+    if (index === 0) {
+      if (isValidUUID(cleanDraftId)) {
+        return cleanDraftId.toLowerCase();
+      }
+      return deriveDeterministicUUID(cleanDraftId);
+    }
+    // Sibling transaction in multi-transaction draft: derive deterministic valid RFC 4122 UUID
+    return deriveDeterministicUUID(`${cleanDraftId}:tx:${index}`);
   }
+
   return generateUUID();
 }
 
@@ -345,10 +419,25 @@ export function mapDtoToReceiptCandidates(
 /**
  * Adapts a candidate (voice or receipt) into a validated NewTransaction payload.
  * Does NOT persist or write to database.
+ *
+ * Invariants:
+ * 1. candidate.candidate_id MUST be an explicit, valid RFC 4122 UUID.
+ *    - Rejects invalid or missing candidate IDs with an Error.
+ *    - NEVER falls back to candidate.draft_id (which would cause sibling collision on transactions_pkey).
+ *    - NEVER silently generates a new UUID during confirmation (which breaks retry idempotency).
+ * 2. Amount and expense_type rules are strictly enforced.
  */
 export function candidateToNewTransaction(
   candidate: VoiceTransactionCandidate | ExtractedReceiptCandidate
 ): NewTransaction {
+  if (!candidate.candidate_id || !isValidUUID(candidate.candidate_id)) {
+    throw new Error(
+      `Cannot confirm candidate transaction: candidate_id '${String(
+        candidate.candidate_id
+      )}' is missing or not a valid RFC 4122 UUID.`
+    );
+  }
+
   if (candidate.amount_paise === null || candidate.amount_paise <= 0) {
     throw new Error("Cannot confirm candidate transaction: invalid or missing amount.");
   }
@@ -363,8 +452,8 @@ export function candidateToNewTransaction(
   }
 
   return {
-    // Stable ID: reuse draft_id if available, otherwise candidate_id.
-    id: candidate.draft_id ?? candidate.candidate_id,
+    // Preserve candidate UUID strictly; never fall back or mint a new ID during confirmation
+    id: candidate.candidate_id.toLowerCase(),
     type: candidate.type,
     amount: candidate.amount_paise,
     category: candidate.category,
