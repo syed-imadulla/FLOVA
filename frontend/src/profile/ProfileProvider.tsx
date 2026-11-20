@@ -15,18 +15,23 @@ export const ProfileContext = createContext<ProfileContextType | undefined>(unde
 
 export function ProfileProvider({ children }: { children: React.ReactNode }) {
   const { user } = useSession();
+  const userId = user?.id;
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchProfile = useCallback(async () => {
-    if (!user) {
+    if (!userId) {
       setProfile(null);
       setLoading(false);
       setError(null);
       return;
     }
-    setLoading(true);
+    // Keep current profile visible during reload; only set loading true if no profile exists yet
+    setProfile((current) => {
+      if (!current) setLoading(true);
+      return current;
+    });
     setError(null);
     try {
       const data = await getMyProfile();
@@ -36,7 +41,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [userId]);
 
   useEffect(() => {
     fetchProfile();
@@ -44,14 +49,14 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
 
   const save = useCallback(
     async (patch: ProfileUpdate): Promise<Profile> => {
-      if (!user) {
+      if (!userId) {
         throw new Error("Cannot save profile without an active session");
       }
-      const updated = await updateMyProfile(user.id, patch);
+      const updated = await updateMyProfile(userId, patch);
       setProfile(updated);
       return updated;
     },
-    [user]
+    [userId]
   );
 
   return (

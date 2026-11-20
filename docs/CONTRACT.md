@@ -109,3 +109,13 @@ Received money is recorded **once**, as a transaction. A payout only mirrors wha
 | Engine feed | `loadRunwayInput()` → `RunwayInput` (all paise, nulls kept) |
 
 All amounts passed to these functions are **paise**.
+
+## Frontend data hooks (`frontend/src/data/`)
+| Hook | State & Methods | Notes |
+|---|---|---|
+| `useLatestCheckin()` | `{ checkin, loading, error, add(c), reload() }` | Loads most recent balance check-in |
+| `useTransactions(opts)` | `{ items, loading, error, add(t), update(id, patch), remove(id), reload() }` | Transactions newest first (default limit 100) |
+| `usePayouts()` | `{ items, loading, error, add(p), receive(id, amount, date?), setStatus(id, status), reload() }` | Expected payouts list and settlement actions |
+| `useCommitments(filter)` | `{ items, loading, error, add(c), setStatus(id, status), reload() }` | Commitments (upcoming or all) |
+| `useProfile()` | `{ profile, loading, error, reload(), save(patch) }` | Profile state in `frontend/src/profile/` |
+
