@@ -206,15 +206,22 @@ for (const alias of aliases) {
   check(settledPath === "/login", `Alias ${alias.from} -> ${alias.target} resolves safely without loops (redirected to ${settledPath})`);
 }
 
-// 6. Source-level audit of ActivityScreen and ProfileScreen
+// 6. Source-level audit of ActivityScreen, ProfileScreen, CatchScreen and AddScreen
 const activitySrc = fs.readFileSync(path.resolve(__dirname, "../frontend/src/screens/ActivityScreen.tsx"), "utf8");
 const profileSrc = fs.readFileSync(path.resolve(__dirname, "../frontend/src/screens/ProfileScreen.tsx"), "utf8");
 const moreSrc = fs.readFileSync(path.resolve(__dirname, "../frontend/src/screens/MoreScreen.tsx"), "utf8");
+const catchSrc = fs.readFileSync(path.resolve(__dirname, "../frontend/src/screens/CatchScreen.tsx"), "utf8");
+const addSrc = fs.readFileSync(path.resolve(__dirname, "../frontend/src/screens/AddScreen.tsx"), "utf8");
 
 check(!activitySrc.includes("IconMic") && !activitySrc.includes("Add by voice"), "ActivityScreen verified: no 'Add by voice' or voice capture triggers in Activity");
 check(!activitySrc.includes("useNavigate") || !activitySrc.includes("navigateToCreate"), "ActivityScreen verified: no creation controls in Activity screen");
 check(profileSrc.includes("signOut") && profileSrc.includes("Sign out"), "ProfileScreen verified: accessible Sign out button present calling signOut()");
 check(moreSrc.includes("signOut") && moreSrc.includes("Sign out"), "MoreScreen verified: accessible Sign out button present calling signOut()");
+
+check(catchSrc.includes('capture="environment"'), "CatchScreen verified: Camera input explicitly specifies capture='environment'");
+check(catchSrc.includes("galleryInputRef") && catchSrc.includes("cameraInputRef"), "CatchScreen verified: Distinct triggers for Camera vs Gallery");
+check(catchSrc.includes("flova-shared-cache"), "CatchScreen verified: Listens for PWA Web Share Target cached content");
+check(addSrc.includes("upi_screenshot") && addSrc.includes("Payment Pending Confirmation"), "AddScreen verified: Unified review handles UPI screenshots with pending/failed alerts");
 
 console.log("=================================================");
 console.log(`Browser Audit Results: ${pass} passed, ${fail} failed, ${pass + fail} total`);

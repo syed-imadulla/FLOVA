@@ -289,6 +289,8 @@ export interface ExtractedReceiptCandidate {
   id?: string;
   candidate_id?: string;
   draft_id?: string | null;
+  type?: TransactionType;
+  kind?: "physical_receipt" | "upi_screenshot" | "payment_sms" | "unknown";
   merchant: string | null;
   amountPaise: Paise | null;
   amount_paise?: Paise | null;
@@ -298,8 +300,24 @@ export interface ExtractedReceiptCandidate {
   expense_type?: ExpenseType | null;
   ownership?: MoneyOwnership;
   date: ISODate | null;
+  extractedDate?: ISODate | null;
   extracted_date?: ISODate | null;
   contextual_date?: ISODate | null;
+  scannedAt?: string;
+  dateFallback?: boolean;
+  time?: string | null;
+  paymentStatus?: "successful" | "pending" | "failed" | "unknown";
+  payment_status?: "successful" | "pending" | "failed" | "unknown";
+  upiReference?: string | null;
+  upi_reference?: string | null;
+  upiApp?: string | null;
+  upi_app?: string | null;
+  items?: Array<{ name: string; quantity?: number; price?: number }>;
+  subtotalPaise?: Paise | null;
+  taxPaise?: Paise | null;
+  discountPaise?: Paise | null;
+  possibleTotals?: number[];
+  duplicateWarning?: { existingTransactionId: string; reference: string } | null;
   description?: string | null;
   notes?: string | null; // Optional alias for backward compatibility
   confidence?: number;

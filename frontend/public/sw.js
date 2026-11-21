@@ -1,5 +1,6 @@
 // FLOVA Service Worker (Cloud-Connected Only — No Offline Mutating or Queuing Claims)
-const CACHE_NAME = "flova-shell-v1";
+const CACHE_NAME = "flova-shell-v2";
+const SHARED_CACHE_NAME = "flova-shared-cache";
 const SHELL_ASSETS = ["/", "/index.html", "/favicon.svg", "/manifest.webmanifest"];
 
 self.addEventListener("install", (event) => {
@@ -11,13 +12,45 @@ self.addEventListener("install", (event) => {
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
-      Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)))
+      Promise.all(keys.filter((key) => key !== CACHE_NAME && key !== SHARED_CACHE_NAME).map((key) => caches.delete(key)))
     ).then(() => self.clients.claim())
   );
 });
 
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
+
+  // Handle PWA Web Share Target POST requests
+  if (event.request.method === "POST" && url.pathname === "/share-target") {
+    event.respondWith((async () => {
+      try {
+        const formData = await event.request.formData();
+        const file = formData.get("media");
+        const text = formData.get("text") || formData.get("url") || formData.get("title") || "";
+        const cache = await caches.open(SHARED_CACHE_NAME);
+
+        if (file && typeof file === "object" && "size" in file && file.size > 0) {
+          const headers = new Headers();
+          headers.set("Content-Type", file.type || "image/jpeg");
+          headers.set("X-File-Name", file.name || "shared-image.jpg");
+          await cache.put("/shared-file", new Response(file, { headers }));
+        }
+
+        if (text && typeof text === "string" && text.trim().length > 0) {
+          await cache.put(
+            "/shared-text",
+            new Response(JSON.stringify({ text: text.trim() }), {
+              headers: { "Content-Type": "application/json" },
+            })
+          );
+        }
+      } catch (err) {
+        console.error("Failed to process share target in service worker:", err);
+      }
+      return Response.redirect("/catch?shared=1", 303);
+    })());
+    return;
+  }
 
   // Strictly skip caching for all API, Auth, and Supabase database requests
   if (

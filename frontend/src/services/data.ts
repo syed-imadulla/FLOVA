@@ -350,8 +350,9 @@ export async function confirmCandidateTransaction(
 
   if (isReceipt) {
     const rc = candidate as ExtractedReceiptCandidate;
+    const txType = rc.type ?? "expense";
     const expenseType = rc.expenseType ?? rc.expense_type;
-    if (!expenseType) {
+    if (txType === "expense" && (!rc.ownership || rc.ownership === "mine") && !expenseType) {
       throw new Error("Choose whether this expense is living or work.");
     }
 
@@ -367,11 +368,11 @@ export async function confirmCandidateTransaction(
 
     return addTransaction({
       id: stableId,
-      type: "expense",
+      type: txType,
       amount: amountPaise,
       category: rc.category || "other",
       description,
-      expenseType,
+      expenseType: txType === "expense" ? (expenseType ?? undefined) : undefined,
       ownership: rc.ownership ?? "mine",
       date: rc.date ?? undefined,
       source: "ai_suggestion",

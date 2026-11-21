@@ -1,10 +1,13 @@
 // =====================================================================
-// FLOVA Receipt Extraction Service (Owner: M1)
+// FLOVA Receipt & UPI Screenshot Extraction Service (Owner: M1)
 // Connects frontend to the secure Supabase Edge Function: extract-receipt.
-// Never exposes GROQ_API_KEY in client code.
+// Implements mandatory date fallback rules, duplicate reference detection,
+// and client-side fallback parsing when offline.
+// Strictly read-only inference: never mutates database tables.
 // =====================================================================
 
 import { supabase } from "../lib/supabase";
+import { todayLocalISO } from "../data/dates";
 import type { ExtractedReceiptCandidate } from "../types/contracts";
 
 export interface ExtractReceiptInput {
@@ -40,8 +43,158 @@ export async function fileToBase64(file: File): Promise<string> {
 }
 
 /**
- * Invokes the secure Supabase Edge Function to extract structured receipt suggestions.
+ * Checks existing transactions to see if a transaction with the same UPI reference ID already exists.
+ * Returns the existing transaction ID if found, otherwise null.
+ */
+export async function checkDuplicateUpiReference(upiReference: string): Promise<string | null> {
+  if (!upiReference || upiReference.trim().length < 6) return null;
+  const refClean = upiReference.trim();
+
+  try {
+    const { data, error } = await supabase
+      .from("transactions")
+      .select("id, description")
+      .ilike("description", `%${refClean}%`)
+      .limit(1);
+
+    if (!error && data && data.length > 0) {
+      return data[0].id;
+    }
+  } catch {
+    // If offline or network error, skip duplicate check
+  }
+  return null;
+}
+
+/**
+ * Offline / client-side heuristic fallback for parsing payment SMS, UPI texts, or receipts
+ * when the AI extraction service is unreachable.
+ */
+export function extractReceiptFallback(rawText: string): ExtractedReceiptCandidate {
+  const text = rawText.trim();
+  const lower = text.toLowerCase();
+
+  // 1. Amount extraction (rejecting phone numbers / GST / invoice numbers)
+  let amountPaise: number | null = null;
+  const amountMatch =
+    text.match(/(?:rs\.?|inr|₹)\s*([\d,]+(?:\.\d{1,2})?)/i) ||
+    text.match(/(?:paid|spent|debited|sent)\s*(?:rs\.?|inr|₹)?\s*([\d,]+(?:\.\d{1,2})?)/i);
+
+  if (amountMatch) {
+    const cleanNum = parseFloat(amountMatch[1].replace(/,/g, ""));
+    if (!isNaN(cleanNum) && cleanNum > 0 && cleanNum <= 1000000) {
+      amountPaise = Math.round(cleanNum * 100);
+    }
+  }
+
+  // 2. UPI Reference / UTR (typically 12 digits or alphanumeric txn ID)
+  let upiReference: string | null = null;
+  const refMatch =
+    text.match(/(?:upi\s*ref(?:erence)?(?:\s*no\.?)?|utr(?:\s*no\.?)?|txn\s*id|transaction\s*id)[:\s]*([a-zA-Z0-9]{8,22})/i) ||
+    text.match(/\b(\d{12})\b/);
+  if (refMatch) {
+    upiReference = refMatch[1];
+  }
+
+  // 3. Payment Status
+  let paymentStatus: "successful" | "pending" | "failed" | "unknown" = "successful";
+  if (/pending|processing|awaiting/i.test(lower)) {
+    paymentStatus = "pending";
+  } else if (/failed|declined|unsuccessful/i.test(lower)) {
+    paymentStatus = "failed";
+  } else if (!/paid|successful|completed|debited|sent|received/i.test(lower)) {
+    paymentStatus = "unknown";
+  }
+
+  // 4. UPI App detection
+  let upiApp: string | null = null;
+  if (/google\s*pay|gpay/i.test(lower)) upiApp = "google_pay";
+  else if (/phonepe/i.test(lower)) upiApp = "phonepe";
+  else if (/paytm/i.test(lower)) upiApp = "paytm";
+  else if (/cred/i.test(lower)) upiApp = "cred";
+  else if (/bhim/i.test(lower)) upiApp = "bhim";
+
+  // 5. Merchant / Recipient
+  let merchant: string | null = null;
+  const toMatch = text.match(/(?:to|at|paid to|sent to)[:\s]+([A-Za-z0-9\s&'-]{3,35})(?:\s+on|\s+for|\s+via|\.|\n|$)/i);
+  if (toMatch) {
+    merchant = toMatch[1].trim();
+  }
+
+  // 6. Date extraction with mandatory fallback rule
+  let extractedDate: string | null = null;
+  let dateFallback = false;
+  const dateMatch = text.match(/\b(\d{4}-\d{2}-\d{2})\b/) || text.match(/\b(\d{1,2})[-/](\d{1,2})[-/](\d{4})\b/);
+  if (dateMatch) {
+    if (dateMatch[1] && dateMatch[1].includes("-")) {
+      extractedDate = dateMatch[1];
+    } else if (dateMatch[2] && dateMatch[3]) {
+      const d = dateMatch[1].padStart(2, "0");
+      const m = dateMatch[2].padStart(2, "0");
+      const y = dateMatch[3];
+      extractedDate = `${y}-${m}-${d}`;
+    }
+  }
+
+  const scannedAt = new Date().toISOString();
+  let finalDate = extractedDate;
+  if (!finalDate) {
+    finalDate = todayLocalISO();
+    dateFallback = true;
+  }
+
+  // 7. Category guessing
+  let category = "other";
+  let expenseType: "living" | "work" | null = null;
+  if (/petrol|diesel|fuel|cng/i.test(lower)) {
+    category = "fuel";
+    expenseType = "work";
+  } else if (/food|tea|chai|samosa|restaurant|swiggy|zomato/i.test(lower)) {
+    category = "food";
+    expenseType = "living";
+  } else if (/kirana|grocery|groceries|supermarket/i.test(lower)) {
+    category = "groceries";
+    expenseType = "living";
+  } else if (/recharge|airtel|jio|vi|mobile/i.test(lower)) {
+    category = "phone";
+    expenseType = "work";
+  } else if (/repair|maintenance|bike\s*service/i.test(lower)) {
+    category = "maintenance";
+    expenseType = "work";
+  }
+
+  const missingFields: string[] = [];
+  if (amountPaise === null) missingFields.push("amount");
+  if (expenseType === null) missingFields.push("expenseType");
+
+  const id = typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+    ? crypto.randomUUID()
+    : "cand-" + Math.random().toString(36).slice(2, 11);
+
+  return {
+    id,
+    kind: upiReference || upiApp ? "upi_screenshot" : "payment_sms",
+    merchant,
+    amountPaise,
+    category,
+    expenseType,
+    date: finalDate,
+    extractedDate,
+    scannedAt,
+    dateFallback,
+    paymentStatus,
+    upiReference,
+    upiApp,
+    description: merchant ? `${merchant} payment` : (upiReference ? `UPI Ref: ${upiReference}` : "Payment text"),
+    needsReview: missingFields.length > 0 || paymentStatus !== "successful" || dateFallback,
+    missingFields,
+  };
+}
+
+/**
+ * Invokes the secure Supabase Edge Function to extract structured receipt and UPI screenshot suggestions.
  * Strictly read-only: does NOT insert transactions into the database.
+ * Enforces date fallback rules and duplicate UPI reference detection.
  */
 export async function extractReceipt(input: ExtractReceiptInput): Promise<ExtractedReceiptCandidate> {
   let imageBase64: string | undefined = undefined;
@@ -58,32 +211,80 @@ export async function extractReceipt(input: ExtractReceiptInput): Promise<Extrac
     throw new Error("Please select an image or enter receipt text to extract.");
   }
 
-  const { data, error } = await supabase.functions.invoke<{
-    candidate: ExtractedReceiptCandidate;
-    rawText?: string;
-    error?: string;
-  }>("extract-receipt", {
-    body: { imageBase64, mimeType, text },
-  });
+  try {
+    const { data, error } = await supabase.functions.invoke<{
+      candidate: ExtractedReceiptCandidate;
+      rawText?: string;
+      error?: string;
+    }>("extract-receipt", {
+      body: { imageBase64, mimeType, text },
+    });
 
-  if (error) {
-    throw new Error(`Receipt extraction service error: ${error.message}`);
-  }
-
-  if (!data || !data.candidate) {
-    throw new Error(data?.error || "Receipt extraction returned no structured candidate.");
-  }
-
-  const candidate = data.candidate;
-
-  // Ensure a persistent client UUID is assigned for idempotency
-  if (!candidate.id) {
-    if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
-      candidate.id = crypto.randomUUID();
-    } else {
-      candidate.id = "cand-" + Math.random().toString(36).slice(2, 11);
+    if (error) {
+      throw new Error(error.message || "Failed to extract receipt");
     }
-  }
 
-  return candidate;
+    if (!data || !data.candidate) {
+      throw new Error(data?.error || "Receipt extraction returned no structured candidate.");
+    }
+
+    const candidate = data.candidate;
+
+    // Ensure a persistent client UUID is assigned for idempotency
+    if (!candidate.id) {
+      if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+        candidate.id = crypto.randomUUID();
+      } else {
+        candidate.id = "cand-" + Math.random().toString(36).slice(2, 11);
+      }
+    }
+
+    // MANDATORY DATE FALLBACK INVARIANT:
+    // 1. If document has a clear legible date, preserve it as extractedDate.
+    // 2. If document lacks a legible date, fallback to today's local date and set dateFallback = true.
+    // 3. Preserve scannedAt timestamp.
+    candidate.scannedAt = new Date().toISOString();
+    if (candidate.date && /^\d{4}-\d{2}-\d{2}$/.test(candidate.date)) {
+      candidate.extractedDate = candidate.date;
+      candidate.dateFallback = false;
+    } else {
+      candidate.extractedDate = null;
+      candidate.date = todayLocalISO();
+      candidate.dateFallback = true;
+    }
+
+    // DUPLICATE DETECTION:
+    // If UPI reference is extracted, check whether an existing transaction already recorded it.
+    if (candidate.upiReference) {
+      const existingId = await checkDuplicateUpiReference(candidate.upiReference);
+      if (existingId) {
+        candidate.duplicateWarning = {
+          existingTransactionId: existingId,
+          reference: candidate.upiReference,
+        };
+        candidate.needsReview = true;
+      }
+    }
+
+    return candidate;
+  } catch (err: any) {
+    // If network failed completely (offline) and text was provided, fallback to offline heuristic
+    const isNetworkOffline = typeof navigator !== "undefined" && navigator?.onLine === false;
+    const isFetchFail = err?.name === "TypeError" && /fetch|network/i.test(err?.message || "");
+    if (text && (isNetworkOffline || isFetchFail)) {
+      console.warn("Network offline, using local heuristic text extraction:", err);
+      const fallback = extractReceiptFallback(text);
+      if (fallback.upiReference) {
+        const existingId = await checkDuplicateUpiReference(fallback.upiReference);
+        if (existingId) {
+          fallback.duplicateWarning = {
+            existingTransactionId: existingId,
+            reference: fallback.upiReference,
+          };
+        }
+      }
+      return fallback;
+    }
+    throw err;
+  }
 }

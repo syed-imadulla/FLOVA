@@ -158,24 +158,46 @@ Deno.serve(async (req: Request) => {
     }
 
     // 5. Select Groq Model and build messages
-    const systemPrompt = `You are a specialized financial receipt extraction engine for Indian gig and delivery workers.
-Extract structured expense data from the receipt image or text.
-Follow these strict rules:
-1. Extract:
-   - merchant: string or null (vendor/shop/pump name)
-   - amount_rupees: number or null (final paid total amount in Indian Rupees)
-   - date: string or null (transaction date in ISO YYYY-MM-DD format)
-   - category: string or null (one of: 'fuel', 'food', 'phone', 'maintenance', 'rent', 'other')
-   - expense_type: string or null (either 'living', 'work', or null if uncertain)
-   - description: string or null (concise description of purchase or items)
-   - confidence: number between 0 and 1 estimating extraction certainty
-   - missing_fields: string[] (list any fields that could not be detected from the receipt, e.g. ["amount", "expense_type"])
-2. Anti-Hallucination & Truthful Uncertainty:
-   - DO NOT INVENT OR GUESS NUMBERS.
-   - If the total amount is not clearly legible or present, set amount_rupees to null and include "amount" in missing_fields.
-   - If merchant name is not clearly visible, set merchant to null.
-   - If date is not visible, set date to null.
-3. Return strictly a JSON object with the specified keys.`;
+    const systemPrompt = `You are a specialized financial receipt and UPI payment extraction engine for Indian gig and delivery workers.
+Extract structured expense data from the receipt image, UPI payment screenshot, or transaction text/SMS.
+
+Classification:
+- kind: 'physical_receipt' | 'upi_screenshot' | 'payment_sms' | 'unknown'
+
+Rules for UPI Screenshots & Payment SMS:
+- If this is a UPI screenshot (Google Pay, PhonePe, Paytm, CRED, BHIM, etc.) or UPI SMS:
+  - upi_app: 'google_pay' | 'phonepe' | 'paytm' | 'cred' | 'bhim' | 'other' | null
+  - upi_reference: 12-digit UTR or transaction ID (e.g. UPI Ref / UTR / Txn ID) if visible, or null
+  - payment_status: 'successful' | 'pending' | 'failed' | 'unknown'
+    - 'successful': clearly marked as Paid, Completed, Successful, or Green checkmark
+    - 'pending': Processing, Payment pending, Awaiting bank confirmation
+    - 'failed': Failed, Declined, Payment failed, Red cross mark
+    - 'unknown': status cannot be definitively determined
+  - merchant: recipient name or shop name where money was sent
+  - payment_method: 'upi'
+
+Rules for Physical Receipts:
+- items: array of { "name": string, "quantity": number | null, "price": number | null }
+- subtotal_rupees: number or null
+- tax_rupees: number or null (GST / VAT)
+- discount_rupees: number or null
+- payment_method: 'cash' | 'card' | 'upi' | 'other' | null
+
+General Anti-Hallucination & Truthful Uncertainty Rules:
+1. amount_rupees: final payable/paid total amount in Indian Rupees.
+   - NEVER MISTAKE invoice numbers, phone numbers (10 digits starting with 6-9), or GST numbers (15 chars) for amounts.
+   - Prefer final paid total over subtotal.
+   - If multiple possible totals exist, return them in possible_totals: number[].
+   - If amount is not clearly legible, set amount_rupees to null and add "amount" to missing_fields.
+2. date: transaction date strictly in YYYY-MM-DD format IF CLEARLY IDENTIFIABLE on the document.
+   - NEVER invent or assume today's date if date is missing or illegible; set date to null.
+3. time: transaction time in HH:MM format if visible, else null.
+4. category: one of 'fuel', 'food', 'groceries', 'phone', 'maintenance', 'rent', 'other'.
+5. expense_type: 'living', 'work', or null if uncertain.
+6. confidence: number between 0 and 1.
+7. missing_fields: string[] (e.g. ["amount", "expense_type", "date"]).
+
+Return strictly a JSON object matching this schema.`;
 
     let userContent: any;
 
@@ -185,7 +207,7 @@ Follow these strict rules:
         : `data:${body.mimeType || "image/jpeg"};base64,${body.imageBase64!}`;
 
       userContent = [
-        { type: "text", text: "Extract details from this receipt:" },
+        { type: "text", text: "Extract details from this receipt or UPI payment screenshot:" },
         { type: "image_url", image_url: { url: imageUrl } },
       ];
     } else {
@@ -240,6 +262,24 @@ Follow these strict rules:
       }
     }
 
+    let subtotalPaise: number | null = null;
+    if (parsed.subtotal_rupees !== null && parsed.subtotal_rupees !== undefined) {
+      const sNum = Number(parsed.subtotal_rupees);
+      if (!isNaN(sNum) && sNum > 0) subtotalPaise = Math.round(sNum * 100);
+    }
+
+    let taxPaise: number | null = null;
+    if (parsed.tax_rupees !== null && parsed.tax_rupees !== undefined) {
+      const tNum = Number(parsed.tax_rupees);
+      if (!isNaN(tNum) && tNum > 0) taxPaise = Math.round(tNum * 100);
+    }
+
+    let discountPaise: number | null = null;
+    if (parsed.discount_rupees !== null && parsed.discount_rupees !== undefined) {
+      const dNum = Number(parsed.discount_rupees);
+      if (!isNaN(dNum) && dNum > 0) discountPaise = Math.round(dNum * 100);
+    }
+
     let dateStr: string | null = null;
     if (typeof parsed.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(parsed.date)) {
       dateStr = parsed.date;
@@ -253,16 +293,38 @@ Follow these strict rules:
       missingFields.push("expenseType");
     }
 
-    const needsReview = missingFields.length > 0 || (typeof parsed.confidence === "number" && parsed.confidence < 0.85);
+    const paymentStatus = parsed.payment_status || (parsed.kind === "upi_screenshot" ? "unknown" : "successful");
+    const isUncertainStatus = paymentStatus === "pending" || paymentStatus === "failed" || paymentStatus === "unknown";
+
+    const needsReview = missingFields.length > 0 || isUncertainStatus || (typeof parsed.confidence === "number" && parsed.confidence < 0.85);
+
+    const items = Array.isArray(parsed.items)
+      ? parsed.items.map((i: any) => ({
+          name: String(i.name || "Item"),
+          quantity: typeof i.quantity === "number" ? i.quantity : null,
+          price: typeof i.price === "number" ? i.price : null,
+        }))
+      : [];
 
     const candidate = {
       id: crypto.randomUUID(),
+      kind: parsed.kind || "unknown",
       merchant: parsed.merchant || null,
       amountPaise,
+      subtotalPaise,
+      taxPaise,
+      discountPaise,
       category: parsed.category || "other",
       expenseType: parsed.expense_type === "living" || parsed.expense_type === "work" ? parsed.expense_type : null,
       date: dateStr,
-      description: parsed.description || (parsed.merchant ? `${parsed.merchant} receipt` : null),
+      extractedDate: dateStr,
+      time: parsed.time || null,
+      paymentStatus,
+      upiReference: parsed.upi_reference || null,
+      upiApp: parsed.upi_app || null,
+      items,
+      possibleTotals: Array.isArray(parsed.possible_totals) ? parsed.possible_totals : [],
+      description: parsed.description || (parsed.merchant ? `${parsed.merchant} ${parsed.kind === 'upi_screenshot' ? 'payment' : 'receipt'}` : null),
       confidence: typeof parsed.confidence === "number" ? Math.min(1, Math.max(0, parsed.confidence)) : 0.8,
       needsReview,
       missingFields,

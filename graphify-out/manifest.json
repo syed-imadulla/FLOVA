@@ -162,15 +162,15 @@
     "semantic_hash": ""
   },
   "frontend/src/services/data.ts": {
-    "mtime": 1795229364.6033292,
-    "seen": 1795230146.192075,
-    "ast_hash": "4e71e5cd94e345a862eccd3f60213c54",
+    "mtime": 1795233539.1855652,
+    "seen": 1795234221.6304996,
+    "ast_hash": "de0fa7f19fcc254047bdd60d484ce034",
     "semantic_hash": ""
   },
   "frontend/src/types/contracts.ts": {
-    "mtime": 1795231280.6301436,
-    "seen": 1795232246.9751227,
-    "ast_hash": "d8bdca91f7df1255fea052480fe4ae45",
+    "mtime": 1795233532.0156288,
+    "seen": 1795234221.6305315,
+    "ast_hash": "4ad7fbf0932fd3b5f825371060dfd871",
     "semantic_hash": ""
   },
   "frontend/src/vite-env.d.ts": {
@@ -384,15 +384,15 @@
     "semantic_hash": ""
   },
   ".planning/ROADMAP.md": {
-    "mtime": 1795231275.9291859,
-    "seen": 1795232246.9759707,
-    "ast_hash": "b271a3f6912d86ae362572f8b9cf9bf2",
+    "mtime": 1795234201.5977302,
+    "seen": 1795234221.6314483,
+    "ast_hash": "241291b0a8393ff5a3735e53aa532526",
     "semantic_hash": ""
   },
   ".planning/STATE.md": {
-    "mtime": 1795231276.1161606,
-    "seen": 1795232246.9759722,
-    "ast_hash": "028b661453c8b90d40d6abcadccf0bd0",
+    "mtime": 1795234213.325627,
+    "seen": 1795234221.63145,
+    "ast_hash": "9e6ca53025c2b134773a0dd1a73a910d",
     "semantic_hash": ""
   },
   ".planning/codebase/ARCHITECTURE.md": {
@@ -804,9 +804,9 @@
     "semantic_hash": ""
   },
   "frontend/src/services/__tests__/mockSupabase.ts": {
-    "mtime": 1795231823.9438584,
-    "seen": 1795232246.9749527,
-    "ast_hash": "5a59745e420ae945960ae14633a5f9fa",
+    "mtime": 1795233832.4849734,
+    "seen": 1795234221.6303794,
+    "ast_hash": "b6036dee6539a90946249de1ab3289ea",
     "semantic_hash": ""
   },
   ".planning/phases/05-payout-synchronization-hardening/05-01-PLAN.md": {
@@ -912,9 +912,9 @@
     "semantic_hash": ""
   },
   "backend/supabase/functions/extract-receipt/index.ts": {
-    "mtime": 1795227425.4215386,
-    "seen": 1795227813.9466422,
-    "ast_hash": "0bffed45bbdd1fe5ed9e639dbbda9074",
+    "mtime": 1795233284.2608304,
+    "seen": 1795234221.626536,
+    "ast_hash": "4c26fea3f08adf34d5b31f9d9e032e40",
     "semantic_hash": ""
   },
   "backend/supabase/functions/process-voice/index.ts": {
@@ -930,9 +930,9 @@
     "semantic_hash": ""
   },
   "frontend/public/sw.js": {
-    "mtime": 1795218659.7084446,
-    "seen": 1795218668.7371333,
-    "ast_hash": "9bf4e3c1cbf74332982c68d823785ea5",
+    "mtime": 1795233370.9850597,
+    "seen": 1795234221.6266205,
+    "ast_hash": "ecb32cadd00c34554a4305e9afbcdd6e",
     "semantic_hash": ""
   },
   "frontend/src/components/HeroSection.tsx": {
@@ -1164,9 +1164,9 @@
     "semantic_hash": ""
   },
   "frontend/src/services/receipt.ts": {
-    "mtime": 1795218659.7207913,
-    "seen": 1795218668.7372637,
-    "ast_hash": "5155cde803b7574b95728fabd780e7a0",
+    "mtime": 1795233827.533017,
+    "seen": 1795234221.6305017,
+    "ast_hash": "d57c17ae69471469e2f3049e35fbb56f",
     "semantic_hash": ""
   },
   "frontend/src/services/voice.ts": {
@@ -1590,15 +1590,15 @@
     "semantic_hash": ""
   },
   "frontend/src/screens/AddScreen.tsx": {
-    "mtime": 1795231279.5641532,
-    "seen": 1795232246.9744554,
-    "ast_hash": "5f59ec22e3f0bea333a7e51fe85222db",
+    "mtime": 1795233582.2181828,
+    "seen": 1795234221.629845,
+    "ast_hash": "3eb2255302e639f350f63e77229ce67b",
     "semantic_hash": ""
   },
   "frontend/src/screens/CatchScreen.tsx": {
-    "mtime": 1795227425.4243064,
-    "seen": 1795227813.9492366,
-    "ast_hash": "ada69e9e817edab7946a526a5cdc032d",
+    "mtime": 1795233608.8069465,
+    "seen": 1795234221.629847,
+    "ast_hash": "3882862501e72218719b017b851d9df3",
     "semantic_hash": ""
   },
   "frontend/src/screens/CheckinScreen.tsx": {
@@ -1740,15 +1740,39 @@
     "semantic_hash": ""
   },
   ".planning/phases/13-core-financial-correctness-navigation-and-account-management/13-VERIFICATION.md": {
-    "mtime": 1795230113.1186259,
-    "seen": 1795230146.1947112,
-    "ast_hash": "5ec2ecf65f1e2584747f758adf981ff4",
+    "mtime": 1795232405.5326543,
+    "seen": 1795234221.6334538,
+    "ast_hash": "09257d1957151974ca2cbfb2e6aa938b",
     "semantic_hash": ""
   },
   "scripts/browser-audit.mjs": {
-    "mtime": 1795232190.885575,
-    "seen": 1795232246.9754503,
-    "ast_hash": "d31717cc8209bd4103ebdc72b4d90034",
+    "mtime": 1795234091.0047019,
+    "seen": 1795234221.63092,
+    "ast_hash": "fad5dfeb4ff9a724701c351d3ab728ac",
+    "semantic_hash": ""
+  },
+  "frontend/src/services/__tests__/smartCaptureReceiptUpi.test.ts": {
+    "mtime": 1795233986.7836177,
+    "seen": 1795234221.6304386,
+    "ast_hash": "79bb7f91d7bb7eae48c575b3d6d7d394",
+    "semantic_hash": ""
+  },
+  ".planning/phases/14-smart-capture-receipt-intelligence-upi-share-integration/14-01-PLAN.md": {
+    "mtime": 1795233224.988357,
+    "seen": 1795234221.6334562,
+    "ast_hash": "e5450e1fdce303d98c00dd3c5b74593f",
+    "semantic_hash": ""
+  },
+  ".planning/phases/14-smart-capture-receipt-intelligence-upi-share-integration/14-CONTEXT.md": {
+    "mtime": 1795233207.3405137,
+    "seen": 1795234221.633458,
+    "ast_hash": "8230e56b6d0b99de45143b939a81c1d2",
+    "semantic_hash": ""
+  },
+  ".planning/phases/14-smart-capture-receipt-intelligence-upi-share-integration/14-VERIFICATION.md": {
+    "mtime": 1795234162.5180736,
+    "seen": 1795234221.6334598,
+    "ast_hash": "11b528109aadc4c4f5a1ad5a0cb6ca99",
     "semantic_hash": ""
   }
 }
