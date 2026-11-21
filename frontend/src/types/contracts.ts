@@ -357,6 +357,7 @@ export interface VoiceTransactionCandidate {
   description?: string | null;
   ownership: MoneyOwnership;
   confidence?: number;
+  stt_provider?: "indicconformer" | "whisper" | "manual_text";
   needsReview: boolean;
   clarification_required?: boolean;
   missingFields: string[];

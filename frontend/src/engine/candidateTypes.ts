@@ -46,6 +46,7 @@ export interface VoiceTransactionCandidate {
   /** Shared contracts alias for expense_type */
   expenseType?: ExpenseType | null;
   ownership: MoneyOwnership;
+  stt_provider?: "indicconformer" | "whisper" | "manual_text";
   date: ISODate | null;
   /** Explicit date extracted from user text/utterance, or null if omitted. */
   extracted_date?: ISODate | null;
@@ -88,6 +89,7 @@ export interface ExtractedReceiptCandidate {
   /** Shared contracts alias for expense_type */
   expenseType?: ExpenseType | null;
   ownership: MoneyOwnership;
+  stt_provider?: "indicconformer" | "whisper" | "manual_text";
   date: ISODate | null;
   /** Explicit date extracted from user text/utterance, or null if omitted. */
   extracted_date?: ISODate | null;

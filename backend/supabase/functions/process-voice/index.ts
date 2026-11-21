@@ -177,8 +177,9 @@ Deno.serve(async (req: Request) => {
     }
 
     let transcript = "";
+    let sttProvider: "indicconformer" | "whisper" | "manual_text" = hasText ? "manual_text" : "whisper";
 
-    // 5. Audio Transcription via Groq Whisper
+    // 5. Audio Transcription: AI4Bharat IndicConformer (PRIMARY) with Groq Whisper (SECONDARY FALLBACK)
     if (hasAudio) {
       const rawBase64 = body.audioBase64!.replace(/^data:audio\/[a-zA-Z0-9.-]+;base64,/, "");
       const binaryString = atob(rawBase64);
@@ -193,41 +194,87 @@ Deno.serve(async (req: Request) => {
       else if (mime.includes("ogg")) extension = "ogg";
       else if (mime.includes("wav")) extension = "wav";
 
-      const audioBlob = new Blob([bytes], { type: mime });
-      const formData = new FormData();
-      formData.append("file", audioBlob, `recording.${extension}`);
-      formData.append("response_format", "json");
-      if (body.language && body.language !== "auto") {
-        formData.append("language", body.language.toLowerCase());
+      // 5A. PRIMARY: AI4Bharat IndicConformer STT Service
+      const indicUrl = Deno.env.get("INDICCONFORMER_URL");
+      const indicKey = Deno.env.get("INDICCONFORMER_KEY") || "flova-indicconformer-secure-token-2026";
+      let indicSucceeded = false;
+
+      if (indicUrl) {
+        try {
+          const abortController = new AbortController();
+          const timer = setTimeout(() => abortController.abort(), 7000); // 7s timeout
+
+          const indicRes = await fetch(indicUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-FLOVA-STT-KEY": indicKey,
+            },
+            body: JSON.stringify({
+              audioBase64: body.audioBase64,
+              mimeType: mime,
+              language: body.language || "kn",
+            }),
+            signal: abortController.signal,
+          });
+          clearTimeout(timer);
+
+          if (indicRes.ok) {
+            const indicData = await indicRes.json();
+            const candText = (indicData.transcript || "").trim();
+            if (candText.length > 0) {
+              transcript = candText;
+              sttProvider = "indicconformer";
+              indicSucceeded = true;
+            }
+          } else {
+            console.warn(`[STT] IndicConformer responded with status ${indicRes.status}. Falling back to Whisper.`);
+          }
+        } catch (e: any) {
+          console.warn("[STT] IndicConformer unreachable or timed out. Falling back to Groq Whisper:", e.message || e);
+        }
       }
 
-      const { res: whisperRes } = await groqWithModelFallback(groqApiKey, "stt", (sttModelId) => {
-        formData.set("model", sttModelId);
-        return fetch("https://api.groq.com/openai/v1/audio/transcriptions", {
-          method: "POST",
-          headers: { "Authorization": `Bearer ${groqApiKey}` },
-          body: formData,
+      // 5B. SECONDARY FALLBACK: Groq Whisper
+      if (!indicSucceeded) {
+        const audioBlob = new Blob([bytes], { type: mime });
+        const formData = new FormData();
+        formData.append("file", audioBlob, `recording.${extension}`);
+        formData.append("response_format", "json");
+        if (body.language && body.language !== "auto") {
+          formData.append("language", body.language.toLowerCase());
+        }
+
+        const { res: whisperRes } = await groqWithModelFallback(groqApiKey, "stt", (sttModelId) => {
+          formData.set("model", sttModelId);
+          return fetch("https://api.groq.com/openai/v1/audio/transcriptions", {
+            method: "POST",
+            headers: { "Authorization": `Bearer ${groqApiKey}` },
+            body: formData,
+          });
         });
-      });
 
-      if (!whisperRes.ok) {
-        const errText = await whisperRes.text();
-        return new Response(
-          JSON.stringify({ error: `Groq Whisper transcription failed (${whisperRes.status}): ${errText}` }),
-          { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
+        if (!whisperRes.ok) {
+          const errText = await whisperRes.text();
+          return new Response(
+            JSON.stringify({ error: `Groq Whisper transcription failed (${whisperRes.status}): ${errText}` }),
+            { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
 
-      const whisperData = await whisperRes.json();
-      transcript = (whisperData.text || "").trim();
-      if (!transcript) {
-        return new Response(
-          JSON.stringify({ error: "No audible speech was recognized in the audio recording." }),
-          { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+        const whisperData = await whisperRes.json();
+        transcript = (whisperData.text || "").trim();
+        sttProvider = "whisper";
+        if (!transcript) {
+          return new Response(
+            JSON.stringify({ error: "No audible speech was recognized in the audio recording." }),
+            { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
       }
     } else {
       transcript = body.text!.trim();
+      sttProvider = "manual_text";
     }
 
     // 6. Financial Intent Extraction via Groq Llama 3.3
@@ -399,6 +446,7 @@ Follow these strict rules:
         const c = {
           id: candidateId,
           transcript,
+          stt_provider: sttProvider,
           type: tx.type === "income" || tx.type === "expense" ? tx.type : null,
           amountPaise,
           category: tx.category || (tx.type === "income" ? "earnings" : "other"),
@@ -423,6 +471,7 @@ Follow these strict rules:
     return new Response(
       JSON.stringify({
         transcript,
+        stt_provider: sttProvider,
         extraction,
         candidate,
         candidates,

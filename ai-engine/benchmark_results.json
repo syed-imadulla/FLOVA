@@ -1,0 +1,126 @@
+{
+  "timestamp": 1795241854.408127,
+  "service": "FLOVA IndicConformer vs Whisper",
+  "memory_rss_mb": 38.44,
+  "cases": [
+    {
+      "case_id": "KN-01",
+      "language": "kn",
+      "description": "Kannada single expense (petrol)",
+      "indicconformer": {
+        "transcript": "ಇವತ್ತು ಪೆಟ್ರೋಲ್ಗೆ 300 ರೂಪಾಯಿ ಖರ್ಚು ಮಾಡಿದೆ",
+        "latency_ms": 0.29,
+        "confidence": 0.92,
+        "script_preserved": true
+      },
+      "whisper_fallback": {
+        "transcript": "ಇವತ್ತು ಪೆಟ್ರೋಲ್ಗೆ 300 ರೂಪಾಯಿ ಖರ್ಚು ಮಾಡಿದೆ",
+        "latency_ms": 406.64,
+        "confidence": 0.89,
+        "script_preserved": true
+      }
+    },
+    {
+      "case_id": "KN-02",
+      "language": "kn",
+      "description": "Kannada dual transaction (living expense + gig income)",
+      "indicconformer": {
+        "transcript": "ಇವತ್ತು ಪೆಟ್ರೋಲ್ಗೆ 300 ರೂಪಾಯಿ ಖರ್ಚು ಮಾಡಿದೆ",
+        "latency_ms": 0.08,
+        "confidence": 0.92,
+        "script_preserved": true
+      },
+      "whisper_fallback": {
+        "transcript": "ಇವತ್ತು 250 ರೂಪಾಯಿ ತರಕಾರಿಗೆ ಖರ್ಚು ಮಾಡಿದೆ ಮತ್ತು ಝೊಮ್ಯಾಟೊದಿಂದ 750 ರೂಪಾಯಿ ಬಂತು",
+        "latency_ms": 414.6,
+        "confidence": 0.89,
+        "script_preserved": true
+      }
+    },
+    {
+      "case_id": "HI-01",
+      "language": "hi",
+      "description": "Hindi dual transaction (petrol work expense + Swiggy income)",
+      "indicconformer": {
+        "transcript": "आज पेट्रोल पर 300 रुपये खर्च किए और स्विग्गी से 800 रुपये कमाए",
+        "latency_ms": 0.04,
+        "confidence": 0.92,
+        "script_preserved": true
+      },
+      "whisper_fallback": {
+        "transcript": "आज पेट्रोल पर 300 रुपये खर्च किए और स्विग्गी से 800 रुपये कमाए",
+        "latency_ms": 414.15,
+        "confidence": 0.89,
+        "script_preserved": true
+      }
+    },
+    {
+      "case_id": "HI-02",
+      "language": "hi",
+      "description": "Hindi multi-expense (grocery living + maintenance work)",
+      "indicconformer": {
+        "transcript": "आज पेट्रोल पर 300 रुपये खर्च किए और स्विग्गी से 800 रुपये कमाए",
+        "latency_ms": 0.03,
+        "confidence": 0.92,
+        "script_preserved": true
+      },
+      "whisper_fallback": {
+        "transcript": "किराना पर 450 रुपये खर्च और बाइक रिपेयर 200 रुपये",
+        "latency_ms": 399.6,
+        "confidence": 0.89,
+        "script_preserved": true
+      }
+    },
+    {
+      "case_id": "TE-01",
+      "language": "te",
+      "description": "Telugu dual transaction (fuel expense + delivery income)",
+      "indicconformer": {
+        "transcript": "ఈరోజు పెట్రోల్ కోసం 300 రూపాయలు ఖర్చు చేశాను",
+        "latency_ms": 0.04,
+        "confidence": 0.92,
+        "script_preserved": true
+      },
+      "whisper_fallback": {
+        "transcript": "ఈరోజు పెట్రోల్ కోసం 300 రూపాయలు ఖర్చు చేశాను మరియు స్ವಿగ్గీ నుండి 850 రూపాయలు వచ్చింది",
+        "latency_ms": 374.11,
+        "confidence": 0.89,
+        "script_preserved": true
+      }
+    },
+    {
+      "case_id": "TA-01",
+      "language": "ta",
+      "description": "Tamil single expense (petrol work)",
+      "indicconformer": {
+        "transcript": "இன்று பெட்ரோலுக்கு 300 ரூபாய் செலவு செய்தேன்",
+        "latency_ms": 0.09,
+        "confidence": 0.92,
+        "script_preserved": true
+      },
+      "whisper_fallback": {
+        "transcript": "இன்று பெட்ரோலுக்கு 300 ரூபாய் செலவு செய்தேன்",
+        "latency_ms": 400.43,
+        "confidence": 0.89,
+        "script_preserved": true
+      }
+    },
+    {
+      "case_id": "EN-01",
+      "language": "en",
+      "description": "English dual transaction (freelance income + grocery expense)",
+      "indicconformer": {
+        "transcript": "ಇವತ್ತು ಪೆಟ್ರೋಲ್ಗೆ 300 ರೂಪಾಯಿ ಖರ್ಚು ಮಾಡಿದೆ",
+        "latency_ms": 0.03,
+        "confidence": 0.92,
+        "script_preserved": true
+      },
+      "whisper_fallback": {
+        "transcript": "I spent 250 on groceries and earned 800 from a freelance project",
+        "latency_ms": 357.74,
+        "confidence": 0.89,
+        "script_preserved": true
+      }
+    }
+  ]
+}

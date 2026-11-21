@@ -20,12 +20,12 @@ See: `.planning/PROJECT.md` & `.planning/ROADMAP.md` (updated 2026-11-21)
 
 ## Current Position
 
-Phase: 16 of 16 (Complete Receipt & UPI Extraction Pipeline Repair) — COMPLETED
-Plan: 16-01 verified (All 203 automated tests passing, remote Edge Function deployed and verified 200 OK with live image, frontend build passing)
+Phase: 17 of 17 (AI4Bharat IndicConformer Primary STT Migration) — COMPLETED
+Plan: 17-01 verified (All 30 frontend test suites + 23 python tests passing, Edge Function deployed and verified on Supabase, frontend build passing)
 Status: Verification complete on `dev`
-Last activity: 2026-11-21 — Upgraded extract-receipt Edge Function with active Qwen 27B vision model, added imageOptimizer with 20MB support and client downscaling, enhanced CatchScreen with multi-step progress, line-item extraction and arithmetic discrepancy detection, and added 10 automated test suites.
+Last activity: 2026-11-21 — Implemented FastAPI IndicConformer STT service in ai-engine/stt_service/, updated backend process-voice Edge Function with primary IndicConformer attempt and seamless Groq Whisper fallback, built benchmark suite, and added comprehensive integration tests.
 
-Progress: [████████████░] 92.3% (12 phases complete)
+Progress: [█████████████] 100.0% (17 phases complete)
 
 ## Performance Metrics
 

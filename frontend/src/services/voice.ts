@@ -31,6 +31,7 @@ export interface VoiceProcessResult {
   extraction: FinancialExtractionDTO;
   candidate: VoiceTransactionCandidate | null;
   candidates?: VoiceTransactionCandidate[];
+  stt_provider?: "indicconformer" | "whisper" | "manual_text";
   source: "edge_function" | "local_fallback";
 }
 
@@ -49,15 +50,28 @@ export interface QueryResolutionResult {
  * Converts a Blob to a base64 Data URL string.
  */
 export async function blobToBase64(blob: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const res = reader.result as string;
-      resolve(res);
-    };
-    reader.onerror = (err) => reject(err);
-    reader.readAsDataURL(blob);
-  });
+  if (typeof FileReader !== "undefined") {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const res = reader.result as string;
+        resolve(res);
+      };
+      reader.onerror = (err) => reject(err);
+      reader.readAsDataURL(blob);
+    });
+  } else if (typeof blob.arrayBuffer === "function") {
+    const arrayBuf = await blob.arrayBuffer();
+    const bytes = new Uint8Array(arrayBuf);
+    let binary = "";
+    for (let i = 0; i < bytes.byteLength; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    const b64 = typeof btoa === "function" ? btoa(binary) : (globalThis as any).Buffer?.from(arrayBuf).toString("base64");
+    return `data:${blob.type || "audio/webm"};base64,${b64}`;
+  } else {
+    throw new Error("No Blob conversion mechanism available in this runtime.");
+  }
 }
 
 /**
@@ -95,6 +109,7 @@ export async function processVoice(input: VoiceProcessInput): Promise<VoiceProce
           extraction: data.extraction,
           candidate: data.candidate || (data.candidates && data.candidates[0]) || null,
           candidates: data.candidates || (data.candidate ? [data.candidate] : undefined),
+          stt_provider: data.stt_provider,
           source: "edge_function",
         };
       }

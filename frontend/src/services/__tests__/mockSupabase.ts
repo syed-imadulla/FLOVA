@@ -88,17 +88,22 @@ class MockQueryBuilder<T> implements PromiseLike<{ data: T[]; error: null }> {
     return this;
   }
 
+  lastEqVal?: string;
+
   eq(col: string, val: string): this {
+    if (col === "id") this.lastEqVal = val;
     this.items = this.items.filter((item) => item[col] === val);
     return this;
   }
 
   single(): Promise<{ data: any; error: any }> {
+    if (mockState.selectSingleHandler) return mockState.selectSingleHandler(this.lastEqVal || this.items[0]?.id || "") as any;
     if (this.items.length === 0) return Promise.resolve({ data: null, error: { message: "Row not found" } });
     return Promise.resolve({ data: this.items[0], error: null });
   }
 
-  maybeSingle(): Promise<{ data: any; error: null }> {
+  maybeSingle(): Promise<{ data: any; error: any }> {
+    if (mockState.selectSingleHandler) return mockState.selectSingleHandler(this.lastEqVal || this.items[0]?.id || "") as any;
     return Promise.resolve({ data: this.items[0] ?? null, error: null });
   }
 
