@@ -11,7 +11,7 @@ import { FlovaFooter } from "./FlovaFooter";
 
 export const FlovaLandingPage: React.FC = () => {
   return (
-    <div className="min-h-screen bg-[#FAF7F2] text-[#16181D] font-sans selection:bg-[#0F5C4C] selection:text-white">
+    <div className="flova-landing min-h-screen bg-[#FAF7F2] text-[#16181D] font-sans selection:bg-[#0F5C4C] selection:text-white">
       {/* 1. Top Navigation Bar */}
       <FlovaNavbar />
 

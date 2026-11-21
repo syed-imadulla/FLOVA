@@ -19,6 +19,7 @@ Work is executed exclusively on branch `feature/backend` and shipped as pull req
 - [x] **Phase 9: Secure voice transcription and transaction integration** - Voice intent extraction into candidate transactions with review guardrails. (Completed 2026-11-21)
 - [x] **Phase 9.1: Multilingual Voice Support & Language-Specific Financial Extraction** - Support for English, Hindi, Kannada, Urdu, and Telugu with Whisper language parameter routing, Indic intent extraction, and truthful uncertainty. (Completed 2026-11-21)
 - [x] **Phase 10: Connect Activity and Money Overview to existing financial services** - Wire Activity timeline and Money Overview to data services, maintaining manual usability if AI fails. (Completed 2026-11-21)
+- [x] **Phase 10.2: Application UI shell and screens** - One persistent mobile layout with a bottom navbar, every screen rebuilt on the existing services, multilingual voice, monthly timeline, live Groq AI layer (see `phases/10.2-app-ui-shell/`). (Completed 2026-11-21)
 - [ ] **Phase 11: Deployment readiness** - Production environment variables, Vercel SPA deployment configuration, and Supabase auth redirect settings.
 - [ ] **Phase 12: Final verification** - End-to-end demo walkthrough (Quick Capture -> FLOVA Catch -> Activity -> Money Overview), smoke testing, and release freeze.
 

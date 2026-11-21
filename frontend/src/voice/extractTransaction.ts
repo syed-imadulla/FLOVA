@@ -2,7 +2,7 @@
 // FLOVA Local Transaction Extractor (M4 & M1)
 // Parses a natural-language transcript into a FinancialExtractionDTO
 // using pattern matching. No external API or key required.
-// Supports English, Hindi, Kannada, Urdu, and Telugu.
+// Supports English, Hindi, Kannada, Urdu, Telugu and Tamil.
 // Follows the extraction contract in frontend/src/engine/EXTRACTION_CONTRACT.md
 // and rules in docs/CONTRACT.md.
 // =====================================================================
@@ -16,12 +16,13 @@ function normalizeNumerals(str: string): string {
     .replace(/[०-९]/g, (d) => String(d.charCodeAt(0) - 0x0966))
     .replace(/[೦-೯]/g, (d) => String(d.charCodeAt(0) - 0x0ce6))
     .replace(/[౦-౯]/g, (d) => String(d.charCodeAt(0) - 0x0c66))
-    .replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 0x06f0));
+    .replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 0x06f0))
+    .replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660));
 }
 
 // Matches: "1500", "Rs 1500", "Rs. 1500", "₹1500", "1,500", "1500.50", "300 रुपये", "300 ರೂಪಾಯಿ", "300 روپے", "300 రూపాయలు"
 const AMOUNT_RE =
-  /(?:rs\.?\s*|₹\s*|रुपये\s*|रूपಾಯಿ\s*|రూపాయలు\s*|روپے\s*)?([0-9]+(?:,[0-9]{3})*(?:\.[0-9]{1,2})?|[0-9]+(?:\.[0-9]{1,2})?)(?:\s*(?:रुपये|रुपया|रूपಾಯಿ|ರೂಪಾಯಿ|రూపಾಯలు|روپے|rupees|rupaye|roopayi|rs))?/i;
+  /(?:rs\.?\s*|₹\s*|रुपये\s*|रूपಾಯಿ\s*|రూపాయలు\s*|روپے\s*|ரூபாய்\s*)?([0-9]+(?:,[0-9]{3})*(?:\.[0-9]{1,2})?|[0-9]+(?:\.[0-9]{1,2})?)(?:\s*(?:रुपये|रुपया|रूपಾಯಿ|ರೂಪಾಯಿ|రూపಾಯలు|روپے|ரூபாய்|rupees|rupaye|roopayi|rubai|rs))?/i;
 
 function extractAmount(text: string): string | null {
   const normalized = normalizeNumerals(text);
@@ -47,6 +48,8 @@ const INCOME_KEYWORDS = [
   "کمائے", "ملا", "آمدنی", "ملے", "آیا", "حاصل", "kamaye", "aamdani",
   // Telugu
   "వచ్చింది", "సంపాదించాను", "వచ్చాయి", "తీసుకున్నాను", "vachindi", "sampadinchano", "sampadinchina",
+  // Tamil
+  "சம்பாதித்தேன்", "சம்பாதிச்சேன்", "வந்தது", "கிடைத்தது", "கிடைச்சது", "வருமானம்", "sambadhichen", "vandhuchu", "kidaichuchu",
 ];
 
 const EXPENSE_KEYWORDS = [
@@ -61,6 +64,8 @@ const EXPENSE_KEYWORDS = [
   "خرچ", "خرچہ", "دیے", "دیا", "بھرا", "خریدا", "kharch", "kharcha", "diye", "bhara",
   // Telugu
   "ఖర్చు", "ఇచ్చాను", "కొన్నాను", "కట్టాను", "పోశాను", "చేసాను", "చేశాను", "పోయించాను", "kharchu", "ichanu", "kattanu", "chesanu", "poyinchanu",
+  // Tamil
+  "செலவு", "செலவழித்தேன்", "செலவு பண்ணேன்", "கொடுத்தேன்", "குடுத்தேன்", "வாங்கினேன்", "கட்டினேன்", "போட்டேன்", "selavu", "koduthen", "vanginen", "kattinen",
 ];
 
 const LIVING_KEYWORDS = [
@@ -77,6 +82,8 @@ const LIVING_KEYWORDS = [
   "چائے", "کھانا", "ناشتہ", "سموسہ", "روٹی", "چاول", "دال", "راشن", "کرایہ", "دوا",
   // Telugu
   "భోజనం", "టిఫిన్", "టీ", "చాయ్", "సరుకులు", "పాలు", "మందులు", "అద్దె", "bhojanam", "tiffin",
+  // Tamil
+  "சாப்பாடு", "உணவு", "டீ", "காபி", "மளிகை", "காய்கறி", "பால்", "மருந்து", "வாடகை", "saapadu", "sapadu",
 ];
 
 const WORK_KEYWORDS = [
@@ -92,6 +99,8 @@ const WORK_KEYWORDS = [
   "پیٹرول", "ڈیزل", "گاڑی", "بائیک", "مرمت", "ریچارج", "موبائل", "پنکچر",
   // Telugu
   "పెట్రోల్", "డీజిల్", "ఇంధనం", "బండి", "బైక్", "రిపేరు", "రీఛార్జ్", "మొబైల్", "పెట్రోల్ కోసం",
+  // Tamil
+  "பெட்ரோல்", "டீசல்", "வண்டி", "பைக்", "ரிப்பேர்", "ரீசார்ஜ்", "மொபைல்",
 ];
 
 const CATEGORY_MAP: Record<string, string> = {
@@ -111,6 +120,19 @@ const CATEGORY_MAP: Record<string, string> = {
   "آمدنی":       "earnings",
   "సంపాదన":      "earnings",
   // Fuel / Work
+  // Tamil
+  "பெட்ரோல்":    "fuel",
+  "டீசல்":       "fuel",
+  "சாப்பாடு":    "food",
+  "உணவு":        "food",
+  "டீ":          "food",
+  "காபி":        "food",
+  "மளிகை":       "groceries",
+  "காய்கறி":     "groceries",
+  "ரீசார்ஜ்":    "phone",
+  "மொபைல்":      "phone",
+  "வாடகை":       "rent",
+  "மருந்து":     "medical",
   "petrol":      "fuel",
   "diesel":      "fuel",
   "fuel":        "fuel",

@@ -20,6 +20,8 @@ graphify-out/.graphify_build_state.json
 # Supabase CLI local state
 backend/supabase/.temp/
 backend/supabase/.branches/
+supabase/.temp/
+supabase/.branches/
 
 # Personal editor/launcher config
 .claude/launch.json
