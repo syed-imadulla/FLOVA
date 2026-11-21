@@ -6,8 +6,25 @@
 // =====================================================================
 
 // ---------- enums ----------
-export const WORK_PROFILES = ["delivery", "driver", "service", "freelancer", "independent_business"] as const;
+export const WORK_PROFILES = [
+  "delivery",
+  "driver",
+  "service",
+  "freelancer",
+  "independent_business",
+  "small_vendor",
+  "daily_wage",
+  "seasonal_worker",
+  "other",
+] as const;
 export const PAYOUT_PATTERNS = ["daily", "weekly", "per_job", "milestone", "variable"] as const;
+export const INCOME_VARIABILITIES = [
+  "regular",
+  "variable",
+  "unpredictable",
+  "seasonal",
+  "intermittent",
+] as const;
 export const APP_LANGUAGES = ["en", "kn", "hi"] as const; // kn/hi only once translations are reviewed
 export const TRANSACTION_TYPES = ["income", "expense"] as const;
 export const EXPENSE_TYPES = ["living", "work"] as const;
@@ -20,6 +37,7 @@ export const ENTRY_SOURCES = ["manual", "voice", "ai_suggestion", "demo"] as con
 
 export type WorkProfile = (typeof WORK_PROFILES)[number];
 export type PayoutPattern = (typeof PAYOUT_PATTERNS)[number];
+export type IncomeVariability = (typeof INCOME_VARIABILITIES)[number];
 export type AppLanguage = (typeof APP_LANGUAGES)[number];
 export type TransactionType = (typeof TRANSACTION_TYPES)[number];
 export type ExpenseType = (typeof EXPENSE_TYPES)[number];
@@ -30,10 +48,35 @@ export type CommitmentKind = (typeof COMMITMENT_KINDS)[number];
 export type CommitmentStatus = (typeof COMMITMENT_STATUSES)[number];
 export type EntrySource = (typeof ENTRY_SOURCES)[number];
 
-/** Suggested category values (free text in the DB, max 40 chars). UI presets can adapt per work profile. */
+/** Universal personal living expense categories applicable across all worker types */
+export const UNIVERSAL_LIVING_CATEGORIES = [
+  "food",
+  "rent",
+  "groceries",
+  "healthcare",
+  "utility",
+  "education",
+  "personal",
+  "other",
+] as const;
+
+/** Occupation-specific work/business expense suggestions tailored to worker persona */
+export const OCCUPATION_WORK_CATEGORIES: Record<WorkProfile, readonly string[]> = {
+  delivery: ["fuel", "vehicle_maintenance", "phone_internet", "platform_fee", "equipment", "other"],
+  driver: ["fuel", "vehicle_maintenance", "toll_parking", "phone_internet", "insurance", "other"],
+  freelancer: ["phone_internet", "software_tools", "equipment", "coworking", "books_courses", "other"],
+  service: ["tools", "materials", "supplies", "commute", "equipment", "phone_internet", "other"],
+  independent_business: ["inventory", "materials", "supplies", "rent", "utility", "transport", "other"],
+  small_vendor: ["inventory", "supplies", "cart_maintenance", "packaging", "commute", "other"],
+  daily_wage: ["tools", "materials", "safety_gear", "commute", "food", "other"],
+  seasonal_worker: ["equipment", "seeds_fertilizer", "tools", "transport", "supplies", "other"],
+  other: ["tools", "materials", "supplies", "equipment", "phone_internet", "other"],
+};
+
+/** Suggested category values (free text in the DB, max 40 chars). UI presets adapt per work profile. */
 export const SUGGESTED_CATEGORIES = {
-  income: ["earnings", "tips", "payout", "incentive", "advance", "cod_collection", "other"],
-  expense: ["food", "fuel", "phone", "maintenance", "rent", "emi", "cod_handover", "other"],
+  income: ["earnings", "tips", "payout", "incentive", "advance", "cod_collection", "client_payment", "other"],
+  expense: ["food", "fuel", "phone", "maintenance", "rent", "emi", "tools", "inventory", "supplies", "cod_handover", "other"],
   commitment: ["rent", "emi", "loan", "utility", "phone", "school", "other"],
 } as const;
 
@@ -54,6 +97,9 @@ export interface Profile {
   display_name: string | null;
   work_profile: WorkProfile;
   payout_pattern: PayoutPattern;
+  income_variability: IncomeVariability;
+  handles_cod: boolean;
+  safe_runway_buffer: RupeeString | null;
   preferred_language: AppLanguage;
   daily_living_estimate: RupeeString | null; // null = not provided -> uncertainty, never 0
   daily_work_estimate: RupeeString | null;
@@ -118,9 +164,10 @@ export interface Commitment {
 
 // ---------- inputs (what the app sends; user_id is filled by the DB from the session) ----------
 export type ProfileUpdate = Partial<Pick<Profile,
-  "display_name" | "work_profile" | "payout_pattern" | "preferred_language" | "onboarding_completed">> & {
+  "display_name" | "work_profile" | "payout_pattern" | "income_variability" | "handles_cod" | "preferred_language" | "onboarding_completed">> & {
   daily_living_estimate?: Paise | null;
   daily_work_estimate?: Paise | null;
+  safe_runway_buffer?: Paise | null;
 };
 
 export interface NewBalanceCheckin {
@@ -196,38 +243,64 @@ export type {
 /**
  * Extracted receipt candidate before user confirmation.
  * Missing/uncertain data is represented as null (never invented).
+ * Supports both camelCase and snake_case candidate property representations
+ * to ensure strict candidate identity stability across extraction, review, and confirmation.
  */
 export interface ExtractedReceiptCandidate {
   id?: string;
+  candidate_id?: string;
+  draft_id?: string | null;
   merchant: string | null;
   amountPaise: Paise | null;
+  amount_paise?: Paise | null;
+  amount_rupees?: string | null;
   category: string | null;
   expenseType: ExpenseType | null;
+  expense_type?: ExpenseType | null;
+  ownership?: MoneyOwnership;
   date: ISODate | null;
+  extracted_date?: ISODate | null;
+  contextual_date?: ISODate | null;
   description?: string | null;
   notes?: string | null; // Optional alias for backward compatibility
   confidence?: number;
   needsReview: boolean;
+  clarification_required?: boolean;
   missingFields: string[];
+  clarification_questions?: string[];
   rawExtractedData?: Record<string, unknown>;
+  raw_utterance?: string;
 }
 
 /**
  * Extracted voice transaction candidate before user confirmation.
  * Missing/uncertain data is represented as null (never invented).
+ * Supports both camelCase and snake_case candidate property representations
+ * to ensure strict candidate identity stability across extraction, review, and confirmation.
  */
 export interface VoiceTransactionCandidate {
   id?: string;
+  candidate_id?: string;
+  draft_id?: string | null;
   transcript: string;
+  raw_utterance?: string;
   type: TransactionType | null;
   amountPaise: Paise | null;
+  amount_paise?: Paise | null;
+  amount_rupees?: string | null;
   category: string | null;
   expenseType: ExpenseType | null;
+  expense_type?: ExpenseType | null;
   date: ISODate | null;
+  extracted_date?: ISODate | null;
+  contextual_date?: ISODate | null;
+  description?: string | null;
   ownership: MoneyOwnership;
   confidence?: number;
   needsReview: boolean;
+  clarification_required?: boolean;
   missingFields: string[];
+  clarification_questions?: string[];
 }
 
 // ---------- Activity Timeline (Phase 7 & 10) ----------

@@ -93,5 +93,32 @@ ok(true, "other payout fields stay editable");
 await db.exec(`reset role; select set_config('request.jwt.claim.sub', '', false); set role anon;`);
 await expectError(`select * from public.transactions`, "anon has no table access");
 
+// generalized profiles, income variability, and COD capability tests
+await as(A, `select 1`);
+const allProfiles = ['delivery', 'driver', 'service', 'freelancer', 'independent_business', 'small_vendor', 'daily_wage', 'seasonal_worker', 'other'];
+for (const wp of allProfiles) {
+  await as(A, `update public.profiles set work_profile = '${wp}' where id = '${A}'`);
+  const checkWp = (await as(A, `select work_profile from public.profiles where id = '${A}'`)).rows[0].work_profile;
+  ok(checkWp === wp, `work_profile '${wp}' supported cleanly`);
+}
+
+const allVariabilities = ['regular', 'variable', 'unpredictable', 'seasonal', 'intermittent'];
+for (const iv of allVariabilities) {
+  await as(A, `update public.profiles set income_variability = '${iv}' where id = '${A}'`);
+  const checkIv = (await as(A, `select income_variability from public.profiles where id = '${A}'`)).rows[0].income_variability;
+  ok(checkIv === iv, `income_variability '${iv}' supported cleanly`);
+}
+
+await as(A, `update public.profiles set handles_cod = true, safe_runway_buffer = 1500.00 where id = '${A}'`);
+const profA = (await as(A, `select handles_cod, safe_runway_buffer::text s from public.profiles where id = '${A}'`)).rows[0];
+ok(profA.handles_cod === true && profA.s === "1500.00", "handles_cod and safe_runway_buffer stored cleanly");
+
+await expectError(`update public.profiles set safe_runway_buffer = -100 where id = '${A}'`, "negative safe_runway_buffer rejected");
+
+const C = "33333333-3333-3333-3333-333333333333";
+await db.exec(`reset role; insert into auth.users (id, raw_user_meta_data) values ('${C}', '{"display_name":"New Irregular Earner"}');`);
+const profC = (await db.query(`select work_profile, income_variability, handles_cod from public.profiles where id = '${C}'`)).rows[0];
+ok(profC.work_profile === "other" && profC.income_variability === "variable" && profC.handles_cod === false, "new sign-up defaults to work_profile='other', variability='variable', handles_cod=false");
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

@@ -19,6 +19,7 @@ export async function updateMyProfile(userId: string, patch: ProfileUpdate): Pro
   const row: Record<string, unknown> = { ...patch };
   if ("daily_living_estimate" in patch) row.daily_living_estimate = money(patch.daily_living_estimate);
   if ("daily_work_estimate" in patch) row.daily_work_estimate = money(patch.daily_work_estimate);
+  if ("safe_runway_buffer" in patch) row.safe_runway_buffer = money(patch.safe_runway_buffer);
   return unwrap(await supabase.from("profiles").update(row).eq("id", userId).select().single(), "Save profile");
 }
 
@@ -323,20 +324,26 @@ export async function listActivityTimeline(opts: {
 /**
  * Confirms an AI-extracted candidate (receipt or voice) into a permanent transaction.
  * Requires user confirmation and throws when essential fields (amount, expenseType) are missing.
+ * Reconciles both camelCase and snake_case candidate property representations (PR #15 and Phase 7 contracts),
+ * ensuring the candidate UUID is strictly preserved across repeated retries to prevent duplicate database writes.
  */
 export async function confirmCandidateTransaction(
   candidate: ExtractedReceiptCandidate | VoiceTransactionCandidate
 ): Promise<Transaction> {
-  const amountPaise = candidate.amountPaise;
+  const amountPaise = candidate.amountPaise ?? candidate.amount_paise;
   if (amountPaise === null || amountPaise === undefined || amountPaise <= 0) {
     throw new Error("Cannot confirm transaction: amount is missing or invalid. User review required.");
   }
+
+  // Preserve stable candidate ID across review, retries, and confirmation
+  const stableId = candidate.id || candidate.candidate_id;
 
   const isReceipt = "merchant" in candidate;
 
   if (isReceipt) {
     const rc = candidate as ExtractedReceiptCandidate;
-    if (!rc.expenseType) {
+    const expenseType = rc.expenseType ?? rc.expense_type;
+    if (!expenseType) {
       throw new Error("Choose whether this expense is living or work.");
     }
 
@@ -351,13 +358,13 @@ export async function confirmCandidateTransaction(
     }
 
     return addTransaction({
-      id: rc.id,
+      id: stableId,
       type: "expense",
       amount: amountPaise,
       category: rc.category || "other",
       description,
-      expenseType: rc.expenseType,
-      ownership: "mine",
+      expenseType,
+      ownership: rc.ownership ?? "mine",
       date: rc.date ?? undefined,
       source: "ai_suggestion",
     });
@@ -367,19 +374,21 @@ export async function confirmCandidateTransaction(
       throw new Error("Cannot confirm transaction: transaction type (income or expense) is required.");
     }
     const ownership = vc.ownership ?? "mine";
-    if (vc.type === "expense" && ownership === "mine" && !vc.expenseType) {
+    const expenseType = vc.expenseType ?? vc.expense_type;
+    if (vc.type === "expense" && ownership === "mine" && !expenseType) {
       throw new Error("Choose whether this expense is living or work.");
     }
 
-    const expenseType = vc.type === "expense" && ownership === "mine" ? (vc.expenseType ?? undefined) : undefined;
+    const resolvedExpenseType = vc.type === "expense" && ownership === "mine" ? (expenseType ?? undefined) : undefined;
+    const desc = vc.description || vc.transcript || vc.raw_utterance || undefined;
 
     return addTransaction({
-      id: vc.id,
+      id: stableId,
       type: vc.type,
       amount: amountPaise,
       category: vc.category || "other",
-      description: vc.transcript || undefined,
-      expenseType,
+      description: desc,
+      expenseType: resolvedExpenseType,
       ownership,
       date: vc.date ?? undefined,
       source: "voice",

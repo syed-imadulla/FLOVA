@@ -8,11 +8,25 @@ import { parseOptionalRupees } from "../profile/parseRupees";
 import {
   WORK_PROFILES,
   PAYOUT_PATTERNS,
+  INCOME_VARIABILITIES,
   type WorkProfile,
   type PayoutPattern,
+  type IncomeVariability,
   type AppLanguage,
 } from "../types/contracts";
 import { AppShell } from "../components/layout/AppShell";
+
+const WORK_ICONS: Record<WorkProfile, string> = {
+  delivery: "🛵",
+  driver: "🛺",
+  service: "🔧",
+  freelancer: "💻",
+  independent_business: "📦",
+  small_vendor: "🏪",
+  daily_wage: "🔨",
+  seasonal_worker: "🌾",
+  other: "💼",
+};
 
 export function ProfileSettingsView() {
   const { user } = useSession();
@@ -20,8 +34,11 @@ export function ProfileSettingsView() {
   const navigate = useNavigate();
 
   const [displayName, setDisplayName] = useState("");
-  const [workProfile, setWorkProfile] = useState<WorkProfile>("delivery");
+  const [workProfile, setWorkProfile] = useState<WorkProfile>("other");
   const [payoutPattern, setPayoutPattern] = useState<PayoutPattern>("weekly");
+  const [incomeVariability, setIncomeVariability] = useState<IncomeVariability>("variable");
+  const [handlesCod, setHandlesCod] = useState(false);
+  const [safeBufferText, setSafeBufferText] = useState("");
   const [language, setLanguage] = useState<AppLanguage>("en");
   const [livingText, setLivingText] = useState("");
   const [workText, setWorkText] = useState("");
@@ -36,6 +53,8 @@ export function ProfileSettingsView() {
       setDisplayName(profile.display_name || "");
       setWorkProfile(profile.work_profile);
       setPayoutPattern(profile.payout_pattern);
+      if (profile.income_variability) setIncomeVariability(profile.income_variability);
+      if (typeof profile.handles_cod === "boolean") setHandlesCod(profile.handles_cod);
       setLanguage(profile.preferred_language);
       setLivingText(
         profile.daily_living_estimate !== null && profile.daily_living_estimate !== undefined
@@ -45,6 +64,11 @@ export function ProfileSettingsView() {
       setWorkText(
         profile.daily_work_estimate !== null && profile.daily_work_estimate !== undefined
           ? String(toPaiseOrNull(profile.daily_work_estimate)! / 100)
+          : ""
+      );
+      setSafeBufferText(
+        profile.safe_runway_buffer !== null && profile.safe_runway_buffer !== undefined
+          ? String(toPaiseOrNull(profile.safe_runway_buffer)! / 100)
           : ""
       );
     }
@@ -67,12 +91,21 @@ export function ProfileSettingsView() {
       return;
     }
 
+    const bufferRes = parseOptionalRupees(safeBufferText);
+    if (!bufferRes.ok) {
+      setError(`Safe runway buffer: ${bufferRes.message}`);
+      return;
+    }
+
     setSaving(true);
     try {
       await save({
         display_name: displayName.trim() || null,
         work_profile: workProfile,
         payout_pattern: payoutPattern,
+        income_variability: incomeVariability,
+        handles_cod: handlesCod,
+        safe_runway_buffer: bufferRes.paise,
         preferred_language: language,
         daily_living_estimate: livingRes.paise,
         daily_work_estimate: workRes.paise,
@@ -175,7 +208,7 @@ export function ProfileSettingsView() {
                         }`}
                       >
                         <div className="text-base mb-1">
-                          {wp === "delivery" ? "🛵" : wp === "driver" ? "🚗" : wp === "service" ? "🔧" : wp === "freelancer" ? "💻" : "🏪"}
+                          {WORK_ICONS[wp] || "💼"}
                         </div>
                         <div className="text-xs font-bold capitalize">
                           {wp.replace("_", " ")}
@@ -186,11 +219,11 @@ export function ProfileSettingsView() {
                 </div>
               </div>
 
-              {/* Payout Pattern Selector */}
+              {/* Payout Pattern & Income Variability */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="prof-payout" className="block text-xs font-bold uppercase tracking-wider text-[#5A554A] mb-1.5">
-                    Platform Payout Schedule
+                    Settlement / Payout Schedule
                   </label>
                   <select
                     id="prof-payout"
@@ -208,21 +241,79 @@ export function ProfileSettingsView() {
                 </div>
 
                 <div>
-                  <label htmlFor="prof-lang" className="block text-xs font-bold uppercase tracking-wider text-[#5A554A] mb-1.5">
-                    Language / Script
+                  <label htmlFor="prof-variability" className="block text-xs font-bold uppercase tracking-wider text-[#5A554A] mb-1.5">
+                    Income Stability &amp; Predictability
                   </label>
                   <select
-                    id="prof-lang"
-                    value={language}
-                    onChange={(e) => setLanguage(e.target.value as AppLanguage)}
+                    id="prof-variability"
+                    value={incomeVariability}
+                    onChange={(e) => setIncomeVariability(e.target.value as IncomeVariability)}
                     disabled={saving}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#D5D0C5] bg-[#FCFBF8] text-sm text-[#16181D] focus:outline-none focus:border-[#0F5C4C]"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#D5D0C5] bg-[#FCFBF8] text-sm text-[#16181D] capitalize focus:outline-none focus:border-[#0F5C4C]"
                   >
-                    <option value="en">English (Official)</option>
-                    <option value="hi">Hindi (हिंदी)</option>
-                    <option value="kn">Kannada (ಕನ್ನಡ)</option>
+                    {INCOME_VARIABILITIES.map((iv) => (
+                      <option key={iv} value={iv}>
+                        {iv.replace("_", " ")}
+                      </option>
+                    ))}
                   </select>
                 </div>
+              </div>
+
+              {/* COD Capability Toggle */}
+              <div className="p-4 rounded-2xl bg-[#FCFBF8] border border-[#D5D0C5]">
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={handlesCod}
+                    onChange={(e) => setHandlesCod(e.target.checked)}
+                    disabled={saving}
+                    className="w-4 h-4 rounded text-[#0F5C4C] focus:ring-[#0F5C4C]"
+                  />
+                  <div>
+                    <span className="text-xs font-bold text-[#16181D]">
+                      Handle Cash-on-Delivery (COD) from customers
+                    </span>
+                    <p className="text-[11px] text-[#7A7468] mt-0.5">
+                      Customer cash is isolated as custodial liability (not_mine) so you never accidentally spend it.
+                    </p>
+                  </div>
+                </label>
+              </div>
+
+              {/* Emergency Cushion Buffer */}
+              <div>
+                <label htmlFor="prof-buffer" className="block text-xs font-bold uppercase tracking-wider text-[#5A554A] mb-1.5">
+                  Emergency Runway Cushion Buffer (₹, optional)
+                </label>
+                <input
+                  id="prof-buffer"
+                  type="number"
+                  step="any"
+                  placeholder="e.g. 2000 (leave empty for zero buffer)"
+                  value={safeBufferText}
+                  onChange={(e) => setSafeBufferText(e.target.value)}
+                  disabled={saving}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D5D0C5] bg-[#FCFBF8] text-sm font-mono tabular-nums text-[#16181D] focus:outline-none focus:border-[#0F5C4C]"
+                />
+              </div>
+
+              {/* Language Selector */}
+              <div>
+                <label htmlFor="prof-lang" className="block text-xs font-bold uppercase tracking-wider text-[#5A554A] mb-1.5">
+                  Language / Script
+                </label>
+                <select
+                  id="prof-lang"
+                  value={language}
+                  onChange={(e) => setLanguage(e.target.value as AppLanguage)}
+                  disabled={saving}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D5D0C5] bg-[#FCFBF8] text-sm text-[#16181D] focus:outline-none focus:border-[#0F5C4C]"
+                >
+                  <option value="en">English (Official)</option>
+                  <option value="hi">Hindi (हिंदी)</option>
+                  <option value="kn">Kannada (ಕನ್ನಡ)</option>
+                </select>
               </div>
 
               {/* Daily Living & Work Estimates */}

@@ -23,11 +23,13 @@ export const FlovaIndiaContext: React.FC = () => {
   ];
 
   const workProfiles = [
-    { label: "Food Delivery", platforms: "Zomato · Swiggy", icon: "🛵" },
-    { label: "Quick Commerce", platforms: "Blinkit · Zepto · Instamart", icon: "⚡" },
-    { label: "Rides & Transit", platforms: "Uber · Ola · Rapido", icon: "🚖" },
-    { label: "Urban Services", platforms: "Urban Company · Service Pros", icon: "🔧" },
-    { label: "Freelance & Micro-Vendors", platforms: "Independent Contracts", icon: "💼" },
+    { label: "Food Delivery", platforms: "Zomato · Swiggy · Zepto", icon: "🛵" },
+    { label: "Cab / Auto Driver", platforms: "Uber · Ola · Rapido", icon: "🛺" },
+    { label: "Field & Home Tech", platforms: "Urban Company · Local Pros", icon: "🔧" },
+    { label: "Freelancer & Tech", platforms: "Upwork · Design · Code", icon: "💻" },
+    { label: "Small Shop & Vendor", platforms: "Kirana · Stalls · Markets", icon: "🏪" },
+    { label: "Daily Wage & Trades", platforms: "Construction · Craft Trades", icon: "🔨" },
+    { label: "Seasonal & Agro", platforms: "Harvest · Regional Trade", icon: "🌾" },
   ];
 
   return (

@@ -38,6 +38,52 @@ export type {
   ExtractedTransactionData,
   ExtractionActionIntent,
   ExtractionEntryIntent,
+  ExtractionInputSource,
   ExtractionMetadata,
   FinancialExtractionDTO,
+  FinancialQueryType,
+  ProposedEvidenceType,
+  ProposedPaymentMethod,
+  ProposedVerificationStatus,
 } from "./extractionTypes";
+
+export {
+  adaptExtractedCheckin,
+  adaptExtractedPayout,
+  adaptExtractedTransactions,
+  mapCanonicalCategory,
+  resolveCorrectionIntent,
+  sanitizeExtractedTransaction,
+  type CategoryMappingResult,
+  type CheckinAdaptationResult,
+  type CorrectionResolutionResult,
+} from "./extractionAdapter";
+
+export type {
+  ExtractedReceiptCandidate,
+  PendingDraftContext,
+  VoiceTransactionCandidate,
+} from "./candidateTypes";
+
+export {
+  RFC_4122_UUID_REGEX,
+  candidateToNewTransaction,
+  confirmCandidateTransaction,
+  deriveDeterministicUUID,
+  generateUUID,
+  isValidUUID,
+  mapDtoToReceiptCandidates,
+  mapDtoToVoiceCandidates,
+  resolveCandidateId,
+  safeConvertRupeeStringToPaise,
+} from "./candidateAdapter";
+
+export {
+  EXTRACTION_RESPONSE_JSON_SCHEMA,
+  EXTRACTION_SYSTEM_PROMPT,
+  MOCK_EXTRACTION_RESPONSES,
+  validateExtractionOutput,
+  type ExtractionValidationResult,
+  type ValidatedFinancialExtractionDTO,
+  type ValidationContext,
+} from "./extractionPrompt";

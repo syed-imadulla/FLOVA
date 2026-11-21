@@ -138,8 +138,8 @@ export function VoiceCapturePage() {
         setViewState("view_payout");
       } else if (result.extraction.entry_intent === "balance_checkin") {
         setViewState("view_checkin");
-      } else if (result.extraction.entry_intent === "financial_query") {
-        const queryData = result.extraction.financial_query || {
+      } else if (result.extraction.entry_intent === "financial_query" || result.extraction.entry_intent === "query") {
+        const queryData = result.extraction.financial_query || result.extraction.query || {
           query_type: "general",
           target_date: null,
           target_entity: null,
