@@ -256,8 +256,6 @@ export function OnboardingPage() {
                     checked={isSelected}
                     onChange={() => {
                       setWorkProfile(opt.key);
-                      // Auto-enable COD recommendation for delivery partners, optional for others
-                      if (opt.key === "delivery") setHandlesCod(true);
                     }}
                     disabled={isSaving}
                     style={{ marginTop: "0.2rem" }}

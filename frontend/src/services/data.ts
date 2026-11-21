@@ -173,9 +173,13 @@ export async function loadRunwayInput(): Promise<RunwayInput> {
   ]);
   return {
     profile: {
-      workProfile: profile.work_profile, payoutPattern: profile.payout_pattern,
+      workProfile: profile.work_profile,
+      payoutPattern: profile.payout_pattern,
+      incomeVariability: profile.income_variability,
+      handlesCod: profile.handles_cod,
       dailyLivingEstimate: toPaiseOrNull(profile.daily_living_estimate),
       dailyWorkEstimate: toPaiseOrNull(profile.daily_work_estimate),
+      safeRunwayBuffer: toPaiseOrNull(profile.safe_runway_buffer),
     },
     latestCheckin: checkin && {
       cash: toPaise(checkin.cash_amount), bank: toPaise(checkin.bank_amount),

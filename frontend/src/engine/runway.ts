@@ -18,6 +18,8 @@ export interface DailyProjectionEntry {
   otherTransactionAdjustmentPaise: number;
   netChangePaise: number;
   closingBalancePaise: number;
+  /** Spendable closing balance after reserving the emergency cushion (clamped to 0) */
+  closingSpendableBalancePaise?: number;
   commitmentsApplied: Array<{ id: string; title: string; amount: Paise }>;
   remainingLivingBudgetPaise?: Paise;
   remainingWorkBudgetPaise?: Paise;
@@ -30,11 +32,19 @@ export type RunwayProjectionStatus =
 
 export interface RunwayProjectionResult {
   status: RunwayProjectionStatus;
+  /** Actual confirmed personal balance (never distorted by buffer) */
   startingConfirmedBalancePaise: number | null;
+  /** Reserved emergency cushion from user profile in integer paise (defaults to 0 if null/unspecified) */
+  safeRunwayBufferPaise?: Paise;
+  /** Available spendable balance after reserving the emergency cushion (never negative, never distorts confirmed balance) */
+  startingSpendableBalancePaise?: number | null;
   dailyEssentialExpensePaise: Paise | null;
   horizonDays: number;
   runwayDays: number | null;
+  /** First date when closing balance drops strictly below 0 (cash shortfall) */
   firstShortfallDate: ISODate | null;
+  /** First date when closing balance drops below the safe runway cushion */
+  firstBufferShortfallDate?: ISODate | null;
   projectedZeroBalanceDate: ISODate | null;
   minClosingBalancePaise: number | null;
   projections: DailyProjectionEntry[];
@@ -87,16 +97,27 @@ export function addDays(dateStr: ISODate, days: number): ISODate {
 export function calculateDailyRunway(input: RunwayProjectionInput): RunwayProjectionResult {
   const horizon = input.horizonDays && input.horizonDays > 0 ? Math.floor(input.horizonDays) : 30;
 
+  // Safe runway buffer resolution (integer paise, non-negative, defaults to 0 if null/unspecified)
+  const safeBuffer: Paise =
+    input.profile.safeRunwayBuffer !== null &&
+    input.profile.safeRunwayBuffer !== undefined &&
+    isValidPaise(input.profile.safeRunwayBuffer)
+      ? input.profile.safeRunwayBuffer
+      : 0;
+
   // 1. Compute and validate confirmed starting balance
   const balanceResult = calculateConfirmedBalance(input);
   if (balanceResult.status !== "CONFIRMED") {
     return {
       status: balanceResult.status,
       startingConfirmedBalancePaise: null,
+      safeRunwayBufferPaise: safeBuffer,
+      startingSpendableBalancePaise: null,
       dailyEssentialExpensePaise: null,
       horizonDays: horizon,
       runwayDays: null,
       firstShortfallDate: null,
+      firstBufferShortfallDate: null,
       projectedZeroBalanceDate: null,
       minClosingBalancePaise: null,
       projections: [],
@@ -104,16 +125,22 @@ export function calculateDailyRunway(input: RunwayProjectionInput): RunwayProjec
     };
   }
 
+  // Spendable balance reserves the cushion; clamped at 0 so it never goes negative or distorts confirmed balance
+  const startingSpendable = Math.max(0, safeSub(balanceResult.confirmedBalancePaise!, safeBuffer));
+
   // 2. Validate essential daily expense baseline
   const { dailyLivingEstimate, dailyWorkEstimate } = input.profile;
   if (dailyLivingEstimate === null || dailyWorkEstimate === null) {
     return {
       status: "INSUFFICIENT_INFORMATION",
       startingConfirmedBalancePaise: balanceResult.confirmedBalancePaise,
+      safeRunwayBufferPaise: safeBuffer,
+      startingSpendableBalancePaise: startingSpendable,
       dailyEssentialExpensePaise: null,
       horizonDays: horizon,
       runwayDays: null,
       firstShortfallDate: null,
+      firstBufferShortfallDate: null,
       projectedZeroBalanceDate: null,
       minClosingBalancePaise: null,
       projections: [],
@@ -126,10 +153,13 @@ export function calculateDailyRunway(input: RunwayProjectionInput): RunwayProjec
     return {
       status: "INVALID_INPUT",
       startingConfirmedBalancePaise: balanceResult.confirmedBalancePaise,
+      safeRunwayBufferPaise: safeBuffer,
+      startingSpendableBalancePaise: startingSpendable,
       dailyEssentialExpensePaise: null,
       horizonDays: horizon,
       runwayDays: null,
       firstShortfallDate: null,
+      firstBufferShortfallDate: null,
       projectedZeroBalanceDate: null,
       minClosingBalancePaise: null,
       projections: [],
@@ -145,10 +175,13 @@ export function calculateDailyRunway(input: RunwayProjectionInput): RunwayProjec
     return {
       status: "INVALID_INPUT",
       startingConfirmedBalancePaise: balanceResult.confirmedBalancePaise,
+      safeRunwayBufferPaise: safeBuffer,
+      startingSpendableBalancePaise: startingSpendable,
       dailyEssentialExpensePaise: dailyEssentialExpense,
       horizonDays: horizon,
       runwayDays: null,
       firstShortfallDate: null,
+      firstBufferShortfallDate: null,
       projectedZeroBalanceDate: null,
       minClosingBalancePaise: null,
       projections: [],
@@ -203,6 +236,7 @@ export function calculateDailyRunway(input: RunwayProjectionInput): RunwayProjec
   const projections: DailyProjectionEntry[] = [];
   let currentBalance: number = balanceResult.confirmedBalancePaise!;
   let firstShortfallDate: ISODate | null = null;
+  let firstBufferShortfallDate: ISODate | null = null;
   let projectedZeroBalanceDate: ISODate | null = null;
   let minClosingBalance: number = currentBalance;
   let coveredDaysCount = 0;
@@ -227,6 +261,7 @@ export function calculateDailyRunway(input: RunwayProjectionInput): RunwayProjec
 
     const netChange = safeSub(otherAdjustments, totalOutflow);
     const closingBalance = safeAdd(openingBalance, netChange);
+    const closingSpendable = Math.max(0, safeSub(closingBalance, safeBuffer));
 
     projections.push({
       dayIndex: d,
@@ -237,6 +272,7 @@ export function calculateDailyRunway(input: RunwayProjectionInput): RunwayProjec
       otherTransactionAdjustmentPaise: otherAdjustments,
       netChangePaise: netChange,
       closingBalancePaise: closingBalance,
+      closingSpendableBalancePaise: closingSpendable,
       commitmentsApplied: [...dayCommitments],
       ...(d === 0 ? {
         remainingLivingBudgetPaise: remainingLiving,
@@ -262,6 +298,11 @@ export function calculateDailyRunway(input: RunwayProjectionInput): RunwayProjec
       }
     }
 
+    // Buffer shortfall date: First date closing balance breaches the reserved cushion
+    if (firstBufferShortfallDate === null && closingBalance < safeBuffer) {
+      firstBufferShortfallDate = currentDate;
+    }
+
     currentBalance = closingBalance;
   }
 
@@ -270,10 +311,13 @@ export function calculateDailyRunway(input: RunwayProjectionInput): RunwayProjec
   return {
     status: "PROJECTED",
     startingConfirmedBalancePaise: balanceResult.confirmedBalancePaise,
+    safeRunwayBufferPaise: safeBuffer,
+    startingSpendableBalancePaise: startingSpendable,
     dailyEssentialExpensePaise: dailyEssentialExpense,
     horizonDays: horizon,
     runwayDays,
     firstShortfallDate,
+    firstBufferShortfallDate,
     projectedZeroBalanceDate,
     minClosingBalancePaise: minClosingBalance,
     projections,

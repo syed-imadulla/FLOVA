@@ -215,6 +215,9 @@ export interface RunwayInput {
     payoutPattern: PayoutPattern;
     dailyLivingEstimate: Paise | null;
     dailyWorkEstimate: Paise | null;
+    safeRunwayBuffer?: Paise | null;
+    incomeVariability?: IncomeVariability;
+    handlesCod?: boolean;
   };
   latestCheckin: { cash: Paise; bank: Paise; notMine: Paise; checkedAt: ISOTimestamp } | null;
   transactionsSinceCheckin: Array<{
