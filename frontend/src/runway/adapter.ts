@@ -7,6 +7,12 @@ export interface ProcessedRunway {
   custodialOwedPaise: number | null;
   dailyEssentialExpensePaise: number | null;
   firstShortfallDate: ISODate | null;
+  /** Reserved safety cushion (paise). Never subtracted from confirmedBalancePaise. */
+  safeRunwayBufferPaise?: number;
+  /** max(0, confirmed − buffer); null when the balance is not confirmed. */
+  startingSpendableBalancePaise?: number | null;
+  /** First day the projected balance dips below the reserved cushion. */
+  firstBufferShortfallDate?: ISODate | null;
   projectedZeroBalanceDate: ISODate | null;
   runwayDays: number | null;
   projections: DailyProjectionEntry[];
@@ -21,6 +27,8 @@ export function processRunwayFeed(
   options: { horizonDays?: number; startDate?: ISODate } = {}
 ): ProcessedRunway {
   const missingInputs: string[] = [];
+  const bufferRaw = input?.profile.safeRunwayBuffer;
+  const safeRunwayBufferPaise = typeof bufferRaw === "number" && Number.isSafeInteger(bufferRaw) && bufferRaw > 0 ? bufferRaw : 0;
 
   if (!input || !input.latestCheckin) {
     missingInputs.push("Balance check-in");
@@ -73,6 +81,9 @@ export function processRunwayFeed(
       custodialOwedPaise: custodial,
       dailyEssentialExpensePaise: null,
       firstShortfallDate: null,
+      safeRunwayBufferPaise,
+      startingSpendableBalancePaise: confirmedBal === null ? null : Math.max(0, confirmedBal - safeRunwayBufferPaise),
+      firstBufferShortfallDate: null,
       projectedZeroBalanceDate: null,
       runwayDays: null,
       projections: [],
@@ -98,6 +109,9 @@ export function processRunwayFeed(
     custodialOwedPaise: balanceRes.custodialOwedPaise,
     dailyEssentialExpensePaise: projectionResult.dailyEssentialExpensePaise,
     firstShortfallDate: projectionResult.firstShortfallDate,
+    safeRunwayBufferPaise: projectionResult.safeRunwayBufferPaise ?? safeRunwayBufferPaise,
+    startingSpendableBalancePaise: projectionResult.startingSpendableBalancePaise ?? null,
+    firstBufferShortfallDate: projectionResult.firstBufferShortfallDate ?? null,
     projectedZeroBalanceDate: projectionResult.projectedZeroBalanceDate,
     runwayDays: projectionResult.runwayDays,
     projections: projectionResult.projections,

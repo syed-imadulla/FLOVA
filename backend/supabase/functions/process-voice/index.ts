@@ -22,6 +22,93 @@ interface ProcessVoiceRequest {
   language?: string;
 }
 
+// ---------- Groq model selection (self-healing) ----------
+// Groq retires models and accounts can restrict which models a key may use. Instead of a
+// hard-coded name, try candidates in order and move on when Groq says a model is missing,
+// retired or not permitted. Optional secrets GROQ_CHAT_MODEL / GROQ_VISION_MODEL /
+// GROQ_STT_MODEL pin a model explicitly.
+const GROQ_PREFS: Record<"chat" | "vision" | "stt", string[]> = {
+  chat: [
+    "openai/gpt-oss-120b",
+    "moonshotai/kimi-k2-instruct",
+    "meta-llama/llama-4-maverick-17b-128e-instruct",
+    "openai/gpt-oss-20b",
+    "meta-llama/llama-4-scout-17b-16e-instruct",
+    "llama-3.3-70b-versatile",
+    "llama-3.1-8b-instant",
+  ],
+  vision: [
+    "meta-llama/llama-4-maverick-17b-128e-instruct",
+    "meta-llama/llama-4-scout-17b-16e-instruct",
+    "llama-3.2-90b-vision-preview",
+    "llama-3.2-11b-vision-preview",
+  ],
+  stt: ["whisper-large-v3-turbo", "whisper-large-v3"],
+};
+const GROQ_PIN: Record<"chat" | "vision" | "stt", string> = { chat: "GROQ_CHAT_MODEL", vision: "GROQ_VISION_MODEL", stt: "GROQ_STT_MODEL" };
+let groqModelCache: { at: number; ids: string[] } | null = null;
+
+async function groqListModels(apiKey: string): Promise<string[]> {
+  if (groqModelCache && Date.now() - groqModelCache.at < 10 * 60_000) return groqModelCache.ids;
+  try {
+    const res = await fetch("https://api.groq.com/openai/v1/models", { headers: { Authorization: `Bearer ${apiKey}` } });
+    if (!res.ok) return [];
+    const body = await res.json();
+    const ids: string[] = (body?.data ?? []).filter((m: { active?: boolean }) => m?.active !== false).map((m: { id: string }) => m.id);
+    groqModelCache = { at: Date.now(), ids };
+    return ids;
+  } catch {
+    return [];
+  }
+}
+
+async function groqCandidates(apiKey: string, kind: "chat" | "vision" | "stt"): Promise<string[]> {
+  const pinned = Deno.env.get(GROQ_PIN[kind]);
+  const listed = await groqListModels(apiKey);
+  const prefs = GROQ_PREFS[kind];
+  const extra = listed.filter((id) =>
+    kind === "stt" ? /whisper/i.test(id) : kind === "vision" ? /llama-4|vision/i.test(id) : !/whisper|tts|guard|playai|orpheus|distil|compound|allam/i.test(id)
+  );
+  const ordered = [
+    ...(pinned ? [pinned] : []),
+    ...prefs.filter((p) => listed.includes(p)),
+    ...extra,
+    ...prefs.filter((p) => !listed.includes(p)),
+  ];
+  return [...new Set(ordered)];
+}
+
+function groqModelUnavailable(status: number, text: string): boolean {
+  // 429: this model's rate limit is used up; Groq limits each model separately, so try the next one.
+  return status === 404 || status === 403 || status === 429 || (status === 400 && /model_not_found|decommission|does not exist|not supported|not have access|model_permission/i.test(text));
+}
+
+/** Today's date in India, so relative words ("today", "yesterday", "Friday") resolve to real dates. */
+function todayContext(): string {
+  const now = new Date();
+  const iso = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata", year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
+  const weekday = new Intl.DateTimeFormat("en-IN", { timeZone: "Asia/Kolkata", weekday: "long" }).format(now);
+  return `Today's date in India is ${iso} (${weekday}). Resolve relative dates such as "today", "yesterday", "tomorrow" or a weekday name to YYYY-MM-DD using this date (a weekday name for an expected payout means the next such day; for a past transaction it means the most recent one). If no date is mentioned, leave the date null.`;
+}
+
+/** POST to Groq, trying each candidate model until one is available. Returns the last response. */
+async function groqWithModelFallback(
+  apiKey: string,
+  kind: "chat" | "vision" | "stt",
+  send: (model: string) => Promise<Response>
+): Promise<{ res: Response; model: string }> {
+  const candidates = await groqCandidates(apiKey, kind);
+  let last: { res: Response; model: string } | null = null;
+  for (const model of candidates) {
+    const res = await send(model);
+    if (res.ok) return { res, model };
+    const text = await res.clone().text();
+    last = { res: new Response(text, { status: res.status }), model };
+    if (!groqModelUnavailable(res.status, text)) return last;
+  }
+  return last ?? { res: new Response(JSON.stringify({ error: "No Groq model available" }), { status: 503 }), model: "none" };
+}
+
 Deno.serve(async (req: Request) => {
   // 1. CORS Preflight
   if (req.method === "OPTIONS") {
@@ -109,18 +196,18 @@ Deno.serve(async (req: Request) => {
       const audioBlob = new Blob([bytes], { type: mime });
       const formData = new FormData();
       formData.append("file", audioBlob, `recording.${extension}`);
-      formData.append("model", "whisper-large-v3-turbo");
       formData.append("response_format", "json");
       if (body.language && body.language !== "auto") {
         formData.append("language", body.language.toLowerCase());
       }
 
-      const whisperRes = await fetch("https://api.groq.com/openai/v1/audio/transcriptions", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${groqApiKey}`,
-        },
-        body: formData,
+      const { res: whisperRes } = await groqWithModelFallback(groqApiKey, "stt", (sttModelId) => {
+        formData.set("model", sttModelId);
+        return fetch("https://api.groq.com/openai/v1/audio/transcriptions", {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${groqApiKey}` },
+          body: formData,
+        });
       });
 
       if (!whisperRes.ok) {
@@ -145,7 +232,7 @@ Deno.serve(async (req: Request) => {
 
     // 6. Financial Intent Extraction via Groq Llama 3.3
     const systemPrompt = `You are the specialized AI Financial Intent Extraction Engine for FLOVA, a personal finance assistant for Indian gig and delivery workers.
-Your task is to analyze the user's spoken utterance (which may be in English, Hindi, Kannada, Urdu, Telugu, or code-switched Hinglish/Kanglish) and return a strictly structured JSON object matching the canonical FinancialExtractionDTO.
+Your task is to analyze the user's spoken utterance (which may be in English, Hindi, Kannada, Tamil, Telugu, Malayalam, Marathi, Bengali, Gujarati, Urdu, or code-switched mixes such as Hinglish/Kanglish/Tanglish) and return a strictly structured JSON object matching the canonical FinancialExtractionDTO.
 
 Follow these strict rules:
 1. Intent Classification:
@@ -156,7 +243,7 @@ Follow these strict rules:
    - "unknown": Unrelated chatter, incomprehensible text, or non-financial statements.
 
 2. Multilingual & Script Handling:
-   - Accurately parse numbers and financial terms across English, Hindi (Devanagari), Kannada (ಕನ್ನಡ), Urdu (اردو), and Telugu (తెలుగు), including transliterated/code-switching (e.g., "300 roopayalu petrol ki", "oota 120 rupayi").
+   - Accurately parse numbers and financial terms across English, Hindi/Marathi (Devanagari), Kannada (ಕನ್ನಡ), Tamil (தமிழ்), Telugu (తెలుగు), Malayalam (മലയാളം), Bengali (বাংলা), Gujarati (ગુજરાતી) and Urdu (اردو), including transliterated/code-switching (e.g., "300 roopayalu petrol ki", "oota 120 rupayi").
    - Amounts in Indic scripts/words (e.g., "३००", "300 रुपये", "300 ರೂಪಾಯಿ", "300 روپے", "300 రూపాయలు") MUST be extracted as standard decimal rupee strings (e.g. "300").
    - Work expenses: Petrol/diesel/fuel/cng, bike maintenance/repairs, phone recharge -> expense_type="work", category="fuel"|"maintenance"|"phone".
    - Living expenses: Food, tea, chai, snacks, breakfast, lunch, dinner, ration, groceries -> expense_type="living", category="food".
@@ -214,22 +301,24 @@ Follow these strict rules:
   }
 }`;
 
-    const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${groqApiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "llama-3.3-70b-versatile",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: `Spoken utterance:\n"${transcript}"` },
-        ],
-        response_format: { type: "json_object" },
-        temperature: 0.1,
-      }),
-    });
+    const { res: groqRes } = await groqWithModelFallback(groqApiKey, "chat", (model) =>
+      fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${groqApiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: `${todayContext()}\n\nSpoken utterance:\n"${transcript}"` },
+          ],
+          response_format: { type: "json_object" },
+          temperature: 0.1,
+        }),
+      })
+    );
 
     if (!groqRes.ok) {
       const errText = await groqRes.text();

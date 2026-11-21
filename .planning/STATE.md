@@ -16,7 +16,7 @@ progress:
 See: `.planning/PROJECT.md` & `.planning/ROADMAP.md` (updated 2026-11-21)
 
 **Core value:** Provide a reliable, decimal-safe, and truthful answer to "Will my available money last until my next payout?" with strict RLS isolation and uncertainty communication.
-**Current focus:** Integration milestone (PR #15/#19/#20 reconciliation into `dev`). Next: complete application UI/UX + frontend-backend integration + full-system testing, then Phase 11 (Deployment Readiness).
+**Current focus:** Phase 10.2 (application UI shell, screens, live AI layer) complete and merged into `dev`. Next: bug fixing on `dev` and full-system testing, then Phase 11 (Deployment Readiness).
 
 ## Current Position
 
@@ -62,3 +62,12 @@ Progress: [███████████░░] 84.6% (11 phases complete)
 - Verified suites: engine 113, services 76, standalone (parseRupees 10, dates 2, ravi 6, wish passes, no case count), backend `test:db` 39, `test:seed` 17. `tsc -b && vite build` passes.
 - Migrations 20261121000200 / 20261121000201: NOT confirmed applied to the hosted Supabase project (no authenticated schema access from the agent).
 - Not done: complete UI/UX, full-system QA, Phase 11, Phase 12.
+
+## Phase 10.2: Application UI Shell & Live AI (2026-11-21)
+
+- One persistent authenticated layout with a bottom navbar (Home · Activity · Mic · Insights · More), plus 13 screens on the existing services: Home, Activity, Voice, Review/Add, Scan receipt, Check-in, Insights (Runway | Month | Insights), Expected payments, Bills & debts, WISH, More, Profile, Onboarding. The legacy pages were removed.
+- Voice: browser speech-to-text in 10 Indian languages. Understanding comes from Groq via `process-voice`, with a local fallback for en/hi/kn/ta/te/ur, and every result goes through review before saving.
+- Edge Functions `process-voice` and `extract-receipt` are deployed to project `msjzkylvafuwlkkujxpv`. They self-select an available Groq model (falling back on retired, forbidden or rate-limited models) and pass today's date (IST) for relative dates. Live-verified for en/ta/hi/kn/te, payouts, balance queries and receipt text.
+- The landing navbar was rebuilt, and legacy global CSS is scoped away from the app and landing.
+- Verified: engine 113, services 76, standalone suites pass, production build passes, browser check at 375px.
+- Open: WISH is stored on the device only; receipt photo and real-device speech are not yet verified by the agent; the Groq free tier is rate-limited.
