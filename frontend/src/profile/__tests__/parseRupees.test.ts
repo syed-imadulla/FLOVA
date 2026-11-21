@@ -39,10 +39,16 @@ const resAbc = parseOptionalRupees("abc");
 assertStrictEqual(resAbc.ok, false, "abc should be rejected");
 console.log('  ✔ optional: "abc" rejected');
 
-// 7. "100001" rejected
-const resMax = parseOptionalRupees("100001");
-assertStrictEqual(resMax.ok, false, "100001 should be rejected");
-console.log('  ✔ optional: "100001" rejected');
+// 7. "1000000" accepted (₹10,00,000 boundary)
+const res10L = parseOptionalRupees("1000000");
+assertStrictEqual(res10L.ok, true, "1000000 should be ok");
+if (res10L.ok) assertStrictEqual(res10L.paise, 100000000, "1000000 should yield 100000000 paise");
+console.log('  ✔ optional: "1000000" (₹10 Lakh) -> 100000000 paise');
+
+// 7b. "1000001" rejected (> ₹10,00,000)
+const resMax = parseOptionalRupees("1000001");
+assertStrictEqual(resMax.ok, false, "1000001 should be rejected");
+console.log('  ✔ optional: "1000001" rejected (> ₹10 Lakh limit)');
 
 // parseRequiredRupees tests
 // 8. "" rejected -> "Enter an amount"

@@ -122,6 +122,23 @@ export const supabase = {
                       error: { code: "23505", message: 'duplicate key value violates unique constraint "transactions_pkey"' } as any,
                     });
                   }
+                  const ownership = (payload as any)?.ownership ?? "mine";
+                  const date = (payload as any)?.transaction_date || "2026-11-21";
+                  const amountNum = parseFloat((payload as any)?.amount ?? "0");
+                  if (ownership === "mine") {
+                    const existingDailySum = mockState.transactions
+                      .filter((t: any) => (t.ownership ?? "mine") === "mine" && (t.transaction_date || t.date || "2026-11-21") === date && t.id !== id)
+                      .reduce((sum: number, t: any) => sum + parseFloat(t.amount || "0"), 0);
+                    if (existingDailySum + amountNum > 1000000.00) {
+                      return Promise.resolve({
+                        data: null,
+                        error: {
+                          code: "check_violation",
+                          message: `Daily transaction limit of ₹10,00,000 exceeded for ${date}`,
+                        } as any,
+                      });
+                    }
+                  }
                   const rec = typeof payload === "object" && payload !== null
                     ? {
                         ...payload,

@@ -17,7 +17,11 @@ export function useActivity(opts: { limit?: number; includeExpectedPayouts?: boo
   const reqId = useRef(0);
 
   const load = useCallback(async () => {
-    if (!user) return;
+    if (!user) {
+      setItems(null);
+      setError(null);
+      return;
+    }
     const id = ++reqId.current;
     setError(null);
     try {

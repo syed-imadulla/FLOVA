@@ -77,7 +77,11 @@ export function useMonthSummary(month: string) {
   const req = useRef(0);
 
   const load = useCallback(async () => {
-    if (!user) return;
+    if (!user) {
+      setTxs(null);
+      setError(null);
+      return;
+    }
     const id = ++req.current;
     setError(null);
     const { from, to } = monthRange(month);

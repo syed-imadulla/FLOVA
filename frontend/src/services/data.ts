@@ -2,6 +2,7 @@
 // database guarantees users only ever touch their own rows. Inputs are in paise.
 import { supabase, unwrap } from "../lib/supabase";
 import { paiseToRupeeString, toPaise, toPaiseOrNull } from "../lib/money";
+import { LIMIT_ERROR_MESSAGE, MAX_TRANSACTION_LIMIT_PAISE } from "../lib/limits";
 import type {
   ActivityItem, BalanceCheckin, Commitment, CommitmentStatus, ExtractedReceiptCandidate,
   NewBalanceCheckin, NewCommitment, NewPayout, NewTransaction,
@@ -40,6 +41,9 @@ export async function getLatestCheckin(): Promise<BalanceCheckin | null> {
 
 // ---------- transactions ----------
 export async function addTransaction(t: NewTransaction): Promise<Transaction> {
+  if (t.amount > MAX_TRANSACTION_LIMIT_PAISE) {
+    throw new Error(LIMIT_ERROR_MESSAGE);
+  }
   const ownership = t.ownership ?? "mine";
   if (t.type === "expense" && ownership === "mine" && !t.expenseType) {
     throw new Error("Choose whether this expense is living or work.");

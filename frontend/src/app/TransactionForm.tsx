@@ -5,7 +5,7 @@ import { useState } from "react";
 import { categoriesFor, EXPENSE_CATEGORIES } from "./categories";
 import { parseRequiredRupees } from "../profile/parseRupees";
 import { todayLocalISO } from "../data/dates";
-import type { ExpenseType, MoneyOwnership, TransactionType } from "../types/contracts";
+import type { ExpenseType, MoneyOwnership, TransactionType, WorkProfile } from "../types/contracts";
 import { Button, Card, Field, MoneyInput, Notice, Segmented, SelectInput, TextInput, cx } from "../ui/kit";
 import { IconCheck } from "../ui/icons";
 
@@ -38,6 +38,7 @@ export function TransactionForm({
   lockType,
   allowNotMine = true,
   aiNote,
+  workProfile,
   submitLabel = "Confirm & save",
   onSubmit,
   onCancel,
@@ -49,6 +50,7 @@ export function TransactionForm({
   allowNotMine?: boolean;
   /** Shown above the form when the values came from AI. */
   aiNote?: React.ReactNode;
+  workProfile?: WorkProfile | null;
   submitLabel?: string;
   onSubmit: (v: TxSubmit) => Promise<void>;
   onCancel?: () => void;
@@ -122,12 +124,12 @@ export function TransactionForm({
               <option value="" disabled>
                 Choose…
               </option>
-              {categoriesFor(d.type).map((c) => (
+              {categoriesFor(d.type, workProfile).map((c) => (
                 <option key={c.value} value={c.value}>
                   {c.label}
                 </option>
               ))}
-              {d.category && !categoriesFor(d.type).some((c) => c.value === d.category) ? <option value={d.category}>{d.category}</option> : null}
+              {d.category && !categoriesFor(d.type, workProfile).some((c) => c.value === d.category) ? <option value={d.category}>{d.category}</option> : null}
             </SelectInput>
           )}
         </Field>

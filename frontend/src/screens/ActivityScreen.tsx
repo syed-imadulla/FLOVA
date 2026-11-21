@@ -10,7 +10,7 @@ import { todayLocalISO } from "../data/dates";
 import { deleteTransaction, updateTransaction } from "../services/data";
 import type { ActivityItem } from "../types/contracts";
 import { Button, Card, Chip, EmptyState, Notice, Screen, Sheet, Skeleton, relativeDayLabel } from "../ui/kit";
-import { IconActivity, IconMic, IconTrash } from "../ui/icons";
+import { IconActivity, IconTrash } from "../ui/icons";
 
 type Filter = "all" | "income" | "expense" | "checkin";
 
@@ -81,11 +81,6 @@ export function ActivityScreen() {
           <EmptyState
             icon={<IconActivity size={22} />}
             title={filter === "all" ? "No activity yet" : "Nothing here yet"}
-            action={
-              <Button icon={<IconMic size={18} />} onClick={() => navigate("/voice")}>
-                Add by voice
-              </Button>
-            }
           >
             Record income or an expense and it will show up here.
           </EmptyState>

@@ -115,6 +115,35 @@ ok(profA.handles_cod === true && profA.s === "1500.00", "handles_cod and safe_ru
 
 await expectError(`update public.profiles set safe_runway_buffer = -100 where id = '${A}'`, "negative safe_runway_buffer rejected");
 
+// ₹10 Lakh individual and daily aggregate limit verification
+await as(A, `select 1`);
+await expectError(
+  `insert into public.transactions (type, amount, category) values ('income', 1000000.01, 'salary')`,
+  "individual transaction over ₹10 Lakh rejected"
+);
+
+// Transaction 1 on 2026-11-25: ₹6,00,000 (succeeds)
+await as(A, `insert into public.transactions (id, type, amount, category, transaction_date) values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'income', 600000.00, 'salary', '2026-11-25')`);
+ok(true, "transaction within ₹10 Lakh on calendar day succeeds");
+
+// Transaction 2 on same day (2026-11-25): ₹5,00,000 (total = ₹11,00,000 > ₹10,00,000 -> rejected)
+await expectError(
+  `insert into public.transactions (type, amount, category, expense_type, transaction_date) values ('expense', 500000.00, 'maintenance', 'work', '2026-11-25')`,
+  "daily aggregate exceeding ₹10 Lakh on same calendar day rejected"
+);
+
+// Third-party funds (ownership = 'not_mine') on same day (2026-11-25): ₹5,00,000 (succeeds, does not count against personal aggregate)
+await as(A, `insert into public.transactions (type, amount, category, ownership, transaction_date) values ('income', 500000.00, 'cod_collection', 'not_mine', '2026-11-25')`);
+ok(true, "third-party (not_mine) funds excluded from personal daily aggregate limit");
+
+// Transaction on a different calendar day (2026-11-26): ₹6,00,000 (succeeds)
+await as(A, `insert into public.transactions (type, amount, category, transaction_date) values ('income', 600000.00, 'salary', '2026-11-26')`);
+ok(true, "transaction on different calendar day evaluated against its own day limit");
+
+// User B on 2026-11-25: ₹6,00,000 (succeeds, isolated per user)
+await as(B, `insert into public.transactions (type, amount, category, transaction_date) values ('income', 600000.00, 'salary', '2026-11-25')`);
+ok(true, "user daily aggregate is strictly isolated per authenticated user");
+
 const C = "33333333-3333-3333-3333-333333333333";
 await db.exec(`reset role; insert into auth.users (id, raw_user_meta_data) values ('${C}', '{"display_name":"New Irregular Earner"}');`);
 const profC = (await db.query(`select work_profile, income_variability, handles_cod from public.profiles where id = '${C}'`)).rows[0];

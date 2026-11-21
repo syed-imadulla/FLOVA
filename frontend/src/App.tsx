@@ -69,6 +69,9 @@ export default function App() {
               <Route path="/overview" element={<Navigate to="/insights" replace />} />
               <Route path="/settings" element={<Navigate to="/profile" replace />} />
               <Route path="/plan" element={<Navigate to="/commitments" replace />} />
+              <Route path="/quick-capture" element={<Navigate to="/add" replace />} />
+              <Route path="/voice-transcription" element={<Navigate to="/voice" replace />} />
+              <Route path="/catch-receipt" element={<Navigate to="/catch" replace />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </DataVersionProvider>

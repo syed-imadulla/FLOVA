@@ -7,9 +7,18 @@ import { emptyDraft, TransactionForm, type TxDraft, type TxSubmit } from "../app
 import { categoryLabel } from "../app/categories";
 import { useDataVersion } from "../data/DataVersionProvider";
 import { formatINR } from "../lib/money";
+import { useProfile } from "../profile/useProfile";
 import { addTransaction, confirmCandidateTransaction } from "../services/data";
 import type { ExtractedReceiptCandidate, VoiceTransactionCandidate } from "../types/contracts";
 import { Screen } from "../ui/kit";
+
+export interface QueuedReviewCandidate {
+  candidateId: string;
+  draft: TxDraft;
+  aiNote?: string;
+  merchant?: string | null;
+  transcript?: string;
+}
 
 export interface ReviewState {
   /** Omitted for a manual entry opened with pre-filled values (e.g. paying a bill). */
@@ -19,6 +28,11 @@ export interface ReviewState {
   aiNote?: string;
   merchant?: string | null;
   transcript?: string;
+  /** Queue of additional candidates to review sequentially (e.g. from multi-transaction voice utterances) */
+  remainingCandidates?: QueuedReviewCandidate[];
+  /** 1-based index and total count for multi-entry progress indication */
+  queueIndex?: number;
+  queueTotal?: number;
 }
 
 function newId(): string {
@@ -29,13 +43,16 @@ function newId(): string {
 export function AddScreen() {
   const navigate = useNavigate();
   const { bump } = useDataVersion();
-  const review = (useLocation().state as ReviewState | null) ?? null;
-  const [candidateId] = useState<string>(() => review?.candidateId || newId());
+  const { profile } = useProfile();
+  const location = useLocation();
+  const review = (location.state as ReviewState | null) ?? null;
+  const [fallbackId] = useState<string>(() => newId());
+  const activeCandidateId = review?.candidateId || fallbackId;
 
   async function save(v: TxSubmit) {
     if (review?.origin === "receipt") {
       const c: ExtractedReceiptCandidate = {
-        id: candidateId,
+        id: activeCandidateId,
         merchant: review.merchant ?? null,
         amountPaise: v.amountPaise,
         category: v.category,
@@ -49,7 +66,7 @@ export function AddScreen() {
       await confirmCandidateTransaction(c);
     } else if (review?.origin === "voice") {
       const c: VoiceTransactionCandidate = {
-        id: candidateId,
+        id: activeCandidateId,
         transcript: review.transcript || "",
         description: v.note || review.transcript || null,
         type: v.type,
@@ -64,7 +81,7 @@ export function AddScreen() {
       await confirmCandidateTransaction(c);
     } else {
       await addTransaction({
-        id: candidateId,
+        id: activeCandidateId,
         type: v.type,
         amount: v.amountPaise,
         category: v.category,
@@ -77,23 +94,82 @@ export function AddScreen() {
     }
     bump();
     const what = v.type === "income" ? "income" : `${categoryLabel(v.category).toLowerCase()} expense`;
+
+    // Sequential review of remaining candidates in a multi-transaction capture
+    if (review?.remainingCandidates && review.remainingCandidates.length > 0) {
+      const [nextCandidate, ...rest] = review.remainingCandidates;
+      const currentIdx = review.queueIndex ?? 1;
+      const total = review.queueTotal ?? review.remainingCandidates.length + 1;
+      navigate("/add", {
+        replace: true,
+        state: {
+          origin: review.origin,
+          candidateId: nextCandidate.candidateId,
+          draft: nextCandidate.draft,
+          aiNote: nextCandidate.aiNote ?? `Saved ${formatINR(v.amountPaise)}. Now reviewing transaction ${currentIdx + 1} of ${total}:`,
+          transcript: nextCandidate.transcript ?? review.transcript,
+          merchant: nextCandidate.merchant,
+          remainingCandidates: rest,
+          queueIndex: currentIdx + 1,
+          queueTotal: total,
+        } satisfies ReviewState,
+      });
+      return;
+    }
+
     navigate("/activity", { replace: true, state: { flash: `Saved ${formatINR(v.amountPaise)} ${what}.` } });
+  }
+
+  const queueTotal = review?.queueTotal;
+  const queueIndex = review?.queueIndex;
+  const title = review?.origin
+    ? queueTotal && queueTotal > 1
+      ? `Review details (${queueIndex} of ${queueTotal})`
+      : "Review details"
+    : "Add income or expense";
+
+  function handleCancel() {
+    if (review?.remainingCandidates && review.remainingCandidates.length > 0) {
+      const [nextCandidate, ...rest] = review.remainingCandidates;
+      const currentIdx = review.queueIndex ?? 1;
+      const total = review.queueTotal ?? review.remainingCandidates.length + 1;
+      navigate("/add", {
+        replace: true,
+        state: {
+          origin: review.origin,
+          candidateId: nextCandidate.candidateId,
+          draft: nextCandidate.draft,
+          aiNote: nextCandidate.aiNote ?? `Discarded previous transaction. Now reviewing ${currentIdx + 1} of ${total}:`,
+          transcript: nextCandidate.transcript ?? review.transcript,
+          merchant: nextCandidate.merchant,
+          remainingCandidates: rest,
+          queueIndex: currentIdx + 1,
+          queueTotal: total,
+        } satisfies ReviewState,
+      });
+    } else if (window.history.state && window.history.state.idx > 0) {
+      navigate(-1);
+    } else {
+      navigate("/app");
+    }
   }
 
   return (
     <Screen
-      title={review?.origin ? "Review details" : "Add income or expense"}
+      title={title}
       subtitle={review?.origin ? "Check and change anything before saving" : "Recorded only when you confirm"}
       back
     >
       <TransactionForm
+        key={activeCandidateId}
         initial={review?.draft ?? emptyDraft("expense")}
         lockType={review?.origin === "receipt"}
         allowNotMine={review?.origin !== "receipt"}
         aiNote={review?.aiNote}
+        workProfile={profile?.work_profile}
         onSubmit={save}
-        onCancel={() => navigate(-1)}
-        cancelLabel={review?.origin ? "Discard" : "Cancel"}
+        onCancel={handleCancel}
+        cancelLabel={review?.origin ? (review?.remainingCandidates?.length ? "Skip" : "Discard") : "Cancel"}
       />
     </Screen>
   );

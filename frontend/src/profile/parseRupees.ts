@@ -1,4 +1,8 @@
 import { toPaise } from "../lib/money";
+import {
+  DAILY_ESTIMATE_LIMIT_ERROR_MESSAGE,
+  MAX_TRANSACTION_LIMIT_PAISE,
+} from "../lib/limits";
 
 export type ParseRupeesResult =
   | { ok: true; paise: number | null }
@@ -7,8 +11,6 @@ export type ParseRupeesResult =
 export type ParseRequiredRupeesResult =
   | { ok: true; paise: number }
   | { ok: false; message: string };
-
-const MAX_DAILY_PAISE = 100_000 * 100; // ₹1,00,000 per day = 10,000,000 paise
 
 export function parseOptionalRupees(text: string | null | undefined): ParseRupeesResult {
   if (text === null || text === undefined) {
@@ -37,8 +39,8 @@ export function parseOptionalRupees(text: string | null | undefined): ParseRupee
     if (paise < 0) {
       return { ok: false, message: "Amount cannot be negative" };
     }
-    if (paise > MAX_DAILY_PAISE) {
-      return { ok: false, message: "Daily estimate cannot exceed ₹1,00,000" };
+    if (paise > MAX_TRANSACTION_LIMIT_PAISE) {
+      return { ok: false, message: DAILY_ESTIMATE_LIMIT_ERROR_MESSAGE };
     }
     return { ok: true, paise };
   } catch (err) {

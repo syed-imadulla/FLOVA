@@ -4,7 +4,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { paiseToInput, rupeeStringToInput } from "../app/moneyText";
-import type { ReviewState } from "./AddScreen";
+import type { QueuedReviewCandidate, ReviewState } from "./AddScreen";
 import type { CheckinPrefillState } from "./CheckinScreen";
 import type { PayoutPrefillState } from "./PayoutsScreen";
 import { todayLocalISO } from "../data/dates";
@@ -129,6 +129,56 @@ export function VoiceScreen() {
     const aiNote = said ? `FLOVA heard: “${said}”. ${how}` : how;
 
     if (intent === "transaction") {
+      const candidates = res.candidates && res.candidates.length > 0 ? res.candidates : res.candidate ? [res.candidate] : [];
+      const txList = Array.isArray(dto.transactions) && dto.transactions.length > 0 ? dto.transactions : dto.transaction ? [dto.transaction] : [];
+
+      if (candidates.length > 1) {
+        // Multi-transaction utterance: Queue each distinct transaction for sequential review on /add
+        const first = candidates[0];
+        const firstTx = txList[0];
+        const firstType = first.type ?? firstTx?.type ?? "expense";
+
+        const remainingCandidates: QueuedReviewCandidate[] = candidates.slice(1).map((cand, idx) => {
+          const tx = txList[idx + 1];
+          const tType = cand.type ?? tx?.type ?? "expense";
+          return {
+            candidateId: cand.id || cand.candidate_id || `cand-${Date.now()}-${idx + 1}`,
+            draft: {
+              type: tType,
+              amount: paiseToInput(cand.amountPaise ?? cand.amount_paise ?? null) || rupeeStringToInput(tx?.amount),
+              category: cand.category || tx?.category || (tType === "income" ? "earnings" : "other"),
+              expenseType: (cand.expenseType ?? cand.expense_type ?? tx?.expense_type ?? "") || "",
+              ownership: cand.ownership ?? tx?.ownership ?? "mine",
+              date: cand.date || tx?.date || todayLocalISO(),
+              note: tx?.description || cand.description || "",
+            },
+            transcript: said,
+            aiNote: `FLOVA extracted multiple transactions from: “${said}”. Reviewing entry ${idx + 2} of ${candidates.length}.`,
+          };
+        });
+
+        const state: ReviewState = {
+          origin: "voice",
+          candidateId: first.id || first.candidate_id,
+          transcript: said,
+          aiNote: `FLOVA extracted ${candidates.length} transactions from: “${said}”. Reviewing 1 of ${candidates.length}:`,
+          remainingCandidates,
+          queueIndex: 1,
+          queueTotal: candidates.length,
+          draft: {
+            type: firstType,
+            amount: paiseToInput(first.amountPaise ?? first.amount_paise ?? null) || rupeeStringToInput(firstTx?.amount),
+            category: first.category || firstTx?.category || (firstType === "income" ? "earnings" : "other"),
+            expenseType: (first.expenseType ?? first.expense_type ?? firstTx?.expense_type ?? "") || "",
+            ownership: first.ownership ?? firstTx?.ownership ?? "mine",
+            date: first.date || firstTx?.date || todayLocalISO(),
+            note: firstTx?.description || first.description || "",
+          },
+        };
+        navigate("/add", { state });
+        return;
+      }
+
       const c = res.candidate;
       const tx = dto.transaction;
       const type = c?.type ?? tx?.type ?? "expense";
