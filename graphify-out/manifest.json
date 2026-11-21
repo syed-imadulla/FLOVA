@@ -306,9 +306,9 @@
     "semantic_hash": ""
   },
   "CLAUDE.md": {
-    "mtime": 1795181062.808127,
-    "seen": 1795218668.7373865,
-    "ast_hash": "dfe5fa7939121e96d61b54077cc9ab84",
+    "mtime": 1795243825.9114482,
+    "seen": 1795244216.8968956,
+    "ast_hash": "27d3ae75d56802925ae77cc1e92fb4c1",
     "semantic_hash": ""
   },
   "CONTRIBUTING.md": {
@@ -318,9 +318,9 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1795181053.368368,
-    "seen": 1795218668.7373888,
-    "ast_hash": "2fb6744bcd1a38ec32535ebc14e8d862",
+    "mtime": 1795243810.3685832,
+    "seen": 1795244216.8969333,
+    "ast_hash": "2acf2d8f6ce5bacb99b887385273fb6a",
     "semantic_hash": ""
   },
   "ai-engine/README.md": {
@@ -384,15 +384,15 @@
     "semantic_hash": ""
   },
   ".planning/ROADMAP.md": {
-    "mtime": 1795242730.94364,
-    "seen": 1795242740.8663025,
-    "ast_hash": "c710f15e672883e43f48860700cb3515",
+    "mtime": 1795243856.376184,
+    "seen": 1795244216.8941696,
+    "ast_hash": "36d7b5dbcae40119ea36bc0c42a69356",
     "semantic_hash": ""
   },
   ".planning/STATE.md": {
-    "mtime": 1795242715.9937704,
-    "seen": 1795242740.866304,
-    "ast_hash": "ffe8b1a78317e8f52ac175de832bcd4a",
+    "mtime": 1795243875.3950188,
+    "seen": 1795244216.8941715,
+    "ast_hash": "cc9ccbaf1f36b2f477d9ea703257950d",
     "semantic_hash": ""
   },
   ".planning/codebase/ARCHITECTURE.md": {
@@ -804,8 +804,8 @@
     "semantic_hash": ""
   },
   "frontend/src/services/__tests__/mockSupabase.ts": {
-    "mtime": 1795242242.3929026,
-    "seen": 1795242740.8650577,
+    "mtime": 1795242815.083906,
+    "seen": 1795244216.892818,
     "ast_hash": "c0b4daf580d114c59795d3930b687f7d",
     "semantic_hash": ""
   },
@@ -918,8 +918,8 @@
     "semantic_hash": ""
   },
   "backend/supabase/functions/process-voice/index.ts": {
-    "mtime": 1795241817.6486104,
-    "seen": 1795242740.8612514,
+    "mtime": 1795242814.6609097,
+    "seen": 1795244216.888506,
     "ast_hash": "e630affd395fada7b1b167ae3030726d",
     "semantic_hash": ""
   },
@@ -1170,8 +1170,8 @@
     "semantic_hash": ""
   },
   "frontend/src/services/voice.ts": {
-    "mtime": 1795242575.4949963,
-    "seen": 1795242740.86537,
+    "mtime": 1795242815.468501,
+    "seen": 1795244216.8931932,
     "ast_hash": "af7c2d5a3ff4ad5de957f15da7b673f4",
     "semantic_hash": ""
   },
@@ -1704,9 +1704,9 @@
     "semantic_hash": ""
   },
   "HANDOFF.md": {
-    "mtime": 1795227799.2993562,
-    "seen": 1795227813.952252,
-    "ast_hash": "68aaa3c9f193ab9b35287386a62ba7d7",
+    "mtime": 1795243841.6983113,
+    "seen": 1795244216.8969278,
+    "ast_hash": "b9fbde9de143b3c33560b998c3fbc18e",
     "semantic_hash": ""
   },
   ".planning/state.json": {
@@ -1971,6 +1971,78 @@
     "mtime": 1795241717.7564824,
     "seen": 1795242740.868581,
     "ast_hash": "bfa76370d7f81c77dbede336dde30f95",
+    "semantic_hash": ""
+  },
+  ".planning/phases/18-final-project-consolidation-and-release/18-01-PLAN.md": {
+    "mtime": 1795243620.2182336,
+    "seen": 1795244216.8968883,
+    "ast_hash": "473b375eec746e9d5bc2e53a7370db66",
+    "semantic_hash": ""
+  },
+  ".planning/phases/18-final-project-consolidation-and-release/18-CONTEXT.md": {
+    "mtime": 1795243606.566352,
+    "seen": 1795244216.896891,
+    "ast_hash": "8c0d1e9b65597133a7a14c2be35060ab",
+    "semantic_hash": ""
+  },
+  "docs/ADAPTIVE-BUFFER.md": {
+    "mtime": 1795243746.9461336,
+    "seen": 1795244216.897128,
+    "ast_hash": "c84595c550fa2573f52cc31539aaeb4a",
+    "semantic_hash": ""
+  },
+  "docs/ARCHITECTURE.md": {
+    "mtime": 1795243690.7216215,
+    "seen": 1795244216.897131,
+    "ast_hash": "722e5494af0278280d4efa92ddba2b47",
+    "semantic_hash": ""
+  },
+  "docs/DEPLOYMENT.md": {
+    "mtime": 1795243766.9859598,
+    "seen": 1795244216.8971648,
+    "ast_hash": "d040b468f80fdbb9a0c9d1457b44af78",
+    "semantic_hash": ""
+  },
+  "docs/ENVIRONMENT.md": {
+    "mtime": 1795243778.0588636,
+    "seen": 1795244216.8971674,
+    "ast_hash": "451b2c51dffed50ec8a7036fc16aed22",
+    "semantic_hash": ""
+  },
+  "docs/FINANCIAL-ENGINE.md": {
+    "mtime": 1795243736.5912235,
+    "seen": 1795244216.8971698,
+    "ast_hash": "10cf16e36df5a65c11830c9ca4786ca7",
+    "semantic_hash": ""
+  },
+  "docs/INVOICE-INTELLIGENCE.md": {
+    "mtime": 1795243725.7673175,
+    "seen": 1795244216.897172,
+    "ast_hash": "e7b2e69489396564d6ef556916779ab6",
+    "semantic_hash": ""
+  },
+  "docs/SECURITY.md": {
+    "mtime": 1795243756.5440502,
+    "seen": 1795244216.8971744,
+    "ast_hash": "0ca549e7cd9d96041ddf3284b8061e2e",
+    "semantic_hash": ""
+  },
+  "docs/SMART-CAPTURE.md": {
+    "mtime": 1795243716.476398,
+    "seen": 1795244216.8971765,
+    "ast_hash": "d167fff72a5a1e68aeb0d47870f85d86",
+    "semantic_hash": ""
+  },
+  "docs/TESTING.md": {
+    "mtime": 1795243789.4427648,
+    "seen": 1795244216.8971791,
+    "ast_hash": "00836279b846a16922c488b3f5cbd80c",
+    "semantic_hash": ""
+  },
+  "docs/VOICE-STT.md": {
+    "mtime": 1795243704.4705024,
+    "seen": 1795244216.8971817,
+    "ast_hash": "a7ddc2bb0054b2e100511debeace6dac",
     "semantic_hash": ""
   }
 }

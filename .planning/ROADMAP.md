@@ -24,8 +24,7 @@ Work is executed exclusively on branch `feature/backend` and shipped as pull req
 - [x] **Phase 14: Smart Capture, Receipt Intelligence & UPI Share Integration** - Physical receipts with line items and date fallback, UPI screenshots (Google Pay, PhonePe, Paytm, CRED) with status detection & UTR reference, duplicate payment detection, camera/gallery distinction, PWA Web Share Target, and unified `/add` review & confirmation. (Completed 2026-11-21)
 - [x] **Phase 16: Complete Receipt & UPI Extraction Pipeline Repair** - Active Groq vision model migration (qwen/qwen3.8-27b), 20 MB image support with client canvas downscaling & compression, line-item parsing, arithmetic discrepancy checks, and multi-step progress UX. (Completed 2026-11-21)
 - [x] **Phase 17: AI4Bharat IndicConformer Primary STT Migration** - AI4Bharat IndicConformer primary STT engine with Groq Whisper secondary fallback, FastAPI STT microservice in ai-engine/stt_service/, singleton model caching, X-FLOVA-STT-KEY authentication, benchmark suite, and full integration test coverage. (Completed 2026-11-21)
-- [ ] **Phase 11: Deployment readiness** - Production environment variables, Vercel SPA deployment configuration, and Supabase auth redirect settings.
-- [ ] **Phase 12: Final verification** - End-to-end demo walkthrough (Quick Capture -> FLOVA Catch -> Activity -> Money Overview), smoke testing, and release freeze.
+- [x] **Phase 18: Final Project Consolidation, Documentation & Main Branch Release** - Full project audit, 10 technical documentation guides in docs/, README/CLAUDE/HANDOFF consolidation, security audit, 100% automated test verification across frontend/backend/AI, safe merge to main branch, and verified push to GitHub. (Completed 2026-11-21)
 
 ## Phase Details
 
