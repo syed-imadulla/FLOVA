@@ -46,6 +46,10 @@ export interface ReviewState {
   scannedAt?: string;
   duplicateWarning?: string | null;
   items?: Array<{ name: string; quantity?: number; price?: number }>;
+  subtotalPaise?: number | null;
+  taxPaise?: number | null;
+  discountPaise?: number | null;
+  arithmeticDiscrepancy?: string | null;
   possibleTotals?: number[];
 }
 
@@ -483,6 +487,14 @@ export function AddScreen() {
         <div className="mb-4">
           <Notice tone="info" title="Date Defaulted to Today">
             No clear transaction date was detected on the receipt, so today's date ({review.draft.date}) was used. You can change it below.
+          </Notice>
+        </div>
+      )}
+
+      {review?.arithmeticDiscrepancy && (
+        <div className="mb-4">
+          <Notice tone="warn" title="Arithmetic Discrepancy">
+            {review.arithmeticDiscrepancy}
           </Notice>
         </div>
       )}

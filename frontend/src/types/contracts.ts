@@ -316,6 +316,9 @@ export interface ExtractedReceiptCandidate {
   subtotalPaise?: Paise | null;
   taxPaise?: Paise | null;
   discountPaise?: Paise | null;
+  receiptNumber?: string | null;
+  arithmeticDiscrepancy?: string | null;
+  currency?: string;
   possibleTotals?: number[];
   duplicateWarning?: { existingTransactionId: string; reference: string } | null;
   description?: string | null;

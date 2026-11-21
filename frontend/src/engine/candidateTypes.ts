@@ -108,5 +108,17 @@ export interface ExtractedReceiptCandidate {
   raw_utterance: string;
   notes?: string | null;
   confidence?: number;
+  subtotalPaise?: Paise | null;
+  taxPaise?: Paise | null;
+  discountPaise?: Paise | null;
+  receiptNumber?: string | null;
+  arithmeticDiscrepancy?: string | null;
+  currency?: string;
+  items?: Array<{ name: string; quantity?: number | null; price?: number | null; total?: number | null }>;
+  possibleTotals?: number[];
+  dateFallback?: boolean;
+  paymentStatus?: "successful" | "pending" | "failed" | "unknown";
+  upiReference?: string | null;
+  upiApp?: string | null;
   rawExtractedData?: Record<string, unknown>;
 }

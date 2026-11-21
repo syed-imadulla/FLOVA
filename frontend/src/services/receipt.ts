@@ -1,18 +1,23 @@
 // =====================================================================
-// FLOVA Receipt & UPI Screenshot Extraction Service (Owner: M1)
+// FLOVA Receipt & UPI Screenshot Extraction Service (Owner: M1 / Phase 16)
 // Connects frontend to the secure Supabase Edge Function: extract-receipt.
-// Implements mandatory date fallback rules, duplicate reference detection,
-// and client-side fallback parsing when offline.
+// Features: 20 MB image validation, client downscaling & compression,
+// detailed progress callbacks, resilient error decoding, mandatory date
+// fallback rules, duplicate reference detection, offline heuristic parser.
 // Strictly read-only inference: never mutates database tables.
 // =====================================================================
 
 import { supabase } from "../lib/supabase";
 import { todayLocalISO } from "../data/dates";
 import type { ExtractedReceiptCandidate } from "../types/contracts";
+import { validateAndOptimizeImage } from "./imageOptimizer";
+
+export type ExtractionStage = "preparing" | "analysing" | "validating" | "ready";
 
 export interface ExtractReceiptInput {
   file?: File;
   text?: string;
+  onProgress?: (stage: ExtractionStage, percent?: number) => void;
 }
 
 export interface ExtractReceiptResult {
@@ -21,25 +26,12 @@ export interface ExtractReceiptResult {
 }
 
 /**
- * Converts a File object to a base64 Data URL string.
+ * Converts a File object to an optimized base64 Data URL string.
+ * Supports files up to 20 MB with client-side downscaling.
  */
 export async function fileToBase64(file: File): Promise<string> {
-  if (file.size > 5 * 1024 * 1024) {
-    throw new Error("File size exceeds 5MB limit. Please upload a smaller image.");
-  }
-
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === "string") {
-        resolve(reader.result);
-      } else {
-        reject(new Error("Failed to read image as base64 string."));
-      }
-    };
-    reader.onerror = () => reject(reader.error || new Error("Failed to read file."));
-    reader.readAsDataURL(file);
-  });
+  const result = await validateAndOptimizeImage(file);
+  return result.dataUrl;
 }
 
 /**
@@ -74,16 +66,48 @@ export function extractReceiptFallback(rawText: string): ExtractedReceiptCandida
   const text = rawText.trim();
   const lower = text.toLowerCase();
 
-  // 1. Amount extraction (rejecting phone numbers / GST / invoice numbers)
+  // 1. Amount extraction (preferring explicit final payable / total amount over subtotal)
   let amountPaise: number | null = null;
-  const amountMatch =
-    text.match(/(?:rs\.?|inr|₹)\s*([\d,]+(?:\.\d{1,2})?)/i) ||
-    text.match(/(?:paid|spent|debited|sent)\s*(?:rs\.?|inr|₹)?\s*([\d,]+(?:\.\d{1,2})?)/i);
+  const totalMatch =
+    text.match(/\b(?:final\s*total|total\s*payable|payable\s*amount|grand\s*total|net\s*amount|total\s*amount|total|paid|debited|sent)\b\s*[:=-]?\s*(?:rs\.?|inr|₹)?\s*([\d,]+(?:\.\d{1,2})?)/i);
+  const fallbackMatch =
+    text.match(/(?:rs\.?|inr|₹)\s*([\d,]+(?:\.\d{1,2})?)/i);
+  const amountMatch = totalMatch || fallbackMatch;
 
   if (amountMatch) {
     const cleanNum = parseFloat(amountMatch[1].replace(/,/g, ""));
     if (!isNaN(cleanNum) && cleanNum > 0 && cleanNum <= 1000000) {
       amountPaise = Math.round(cleanNum * 100);
+    }
+  }
+
+  // 1b. Subtotal, Tax and Discount
+  let subtotalPaise: number | null = null;
+  const subMatch = text.match(/(?:subtotal|sub\s*total)\s*[:=-]?\s*(?:rs\.?|inr|₹)?\s*([\d,]+(?:\.\d{1,2})?)/i);
+  if (subMatch) {
+    const s = parseFloat(subMatch[1].replace(/,/g, ""));
+    if (!isNaN(s) && s > 0) subtotalPaise = Math.round(s * 100);
+  }
+
+  let taxPaise: number | null = null;
+  const taxMatch = text.match(/(?:tax|gst|cgst|sgst|vat)\s*[:=-]?\s*(?:rs\.?|inr|₹)?\s*([\d,]+(?:\.\d{1,2})?)/i);
+  if (taxMatch) {
+    const t = parseFloat(taxMatch[1].replace(/,/g, ""));
+    if (!isNaN(t) && t > 0) taxPaise = Math.round(t * 100);
+  }
+
+  let discountPaise: number | null = null;
+  const discMatch = text.match(/(?:discount|disc\.?|saved)\s*[:=-]?\s*(?:rs\.?|inr|₹)?\s*([\d,]+(?:\.\d{1,2})?)/i);
+  if (discMatch) {
+    const d = parseFloat(discMatch[1].replace(/,/g, ""));
+    if (!isNaN(d) && d > 0) discountPaise = Math.round(d * 100);
+  }
+
+  let arithmeticDiscrepancy: string | null = null;
+  if (subtotalPaise !== null && amountPaise !== null) {
+    const expected = (subtotalPaise || 0) + (taxPaise || 0) - (discountPaise || 0);
+    if (Math.abs(expected - amountPaise) > 100) {
+      arithmeticDiscrepancy = `Subtotal + Tax - Discount (₹${(expected / 100).toFixed(2)}) does not match final total (₹${(amountPaise / 100).toFixed(2)}).`;
     }
   }
 
@@ -176,6 +200,10 @@ export function extractReceiptFallback(rawText: string): ExtractedReceiptCandida
     kind: upiReference || upiApp ? "upi_screenshot" : "payment_sms",
     merchant,
     amountPaise,
+    subtotalPaise,
+    taxPaise,
+    discountPaise,
+    arithmeticDiscrepancy,
     category,
     expenseType,
     date: finalDate,
@@ -186,7 +214,7 @@ export function extractReceiptFallback(rawText: string): ExtractedReceiptCandida
     upiReference,
     upiApp,
     description: merchant ? `${merchant} payment` : (upiReference ? `UPI Ref: ${upiReference}` : "Payment text"),
-    needsReview: missingFields.length > 0 || paymentStatus !== "successful" || dateFallback,
+    needsReview: missingFields.length > 0 || paymentStatus !== "successful" || dateFallback || arithmeticDiscrepancy !== null,
     missingFields,
   };
 }
@@ -197,12 +225,15 @@ export function extractReceiptFallback(rawText: string): ExtractedReceiptCandida
  * Enforces date fallback rules and duplicate UPI reference detection.
  */
 export async function extractReceipt(input: ExtractReceiptInput): Promise<ExtractedReceiptCandidate> {
+  const onProgress = input.onProgress;
   let imageBase64: string | undefined = undefined;
   let mimeType: string | undefined = undefined;
 
   if (input.file) {
-    imageBase64 = await fileToBase64(input.file);
-    mimeType = input.file.type || "image/jpeg";
+    onProgress?.("preparing", 20);
+    const optimized = await validateAndOptimizeImage(input.file);
+    imageBase64 = optimized.dataUrl;
+    mimeType = optimized.mimeType;
   }
 
   const text = input.text?.trim() || undefined;
@@ -211,22 +242,40 @@ export async function extractReceipt(input: ExtractReceiptInput): Promise<Extrac
     throw new Error("Please select an image or enter receipt text to extract.");
   }
 
+  onProgress?.("analysing", 50);
+
   try {
     const { data, error } = await supabase.functions.invoke<{
       candidate: ExtractedReceiptCandidate;
       rawText?: string;
       error?: string;
+      code?: string;
+      recoverable?: boolean;
     }>("extract-receipt", {
       body: { imageBase64, mimeType, text },
     });
 
     if (error) {
-      throw new Error(error.message || "Failed to extract receipt");
+      let detailMsg = error.message;
+      // Extract detailed error context if available from Supabase JS client
+      if ((error as any).context && typeof (error as any).context.json === "function") {
+        try {
+          const errBody = await (error as any).context.json();
+          if (errBody?.error) {
+            detailMsg = errBody.error;
+          }
+        } catch {
+          // Keep default message
+        }
+      }
+      throw new Error(detailMsg || "Failed to extract receipt");
     }
 
     if (!data || !data.candidate) {
       throw new Error(data?.error || "Receipt extraction returned no structured candidate.");
     }
+
+    onProgress?.("validating", 85);
 
     const candidate = data.candidate;
 
@@ -266,6 +315,7 @@ export async function extractReceipt(input: ExtractReceiptInput): Promise<Extrac
       }
     }
 
+    onProgress?.("ready", 100);
     return candidate;
   } catch (err: any) {
     // If network failed completely (offline) and text was provided, fallback to offline heuristic
@@ -283,6 +333,7 @@ export async function extractReceipt(input: ExtractReceiptInput): Promise<Extrac
           };
         }
       }
+      onProgress?.("ready", 100);
       return fallback;
     }
     throw err;

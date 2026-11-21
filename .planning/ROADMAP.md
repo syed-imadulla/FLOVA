@@ -71,6 +71,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 13. Core Financial Correctness | 1/1 | Completed | 2026-11-21 |
 | 14. Smart Capture & Receipt Intelligence | 1/1 | Completed | 2026-11-21 |
 | 15. Conversational & Adaptive Financial Intelligence | 1/1 | Completed | 2026-11-21 |
+| 16. Complete Receipt & UPI Extraction Repair | 1/1 | Completed | 2026-11-21 |
 
 ### Phase 13: Core Financial Correctness, Navigation and Account Management
 
@@ -101,3 +102,13 @@ Plans:
 Plans:
 
 - [x] 15-01: Multi-transaction extraction, batch arithmetic, invoice intelligence, financial intelligence, and WISH 2.0 database persistence. (Completed 2026-11-21)
+
+### Phase 16: Complete Receipt & UPI Extraction Pipeline Repair
+
+**Goal:** Repair Edge Function extraction failure by upgrading to active Groq vision models (`qwen/qwen3.8-27b`), support 20 MB image uploads with client-side downscaling and compression, add line-item parsing, arithmetic discrepancy checks, and multi-step progress UX.
+**Status:** Completed (2026-11-21)
+**Plans:** 1 plan
+
+Plans:
+
+- [x] 16-01: Repair vision models on Groq, implement 20MB client image optimizer, add line items and arithmetic verification, update CatchScreen progress UI, and add unit tests. (Completed 2026-11-21)

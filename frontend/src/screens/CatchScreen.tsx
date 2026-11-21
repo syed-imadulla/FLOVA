@@ -1,7 +1,8 @@
 // =====================================================================
-// Scan a Receipt or UPI Payment Screenshot (FLOVA Catch)
-// Supports camera capture, phone gallery uploads, desktop image drop,
-// PWA Web Share Target integration, and payment SMS / text pasting.
+// Scan a Receipt or UPI Payment Screenshot (FLOVA Catch - Phase 16 Repair)
+// Supports camera capture, phone gallery uploads (up to 20 MB), desktop
+// image drop, PWA Web Share Target, and payment SMS / text pasting.
+// Features multi-step progress, client downscaling, and resilient retries.
 // Strictly read-only AI inference; confirmed only on /add.
 // =====================================================================
 
@@ -10,7 +11,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { paiseToInput } from "../app/moneyText";
 import type { ReviewState } from "./AddScreen";
 import { todayLocalISO } from "../data/dates";
-import { extractReceipt } from "../services/receipt";
+import { extractReceipt, type ExtractionStage } from "../services/receipt";
 import { Button, Card, Notice, Screen, Segmented } from "../ui/kit";
 import { IconCamera, IconImage, IconSparkle, IconTrash } from "../ui/icons";
 
@@ -25,6 +26,8 @@ export function CatchScreen() {
   const [preview, setPreview] = useState<string | null>(null);
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
+  const [stage, setStage] = useState<ExtractionStage | "idle">("idle");
+  const [stagePercent, setStagePercent] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
   const [shareNotice, setShareNotice] = useState<string | null>(null);
 
@@ -95,13 +98,26 @@ export function CatchScreen() {
     setFile(null);
     setPreview(null);
     setError(null);
+    setStage("idle");
+    setStagePercent(0);
   }
 
   async function extract() {
     setBusy(true);
     setError(null);
+    setStage("preparing");
+    setStagePercent(10);
+
     try {
-      const c = await extractReceipt(mode === "photo" ? { file: file ?? undefined } : { text: text.trim() });
+      const c = await extractReceipt({
+        file: mode === "photo" ? file ?? undefined : undefined,
+        text: mode === "text" ? text.trim() : undefined,
+        onProgress: (currentStage, percent) => {
+          setStage(currentStage);
+          if (percent !== undefined) setStagePercent(percent);
+        },
+      });
+
       const missing = [
         c.amountPaise == null && c.amount_paise == null ? "amount" : null,
         !c.expenseType && !c.expense_type ? "living or work" : null,
@@ -142,6 +158,10 @@ export function CatchScreen() {
             : `Existing transaction has the same UPI reference: ${c.duplicateWarning.reference}`
           : null,
         items: c.items,
+        subtotalPaise: c.subtotalPaise,
+        taxPaise: c.taxPaise,
+        discountPaise: c.discountPaise,
+        arithmeticDiscrepancy: c.arithmeticDiscrepancy,
         possibleTotals: c.possibleTotals,
         draft: {
           type: "expense",
@@ -158,16 +178,32 @@ export function CatchScreen() {
     } catch (e) {
       const msg = e instanceof Error ? e.message : "";
       setError(
-        /failed to send|not found|fetch|502|503/i.test(msg)
-          ? "The FLOVA extraction service is temporarily unreachable. You can enter details manually instead."
-          : msg || "Couldn't read the image or text. Please try again or enter manually."
+        /failed to send|not found|502|503/i.test(msg)
+          ? "The FLOVA extraction engine is temporarily busy. You can retry or enter details manually."
+          : msg || "Could not read the document. Please try again or enter details manually."
       );
     } finally {
       setBusy(false);
+      setStage("idle");
     }
   }
 
   const ready = mode === "photo" ? !!file : text.trim().length > 0;
+
+  function getStageDescription(): string {
+    switch (stage) {
+      case "preparing":
+        return "1/3 Preparing & optimizing image resolution...";
+      case "analysing":
+        return "2/3 Analysing receipt & amounts with AI vision...";
+      case "validating":
+        return "3/3 Validating line items & arithmetic integrity...";
+      case "ready":
+        return "Ready! Opening transaction review...";
+      default:
+        return "Reading document…";
+    }
+  }
 
   return (
     <Screen title="Smart Capture" subtitle="Receipts, UPI screenshots & payment messages" back>
@@ -179,20 +215,22 @@ export function CatchScreen() {
 
       <Segmented
         value={mode}
-        onChange={setMode}
+        onChange={(m) => {
+          setMode(m);
+          setError(null);
+        }}
         options={[
-          { value: "photo", label: "Receipt / UPI Screenshot" },
-          { value: "text", label: "Paste Text / SMS" },
+          { value: "photo", label: "Receipt / Photo" },
+          { value: "text", label: "Paste text / SMS" },
         ]}
       />
 
       {mode === "photo" ? (
         <Card className="p-4 space-y-3">
-          {/* Hidden file inputs: one for Camera, one for Gallery */}
           <input
             ref={cameraInputRef}
             type="file"
-            accept="image/*"
+            accept="image/jpeg,image/png,image/webp,image/jpg"
             capture="environment"
             className="hidden"
             onChange={(e) => pick(e.target.files?.[0] ?? null)}
@@ -200,32 +238,31 @@ export function CatchScreen() {
           <input
             ref={galleryInputRef}
             type="file"
-            accept="image/*"
+            accept="image/jpeg,image/png,image/webp,image/jpg"
             className="hidden"
             onChange={(e) => pick(e.target.files?.[0] ?? null)}
           />
 
           {preview ? (
             <div className="space-y-3">
-              <div className="relative w-full aspect-[4/3] rounded-2xl border border-line bg-[#FAFBF8] overflow-hidden flex items-center justify-center">
-                <img src={preview} alt="Selected receipt or screenshot" className="w-full h-full object-contain" />
+              <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-neutral-900 border border-line">
+                <img src={preview} alt="Receipt preview" className="w-full h-full object-contain" />
               </div>
-              <div className="flex gap-2">
+
+              <div className="flex items-center gap-2">
                 <Button
                   variant="secondary"
-                  className="flex-1"
-                  icon={<IconCamera size={18} />}
+                  className="flex-1 text-xs"
                   onClick={() => cameraInputRef.current?.click()}
                 >
                   Retake photo
                 </Button>
                 <Button
                   variant="secondary"
-                  className="flex-1"
-                  icon={<IconImage size={18} />}
+                  className="flex-1 text-xs"
                   onClick={() => galleryInputRef.current?.click()}
                 >
-                  Change from gallery
+                  Change image
                 </Button>
                 <button
                   type="button"
@@ -239,13 +276,20 @@ export function CatchScreen() {
             </div>
           ) : (
             <div className="space-y-3">
-              <div className="w-full aspect-[4/3] rounded-2xl border-2 border-dashed border-line bg-[#FAFBF8] flex flex-col items-center justify-center p-6 text-center">
+              <div
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  if (e.dataTransfer.files?.[0]) pick(e.dataTransfer.files[0]);
+                }}
+                className="w-full aspect-[4/3] rounded-2xl border-2 border-dashed border-line bg-[#FAFBF8] flex flex-col items-center justify-center p-6 text-center"
+              >
                 <span className="w-14 h-14 rounded-full bg-brand-50 text-brand-700 flex items-center justify-center mb-2">
                   <IconCamera size={26} />
                 </span>
                 <span className="text-[16px] font-bold text-ink">Upload Bill or Payment Screenshot</span>
-                <span className="text-xs text-ink-muted mt-1 max-w-[260px]">
-                  Supports fuel slips, grocery bills, and screenshots from Google Pay, PhonePe, Paytm, CRED & BHIM.
+                <span className="text-xs text-ink-muted mt-1 max-w-[280px]">
+                  Supports fuel slips, grocery bills, and screenshots from Google Pay, PhonePe, Paytm, CRED & BHIM up to 20 MB.
                 </span>
               </div>
 
@@ -262,7 +306,7 @@ export function CatchScreen() {
                   icon={<IconImage size={18} />}
                   onClick={() => galleryInputRef.current?.click()}
                 >
-                  Choose from gallery
+                  Choose gallery
                 </Button>
               </div>
             </div>
@@ -285,7 +329,36 @@ export function CatchScreen() {
         </Card>
       )}
 
-      {error ? <Notice tone="danger" title="Extraction Error">{error}</Notice> : null}
+      {busy && (
+        <div className="p-3.5 rounded-2xl bg-brand-50 border border-brand-200 text-brand-900 text-xs flex items-center gap-3">
+          <span className="animate-spin text-base">⏳</span>
+          <div className="flex-1">
+            <p className="font-semibold">{getStageDescription()}</p>
+            <div className="w-full bg-brand-200 h-1.5 rounded-full mt-1.5 overflow-hidden">
+              <div
+                className="bg-brand-600 h-full rounded-full transition-all duration-300"
+                style={{ width: `${stagePercent}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {error ? (
+        <div className="space-y-2">
+          <Notice tone="danger" title="Extraction Issue">
+            {error}
+          </Notice>
+          <div className="grid grid-cols-2 gap-2">
+            <Button variant="secondary" onClick={extract} disabled={busy || !ready} icon={<IconSparkle size={16} />}>
+              Retry Extraction
+            </Button>
+            <Button variant="ghost" onClick={() => navigate("/add")}>
+              Enter Manually
+            </Button>
+          </div>
+        </div>
+      ) : null}
 
       <Button onClick={extract} loading={busy} disabled={!ready} icon={<IconSparkle size={18} />}>
         {busy ? "Reading document…" : "Extract details"}

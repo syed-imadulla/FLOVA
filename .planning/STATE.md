@@ -2,10 +2,10 @@
 gsd_state_version: '1.0'
 status: in_progress
 progress:
-  total_phases: 15
-  completed_phases: 15
-  total_plans: 16
-  completed_plans: 16
+  total_phases: 16
+  completed_phases: 16
+  total_plans: 17
+  completed_plans: 17
   percent: 100.0
 ---
 
@@ -16,14 +16,14 @@ progress:
 See: `.planning/PROJECT.md` & `.planning/ROADMAP.md` (updated 2026-11-21)
 
 **Core value:** Provide a reliable, decimal-safe, and truthful answer to "Will my available money last until my next payout?" with strict RLS isolation and uncertainty communication.
-**Current focus:** Phase 15 Conversational & Adaptive Financial Intelligence complete on `dev`. All multi-transaction parsing, batch arithmetic in integer paise, invoice upload & management, spending intelligence, adaptive runway buffers, income forecasting, scenario simulation, and persistent WISH 2.0 verified.
+**Current focus:** Phase 16 Complete Receipt & UPI Extraction Pipeline Repair complete on `dev`. Edge Function upgraded to active Groq vision model `qwen/qwen3.8-27b`, 20 MB image uploads supported with client downscaling and compression, line-item parsing, arithmetic discrepancy checks, and multi-step progress UX verified.
 
 ## Current Position
 
-Phase: 15 of 15 (Conversational & Adaptive Financial Intelligence) — COMPLETED
-Plan: 15-01 verified (All engine tests, 4 new Phase 15 service suites, 54 DB tests, and frontend build passing)
+Phase: 16 of 16 (Complete Receipt & UPI Extraction Pipeline Repair) — COMPLETED
+Plan: 16-01 verified (All 203 automated tests passing, remote Edge Function deployed and verified 200 OK with live image, frontend build passing)
 Status: Verification complete on `dev`
-Last activity: 2026-11-21 — Multi-transaction conversational extraction, integer paise batch arithmetic, invoices management and partial settlements, spending analysis, adaptive cushion recommendations, statistical income forecasting, what-if shock simulator, WISH 2.0 database persistence & legacy migration, and TTS audio readout.
+Last activity: 2026-11-21 — Upgraded extract-receipt Edge Function with active Qwen 27B vision model, added imageOptimizer with 20MB support and client downscaling, enhanced CatchScreen with multi-step progress, line-item extraction and arithmetic discrepancy detection, and added 10 automated test suites.
 
 Progress: [████████████░] 92.3% (12 phases complete)
 
