@@ -162,15 +162,15 @@
     "semantic_hash": ""
   },
   "frontend/src/services/data.ts": {
-    "mtime": 1795220333.5836332,
-    "seen": 1795220963.7524838,
-    "ast_hash": "3559edc68286c5b7b5a0df1c0f27d7b6",
+    "mtime": 1795222711.9673858,
+    "seen": 1795223049.1779697,
+    "ast_hash": "bbbe522bea6a61441f8d1cf0af6e1d90",
     "semantic_hash": ""
   },
   "frontend/src/types/contracts.ts": {
-    "mtime": 1795220250.0973792,
-    "seen": 1795220963.752541,
-    "ast_hash": "8cd9f6863db81583112843c33423d3b3",
+    "mtime": 1795222197.0729854,
+    "seen": 1795223049.1780255,
+    "ast_hash": "b3b72a2443cfbb245ea1a82029fda0e5",
     "semantic_hash": ""
   },
   "frontend/src/vite-env.d.ts": {
@@ -528,9 +528,9 @@
     "semantic_hash": ""
   },
   "frontend/src/engine/__tests__/runTests.ts": {
-    "mtime": 1795219858.4988778,
-    "seen": 1795220963.7512038,
-    "ast_hash": "e2beca7442598615ff27efed3bfc0ec6",
+    "mtime": 1795222419.542998,
+    "seen": 1795223049.1765304,
+    "ast_hash": "dc3c4280ec90bbb285e1f5bbb9c78364",
     "semantic_hash": ""
   },
   "frontend/src/engine/__tests__/runway.test.ts": {
@@ -564,9 +564,9 @@
     "semantic_hash": ""
   },
   "frontend/src/engine/runway.ts": {
-    "mtime": 1795191758.1656752,
-    "seen": 1795218668.7372127,
-    "ast_hash": "e45c7d2ad631a7001b9123876a7ebad9",
+    "mtime": 1795222380.8453438,
+    "seen": 1795223049.1768699,
+    "ast_hash": "3a9385be1af4c5a97826132516ab34e0",
     "semantic_hash": ""
   },
   "frontend/src/engine/validation.ts": {
@@ -576,9 +576,9 @@
     "semantic_hash": ""
   },
   "frontend/src/pages/OnboardingPage.tsx": {
-    "mtime": 1795220817.2103126,
-    "seen": 1795220963.7518601,
-    "ast_hash": "aa208e0d3bb3bd3043c553eeddc8f275",
+    "mtime": 1795222711.5293899,
+    "seen": 1795223049.1772666,
+    "ast_hash": "8f13b1d41294fd65e1f4162c65daa91d",
     "semantic_hash": ""
   },
   "frontend/src/profile/ProfileProvider.tsx": {
@@ -894,8 +894,8 @@
     "semantic_hash": ""
   },
   "frontend/src/engine/extractionTypes.ts": {
-    "mtime": 1795220897.619594,
-    "seen": 1795220963.7513273,
+    "mtime": 1795221165.7761984,
+    "seen": 1795223049.1767826,
     "ast_hash": "8041c485ad7497b307b0ee8e0c3223a0",
     "semantic_hash": ""
   },
@@ -912,9 +912,9 @@
     "semantic_hash": ""
   },
   "frontend/src/pages/VoiceCapturePage.tsx": {
-    "mtime": 1795220811.7123616,
-    "seen": 1795220963.751891,
-    "ast_hash": "316118e588552ef4baebe50a9dcd6a63",
+    "mtime": 1795223014.4241593,
+    "seen": 1795223049.1772976,
+    "ast_hash": "ff1b2b70400eba108878205ff2dc4f17",
     "semantic_hash": ""
   },
   "frontend/src/voice/extractTransaction.ts": {
@@ -1212,8 +1212,8 @@
     "semantic_hash": ""
   },
   "frontend/src/pages/ProfileSettingsView.tsx": {
-    "mtime": 1795220688.6444612,
-    "seen": 1795220963.7518888,
+    "mtime": 1795221166.166195,
+    "seen": 1795223049.1772952,
     "ast_hash": "14f44c3b1f3aea63bb7e07d6982f5314",
     "semantic_hash": ""
   },
@@ -1542,8 +1542,8 @@
     "semantic_hash": ""
   },
   "frontend/src/components/landing/FlovaIndiaContext.tsx": {
-    "mtime": 1795220455.532544,
-    "seen": 1795220963.750446,
+    "mtime": 1795221165.5309737,
+    "seen": 1795223049.1755161,
     "ast_hash": "b873168b3a8763ca672339e802b6a9a9",
     "semantic_hash": ""
   },
@@ -1629,6 +1629,12 @@
     "mtime": 1795219807.0065374,
     "seen": 1795220963.7553885,
     "ast_hash": "9feeceb743bd03e551d541bc8d0d5b91",
+    "semantic_hash": ""
+  },
+  "frontend/src/engine/__tests__/safeBuffer.test.ts": {
+    "mtime": 1795222415.0310383,
+    "seen": 1795223049.1765642,
+    "ast_hash": "50e55e5eef7478cbd50ed6c53d2ef15b",
     "semantic_hash": ""
   }
 }

@@ -16,14 +16,14 @@ progress:
 See: `.planning/PROJECT.md` & `.planning/ROADMAP.md` (updated 2026-11-21)
 
 **Core value:** Provide a reliable, decimal-safe, and truthful answer to "Will my available money last until my next payout?" with strict RLS isolation and uncertainty communication.
-**Current focus:** Phase 10 (Financial Activity, Money Overview & Insights) Completed and Verified. Ready for Phase 11 (Deployment Readiness).
+**Current focus:** Integration milestone (PR #15/#19/#20 reconciliation into `dev`). Next: complete application UI/UX + frontend-backend integration + full-system testing, then Phase 11 (Deployment Readiness).
 
 ## Current Position
 
 Phase: 10 of 12 (Financial Activity, Money Overview & Insights) — COMPLETED
 Plan: 10-01 verified (All 11 Phase 10 test scenarios passing; 218 total suite tests passing)
-Status: Ready for review and Phase 11 planning approval
-Last activity: 2026-11-21 — Phase 10 executed and verified.
+Status: Integration milestone — PR #20 consolidates PR #15 (M3 extraction engine) and PR #19 (landing page) into `dev`
+Last activity: 2026-11-21 — PR reconciliation; voice confirm-retry candidate id fix; full suite re-run.
 
 Progress: [███████████░░] 84.6% (11 phases complete)
 
@@ -51,3 +51,14 @@ Progress: [███████████░░] 84.6% (11 phases complete)
 | 10. Activity & Money Overview | 1/1 | Completed |
 | 11. Deployment readiness | 0/1 | Pending |
 | 12. Final verification | 0/1 | Pending |
+
+## Integration Milestone (2026-11-21)
+
+- PR #20 (`feature/backend-generalisation`) is the consolidated integration PR into `dev`.
+  - Contains PR #19 as cdf786e (patch-identical to 428a11b, same parent).
+  - Contains every PR #15 file (1930fee, 30a223b, d71ac9e) verbatim, plus additive camelCase aliases in `candidateTypes.ts`/`extractionTypes.ts` and the `safeBuffer.test` import.
+  - Adds: nine work profiles, income variability, COD opt-in (default false), safe runway buffer, migrations 20261121000200 / 20261121000201.
+- Fix: `VoiceCapturePage` no longer mints a new UUID per confirm click when extraction returned no candidate.
+- Verified suites: engine 113, services 76, standalone (parseRupees 10, dates 2, ravi 6, wish passes, no case count), backend `test:db` 39, `test:seed` 17. `tsc -b && vite build` passes.
+- Migrations 20261121000200 / 20261121000201: NOT confirmed applied to the hosted Supabase project (no authenticated schema access from the agent).
+- Not done: complete UI/UX, full-system QA, Phase 11, Phase 12.
