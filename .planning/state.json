@@ -1,0 +1,78 @@
+{
+  "contract": "1.0.0",
+  "flavor": "core",
+  "milestone": null,
+  "phases": [
+    {
+      "number": "1",
+      "name": "Auth flow",
+      "status": "pending"
+    },
+    {
+      "number": "2",
+      "name": "Profile & onboarding data",
+      "status": "pending"
+    },
+    {
+      "number": "3",
+      "name": "Data capture hooks",
+      "status": "pending"
+    },
+    {
+      "number": "4",
+      "name": "Runway feed",
+      "status": "pending"
+    },
+    {
+      "number": "5",
+      "name": "Payout Synchronization Hardening",
+      "status": "pending"
+    },
+    {
+      "number": "6",
+      "name": "Demo data",
+      "status": "pending"
+    },
+    {
+      "number": "7",
+      "name": "Financial data contracts",
+      "status": "pending"
+    },
+    {
+      "number": "8",
+      "name": "FLOVA Catch integration",
+      "status": "pending"
+    },
+    {
+      "number": "9",
+      "name": "Voice transaction integration",
+      "status": "pending"
+    },
+    {
+      "number": "9.1",
+      "name": "Multilingual Voice Support",
+      "status": "pending"
+    },
+    {
+      "number": "10",
+      "name": "Activity & Money Overview",
+      "status": "pending"
+    },
+    {
+      "number": "11",
+      "name": "Deployment readiness",
+      "status": "pending"
+    },
+    {
+      "number": "12",
+      "name": "Final verification",
+      "status": "pending"
+    }
+  ],
+  "next": {
+    "command": "/gsd-progress --next",
+    "label": "Advance to the next step",
+    "reason": "Phase 10 of 13 · 84% · executing"
+  },
+  "updated_at": "2026-11-21T02:47:08.678Z"
+}

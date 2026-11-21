@@ -30,6 +30,8 @@ export interface VoiceProcessResult {
   transcript: string;
   extraction: FinancialExtractionDTO;
   candidate: VoiceTransactionCandidate | null;
+  candidates?: VoiceTransactionCandidate[];
+  stt_provider?: "indicconformer" | "whisper" | "manual_text";
   source: "edge_function" | "local_fallback";
 }
 
@@ -48,15 +50,28 @@ export interface QueryResolutionResult {
  * Converts a Blob to a base64 Data URL string.
  */
 export async function blobToBase64(blob: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const res = reader.result as string;
-      resolve(res);
-    };
-    reader.onerror = (err) => reject(err);
-    reader.readAsDataURL(blob);
-  });
+  if (typeof FileReader !== "undefined") {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const res = reader.result as string;
+        resolve(res);
+      };
+      reader.onerror = (err) => reject(err);
+      reader.readAsDataURL(blob);
+    });
+  } else if (typeof blob.arrayBuffer === "function") {
+    const arrayBuf = await blob.arrayBuffer();
+    const bytes = new Uint8Array(arrayBuf);
+    let binary = "";
+    for (let i = 0; i < bytes.byteLength; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    const b64 = typeof btoa === "function" ? btoa(binary) : (globalThis as any).Buffer?.from(arrayBuf).toString("base64");
+    return `data:${blob.type || "audio/webm"};base64,${b64}`;
+  } else {
+    throw new Error("No Blob conversion mechanism available in this runtime.");
+  }
 }
 
 /**
@@ -92,7 +107,9 @@ export async function processVoice(input: VoiceProcessInput): Promise<VoiceProce
         return {
           transcript: data.transcript || input.text || "",
           extraction: data.extraction,
-          candidate: data.candidate || null,
+          candidate: data.candidate || (data.candidates && data.candidates[0]) || null,
+          candidates: data.candidates || (data.candidate ? [data.candidate] : undefined),
+          stt_provider: data.stt_provider,
           source: "edge_function",
         };
       }
@@ -108,36 +125,58 @@ export async function processVoice(input: VoiceProcessInput): Promise<VoiceProce
   const fallbackText = input.text?.trim() || "";
   const localDTO = extractTransaction(fallbackText, input.language);
 
-  let candidate: VoiceTransactionCandidate | null = null;
-  if (localDTO.entry_intent === "transaction" && localDTO.transaction) {
-    const tx = localDTO.transaction;
-    const amountPaise = tx.amount ? toPaise(tx.amount) : null;
-    const missingFields: string[] = [];
-    if (amountPaise === null) missingFields.push("amount");
-    if (!tx.type) missingFields.push("type");
-    if (tx.type === "expense" && (!tx.ownership || tx.ownership === "mine") && !tx.expense_type) {
-      missingFields.push("expenseType");
-    }
+  const localCandidates: VoiceTransactionCandidate[] = [];
+  const localTxList = Array.isArray(localDTO.transactions) && localDTO.transactions.length > 0
+    ? localDTO.transactions
+    : localDTO.transaction ? [localDTO.transaction] : [];
 
-    candidate = {
-      id: candidateId,
-      transcript: fallbackText,
-      type: tx.type,
-      amountPaise,
-      category: tx.category || (tx.type === "income" ? "earnings" : "other"),
-      expenseType: tx.expense_type,
-      date: tx.date,
-      ownership: tx.ownership || "mine",
-      confidence: localDTO.metadata.certainty,
-      needsReview: missingFields.length > 0 || localDTO.metadata.clarification_required,
-      missingFields,
-    };
+  if (localDTO.entry_intent === "transaction" && localTxList.length > 0) {
+    for (let i = 0; i < localTxList.length; i++) {
+      const tx = localTxList[i];
+      let amountPaise: number | null = null;
+      if (tx.amount) {
+        try {
+          amountPaise = toPaise(tx.amount);
+        } catch {
+          amountPaise = null;
+        }
+      }
+
+      const missingFields: string[] = [];
+      if (amountPaise === null) missingFields.push("amount");
+      if (!tx.type) missingFields.push("type");
+      if (tx.type === "expense" && (!tx.ownership || tx.ownership === "mine") && !tx.expense_type) {
+        missingFields.push("expenseType");
+      }
+
+      const candId =
+        i === 0
+          ? candidateId
+          : typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+          ? crypto.randomUUID()
+          : `${candidateId}-${i}`;
+
+      localCandidates.push({
+        id: candId,
+        transcript: fallbackText,
+        type: tx.type,
+        amountPaise,
+        category: tx.category || (tx.type === "income" ? "earnings" : "other"),
+        expenseType: tx.expense_type,
+        date: tx.date,
+        ownership: tx.ownership || "mine",
+        confidence: localDTO.metadata.certainty,
+        needsReview: missingFields.length > 0 || localDTO.metadata.clarification_required,
+        missingFields,
+      });
+    }
   }
 
   return {
     transcript: fallbackText,
     extraction: localDTO,
-    candidate,
+    candidate: localCandidates[0] || null,
+    candidates: localCandidates.length > 0 ? localCandidates : undefined,
     source: "local_fallback",
   };
 }

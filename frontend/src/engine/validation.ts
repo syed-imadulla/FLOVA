@@ -10,6 +10,7 @@ import type {
   RunwayInput,
 } from "../types/contracts";
 import { PAYOUT_STATUSES } from "../types/contracts";
+import { MAX_TRANSACTION_LIMIT_PAISE } from "../lib/limits";
 
 export interface ValidationResult {
   valid: boolean;
@@ -132,6 +133,8 @@ export function validateTransaction(
   }
   if (!isValidPaise(tx.amount) || tx.amount <= 0) {
     errors.push(`Transaction amount must be a positive integer paise. Received: ${tx.amount}.`);
+  } else if (tx.amount > MAX_TRANSACTION_LIMIT_PAISE) {
+    errors.push(`Transaction amount (${tx.amount} paise) exceeds maximum application limit of ₹10,00,000.`);
   }
   if (tx.ownership !== "mine" && tx.ownership !== "not_mine") {
     errors.push(`Invalid ownership: ${(tx as { ownership?: unknown }).ownership}. Expected 'mine' or 'not_mine'.`);

@@ -46,6 +46,7 @@ export interface VoiceTransactionCandidate {
   /** Shared contracts alias for expense_type */
   expenseType?: ExpenseType | null;
   ownership: MoneyOwnership;
+  stt_provider?: "indicconformer" | "whisper" | "manual_text";
   date: ISODate | null;
   /** Explicit date extracted from user text/utterance, or null if omitted. */
   extracted_date?: ISODate | null;
@@ -88,6 +89,7 @@ export interface ExtractedReceiptCandidate {
   /** Shared contracts alias for expense_type */
   expenseType?: ExpenseType | null;
   ownership: MoneyOwnership;
+  stt_provider?: "indicconformer" | "whisper" | "manual_text";
   date: ISODate | null;
   /** Explicit date extracted from user text/utterance, or null if omitted. */
   extracted_date?: ISODate | null;
@@ -108,5 +110,17 @@ export interface ExtractedReceiptCandidate {
   raw_utterance: string;
   notes?: string | null;
   confidence?: number;
+  subtotalPaise?: Paise | null;
+  taxPaise?: Paise | null;
+  discountPaise?: Paise | null;
+  receiptNumber?: string | null;
+  arithmeticDiscrepancy?: string | null;
+  currency?: string;
+  items?: Array<{ name: string; quantity?: number | null; price?: number | null; total?: number | null }>;
+  possibleTotals?: number[];
+  dateFallback?: boolean;
+  paymentStatus?: "successful" | "pending" | "failed" | "unknown";
+  upiReference?: string | null;
+  upiApp?: string | null;
   rawExtractedData?: Record<string, unknown>;
 }

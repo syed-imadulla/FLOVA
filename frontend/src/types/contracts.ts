@@ -75,8 +75,44 @@ export const OCCUPATION_WORK_CATEGORIES: Record<WorkProfile, readonly string[]> 
 
 /** Suggested category values (free text in the DB, max 40 chars). UI presets adapt per work profile. */
 export const SUGGESTED_CATEGORIES = {
-  income: ["earnings", "tips", "payout", "incentive", "advance", "cod_collection", "client_payment", "other"],
-  expense: ["food", "fuel", "phone", "maintenance", "rent", "emi", "tools", "inventory", "supplies", "cod_handover", "other"],
+  income: [
+    "salary",
+    "freelance",
+    "business_sales",
+    "delivery_earnings",
+    "service_income",
+    "commission",
+    "tips",
+    "earnings",
+    "client_payment",
+    "platform_payout",
+    "sales",
+    "daily_wage",
+    "payout",
+    "incentive",
+    "advance",
+    "cod_collection",
+    "other",
+  ],
+  expense: [
+    "food",
+    "groceries",
+    "fuel",
+    "phone",
+    "maintenance",
+    "rent",
+    "family",
+    "medical",
+    "transport",
+    "vehicle",
+    "stock",
+    "emi",
+    "tools",
+    "inventory",
+    "supplies",
+    "cod_handover",
+    "other",
+  ],
   commitment: ["rent", "emi", "loan", "utility", "phone", "school", "other"],
 } as const;
 
@@ -253,6 +289,8 @@ export interface ExtractedReceiptCandidate {
   id?: string;
   candidate_id?: string;
   draft_id?: string | null;
+  type?: TransactionType;
+  kind?: "physical_receipt" | "upi_screenshot" | "payment_sms" | "unknown";
   merchant: string | null;
   amountPaise: Paise | null;
   amount_paise?: Paise | null;
@@ -262,8 +300,27 @@ export interface ExtractedReceiptCandidate {
   expense_type?: ExpenseType | null;
   ownership?: MoneyOwnership;
   date: ISODate | null;
+  extractedDate?: ISODate | null;
   extracted_date?: ISODate | null;
   contextual_date?: ISODate | null;
+  scannedAt?: string;
+  dateFallback?: boolean;
+  time?: string | null;
+  paymentStatus?: "successful" | "pending" | "failed" | "unknown";
+  payment_status?: "successful" | "pending" | "failed" | "unknown";
+  upiReference?: string | null;
+  upi_reference?: string | null;
+  upiApp?: string | null;
+  upi_app?: string | null;
+  items?: Array<{ name: string; quantity?: number; price?: number }>;
+  subtotalPaise?: Paise | null;
+  taxPaise?: Paise | null;
+  discountPaise?: Paise | null;
+  receiptNumber?: string | null;
+  arithmeticDiscrepancy?: string | null;
+  currency?: string;
+  possibleTotals?: number[];
+  duplicateWarning?: { existingTransactionId: string; reference: string } | null;
   description?: string | null;
   notes?: string | null; // Optional alias for backward compatibility
   confidence?: number;
@@ -300,6 +357,7 @@ export interface VoiceTransactionCandidate {
   description?: string | null;
   ownership: MoneyOwnership;
   confidence?: number;
+  stt_provider?: "indicconformer" | "whisper" | "manual_text";
   needsReview: boolean;
   clarification_required?: boolean;
   missingFields: string[];
@@ -336,4 +394,89 @@ export interface ActivityItem {
   expectedDate?: ISODate | null;
   source?: EntrySource | "system";
   note?: string | null;
+}
+
+// ---------- Invoices & Settlements (Phase 15) ----------
+export type InvoiceDirection = "receivable" | "payable";
+export type InvoiceStatus = "uploaded" | "unpaid" | "partially_paid" | "paid" | "overdue" | "cancelled";
+
+export interface InvoiceItem {
+  id: string;
+  invoice_id: string;
+  name: string;
+  quantity?: number | null;
+  unit_price?: RupeeString | null;
+  amount: RupeeString;
+}
+
+export interface InvoiceSettlement {
+  id: string;
+  invoice_id: string;
+  user_id: string;
+  amount: RupeeString;
+  settled_at: ISODate;
+  transaction_id?: string | null;
+  payout_id?: string | null;
+  notes?: string | null;
+  created_at: ISOTimestamp;
+}
+
+export interface Invoice {
+  id: string;
+  user_id: string;
+  direction: InvoiceDirection;
+  supplier_name?: string | null;
+  customer_name?: string | null;
+  invoice_number?: string | null;
+  invoice_date: ISODate;
+  due_date?: ISODate | null;
+  total_amount: RupeeString;
+  paid_amount: RupeeString;
+  status: InvoiceStatus;
+  file_path?: string | null;
+  notes?: string | null;
+  metadata?: Record<string, unknown>;
+  items?: InvoiceItem[];
+  settlements?: InvoiceSettlement[];
+  created_at: ISOTimestamp;
+  updated_at: ISOTimestamp;
+}
+
+// ---------- WISH 2.0 Persistent Savings Goals (Phase 15) ----------
+export type WishGoalStatus = "active" | "completed" | "paused" | "cancelled";
+
+export interface WishContribution {
+  id: string;
+  goal_id: string;
+  user_id: string;
+  amount: RupeeString;
+  contributed_at: ISODate;
+  notes?: string | null;
+  created_at: ISOTimestamp;
+}
+
+export interface WishGoal {
+  id: string;
+  user_id: string;
+  title: string;
+  target_amount: RupeeString;
+  saved_amount: RupeeString;
+  target_date?: ISODate | null;
+  category?: string | null;
+  icon?: string | null;
+  status: WishGoalStatus;
+  contributions?: WishContribution[];
+  created_at: ISOTimestamp;
+  updated_at: ISOTimestamp;
+}
+
+// ---------- Multi-Transaction Conversational Intelligence (Phase 15) ----------
+export interface BatchTransactionSummary {
+  totalIncomePaise: Paise;
+  totalExpensesPaise: Paise;
+  netMovementPaise: Paise;
+  candidateCount: number;
+  validCount: number;
+  clarificationCount: number;
+  categoryTotals: Record<string, Paise>;
 }

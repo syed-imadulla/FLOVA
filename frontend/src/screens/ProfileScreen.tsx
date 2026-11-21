@@ -1,17 +1,22 @@
 // Profile & settings — the inputs the runway engine uses. Empty estimates stay unknown (never 0).
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { paiseToInput } from "../app/moneyText";
 import { PAYOUT_LABELS, VARIABILITY_LABELS, WORK_LABELS } from "../app/profileLabels";
 import { useDataVersion } from "../data/DataVersionProvider";
 import { toPaiseOrNull } from "../lib/money";
 import { parseOptionalRupees } from "../profile/parseRupees";
 import { useProfile } from "../profile/useProfile";
+import { signOut } from "../services/auth";
 import { INCOME_VARIABILITIES, PAYOUT_PATTERNS, WORK_PROFILES, type IncomeVariability, type PayoutPattern, type WorkProfile } from "../types/contracts";
 import { Button, Card, Field, MoneyInput, Notice, Screen, SectionTitle, SelectInput, Skeleton, TextInput } from "../ui/kit";
+import { IconLogout } from "../ui/icons";
 
 export function ProfileScreen() {
+  const navigate = useNavigate();
   const { profile, loading, save } = useProfile();
   const { bump } = useDataVersion();
+  const [signingOut, setSigningOut] = useState(false);
   const [name, setName] = useState("");
   const [work, setWork] = useState<WorkProfile>("other");
   const [variability, setVariability] = useState<IncomeVariability>("variable");
@@ -142,6 +147,24 @@ export function ProfileScreen() {
       <Button onClick={submit} loading={saving}>
         Save changes
       </Button>
+
+      <button
+        type="button"
+        disabled={signingOut}
+        onClick={async () => {
+          setSigningOut(true);
+          try {
+            await signOut();
+            navigate("/login", { replace: true });
+          } catch (e) {
+            setMsg({ tone: "danger", text: e instanceof Error ? e.message : "Could not sign out" });
+            setSigningOut(false);
+          }
+        }}
+        className="w-full h-12 rounded-xl bg-white border border-line flex items-center justify-center gap-2 text-[15px] font-semibold text-red-700 mt-2"
+      >
+        <IconLogout size={18} /> {signingOut ? "Signing out…" : "Sign out"}
+      </button>
     </Screen>
   );
 }

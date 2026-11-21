@@ -23,6 +23,7 @@ import type {
   ExtractedTransactionData,
   FinancialExtractionDTO,
 } from "./extractionTypes";
+import { MAX_TRANSACTION_LIMIT_PAISE } from "../lib/limits";
 import { isValidPaise } from "./validation";
 
 /**
@@ -162,9 +163,9 @@ export function safeConvertRupeeStringToPaise(
   }
 
   const paise = toPaise(trimmed);
-  if (!isValidPaise(paise)) {
+  if (!isValidPaise(paise) || paise > MAX_TRANSACTION_LIMIT_PAISE) {
     throw new Error(
-      `Amount '${amountRupees}' converted to paise (${paise}) is outside safe integer limits.`
+      `Amount '${amountRupees}' converted to paise (${paise}) is outside safe integer limits or exceeds ₹10,00,000 maximum application limit.`
     );
   }
 
@@ -258,13 +259,16 @@ function mapTransactionToVoiceCandidate(
   const candidateId = resolveCandidateId(draftId, index, context);
 
   return {
+    id: candidateId,
     candidate_id: candidateId,
     draft_id: draftId,
     type,
     amount_paise: amountPaise,
+    amountPaise,
     amount_rupees: tx.amount ?? null,
     category: catRes.category,
     expense_type: expenseType,
+    expenseType,
     ownership,
     date: resolvedDate,
     extracted_date: extractedDate,
@@ -331,13 +335,16 @@ function mapTransactionToReceiptCandidate(
   const candidateId = resolveCandidateId(draftId, index, context);
 
   return {
+    id: candidateId,
     candidate_id: candidateId,
     draft_id: draftId,
     type,
     amount_paise: amountPaise,
+    amountPaise,
     amount_rupees: tx.amount ?? null,
     category: catRes.category,
     expense_type: expenseType,
+    expenseType,
     ownership,
     date: resolvedDate,
     extracted_date: extractedDate,

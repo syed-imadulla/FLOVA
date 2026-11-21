@@ -2,6 +2,7 @@
 // database guarantees users only ever touch their own rows. Inputs are in paise.
 import { supabase, unwrap } from "../lib/supabase";
 import { paiseToRupeeString, toPaise, toPaiseOrNull } from "../lib/money";
+import { LIMIT_ERROR_MESSAGE, MAX_TRANSACTION_LIMIT_PAISE } from "../lib/limits";
 import type {
   ActivityItem, BalanceCheckin, Commitment, CommitmentStatus, ExtractedReceiptCandidate,
   NewBalanceCheckin, NewCommitment, NewPayout, NewTransaction,
@@ -40,6 +41,9 @@ export async function getLatestCheckin(): Promise<BalanceCheckin | null> {
 
 // ---------- transactions ----------
 export async function addTransaction(t: NewTransaction): Promise<Transaction> {
+  if (t.amount > MAX_TRANSACTION_LIMIT_PAISE) {
+    throw new Error(LIMIT_ERROR_MESSAGE);
+  }
   const ownership = t.ownership ?? "mine";
   if (t.type === "expense" && ownership === "mine" && !t.expenseType) {
     throw new Error("Choose whether this expense is living or work.");
@@ -346,8 +350,9 @@ export async function confirmCandidateTransaction(
 
   if (isReceipt) {
     const rc = candidate as ExtractedReceiptCandidate;
+    const txType = rc.type ?? "expense";
     const expenseType = rc.expenseType ?? rc.expense_type;
-    if (!expenseType) {
+    if (txType === "expense" && (!rc.ownership || rc.ownership === "mine") && !expenseType) {
       throw new Error("Choose whether this expense is living or work.");
     }
 
@@ -363,11 +368,11 @@ export async function confirmCandidateTransaction(
 
     return addTransaction({
       id: stableId,
-      type: "expense",
+      type: txType,
       amount: amountPaise,
       category: rc.category || "other",
       description,
-      expenseType,
+      expenseType: txType === "expense" ? (expenseType ?? undefined) : undefined,
       ownership: rc.ownership ?? "mine",
       date: rc.date ?? undefined,
       source: "ai_suggestion",

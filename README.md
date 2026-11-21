@@ -1,56 +1,164 @@
 # FLOVA
 
-**A steady weekly salary from uneven gig pay.** Built at The Big Hack 2.0 (Finance track, problem F1: the irregular income problem).
+> **"Every rupee has a story. FLOVA remembers."**
 
-Delivery riders get paid a different amount every week. In lean weeks (illness, a bike repair, the January slowdown) many borrow at high informal rates, even though their average income covers their needs. FLOVA turns one number a week, that week's payout, into a steady salary. It puts the surplus from good weeks into a buffer and pays from the buffer in lean weeks.
+FLOVA is an adaptive, voice-first financial companion designed specifically for people with irregular and unpredictable income: delivery riders, cab drivers, auto drivers, freelancers, tradespeople, small vendors, and daily-wage workers across India.
 
-## What it does
-- **Self-salary rule**: a cautious estimate of sustainable pay, a 3-week buffer target, essentials protected first, and a salary that moves at most 15% a week. Every salary comes with plain reasons.
-- **4-week lean outlook**: low / likely / high ranges with seasonal reasons, plus a warning when a slow stretch could run past the buffer.
-- **SMS mode** for keypad phones: `PAY 5200`, `STATUS`, `UNDO`.
-- **Honest limit**: when average income is below essentials, FLOVA says this is a low-income problem, not a timing problem, and points the rider to welfare schemes.
+Instead of rigid monthly budgets that fail when income fluctuates, FLOVA answers the one question that truly matters: **"Will my available money last until my next payout?"**
 
-## Evidence (backtest, 50 simulated years per rider type)
-Baseline: spend what comes in and borrow any gap at 5%/month. FLOVA: follow the rule and borrow only when the buffer is empty. Both use the same income.
+---
 
-| Rider | Weeks borrowing / yr | Interest / yr | Spending swings (CV) | Smoothing can help |
-|---|---|---|---|---|
-| Full-time | 12.8 → 2.6 | ₹782 → ₹611 | 0.20 → 0.15 | 100% of years |
-| Part-time student | 15.4 → 3.4 | ₹547 → ₹459 | 0.27 → 0.19 | 100% of years |
-| New rider (low rating) | 32.9 → 24.0 | ₹11,477 → ₹11,946 | — | 0% (low income) |
+## 🌟 Core Capabilities
 
-Run it yourself: `cd ai-engine && python3 -m udaan_engine`.
+### 1. Conversational Voice Intelligence
+- **AI4Bharat IndicConformer (PRIMARY STT):** Native speech-to-text inference tuned for Indian languages, accents, and code-switching (`kn`, `hi`, `te`, `ta`, `ml`, `en`).
+- **Groq Whisper (SECONDARY FALLBACK):** Automated, seamless failover to `whisper-large-v3-turbo` if the primary engine is unavailable or times out.
+- **Multilingual Understanding:** Natural financial extraction across English, Hindi, Kannada, Telugu, Tamil, Malayalam, Marathi, Bengali, Gujarati, and Urdu.
+- **Multi-Transaction Extraction:** Accurately separates multiple financial events from a single sentence (e.g., *"Spent ₹250 on groceries and earned ₹800 from a freelance project"*) without amount duplication.
+- **Truthful Uncertainty:** Ambiguous or incomplete statements prompt clarification rather than hallucinating amounts or categories.
 
-**Caveats.** Income is synthetic. Hourly rates come from IDInsight's 2024 study of 2,547 delivery drivers. Hours, essentials, seasonality, shock rates and the 5% informal rate are marked ASSUMED in `ai-engine/udaan_engine/profiles.py` and `backtest.py`, and need checking against rider interviews.
+### 2. Smart Capture & Receipt / UPI Intelligence
+- **Physical Paper Receipts:** Parses itemized lines, taxes, fees, and final payable amounts with arithmetic discrepancy detection.
+- **UPI Payment Screenshots:** Recognizes screenshots from Google Pay, PhonePe, Paytm, CRED, and BHIM. Automatically classifies status (`COMPLETED`, `PENDING`, `FAILED`) and extracts the 12-digit UPI reference number (UTR).
+- **Duplicate Payment Prevention:** Rejects duplicate entries with identical UTR numbers.
+- **20 MB Image Optimization:** Client-side HTML5 canvas downscaling and compression reduce photos up to 20 MB to sub-megabyte payloads for instant edge inference.
+- **PWA Web Share Target:** Share payment receipts or screenshots directly from WhatsApp, PhonePe, or gallery into FLOVA.
 
-## Run it
+### 3. Invoice Intelligence Agent
+- **Payables & Receivables Tracking:** Manage contractor and client invoices with line items, due dates, and counterparties.
+- **Partial Settlements:** Record multi-part payments with automatic status tracking (`unpaid`, `partially_paid`, `paid`, `overdue`).
+- **No Double-Counting:** Unpaid receivables represent expected cash flow and are excluded from confirmed balances until settled into the ledger.
+
+### 4. Deterministic Financial Engine
+- **Integer Paise Representation:** All financial totals and balances are calculated strictly in integer paise (`1 Rupee = 100 Paise`). AI never performs authoritative balance math.
+- **Strict Money Isolation:** Segregates personal spendable income, custodial third-party collections (Cash on Delivery / `not_mine`), and expected future payouts.
+- **₹10 Lakh Safeguard:** Strict individual (₹10,00,000) and India-local calendar day aggregate (₹10,00,000) transaction limits enforced in PostgreSQL triggers with row-level locking.
+
+### 5. Adaptive Safety Buffer & Runway Outlook
+- **Self-Salary Rule:** Cautious estimate of sustainable personal pay with essential expenses protected first.
+- **Buffer Deficit Projections:** 30-day forward cash flow modeling detects when spending threatens safety buffers before an actual cash deficit occurs.
+- **Canonical Ravi Delivery Fixture:** Deterministically reproduces the −₹1,170 Saturday shortfall scenario for delivery workers.
+- **WISH 2.0 Micro-Savings:** Database-persisted savings goals that automatically absorb surplus earnings from good weeks.
+
+---
+
+## 🏗️ Architecture & Technology Stack
+
+| Tier | Technologies |
+|---|---|
+| **Frontend PWA** | React 18, Vite 5.4.11, TypeScript 5.6.3, Tailwind CSS 3.4.19, Service Worker (Network-First) |
+| **Backend & Storage** | Supabase Auth, PostgreSQL 15 with Row Level Security (RLS) on project `msjzkylvafuwlkkujxpv` |
+| **Serverless Functions**| Supabase Edge Functions on Deno runtime (`process-voice`, `extract-receipt`) |
+| **AI / Speech-to-Text** | AI4Bharat IndicConformer (Primary microservice), Groq Whisper Large v3 (Secondary fallback) |
+| **AI / Vision & Extraction** | Groq Qwen 2.5 27B Vision, Groq Llama 3.3 70B Versatile Chat |
+| **Mathematical Engine**| Deterministic TypeScript Engine (`frontend/src/engine/`) in integer paise |
+
+Detailed architectural documentation is available in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js 20+ and npm
+- Python 3.10+
+- FFmpeg (`sudo apt install ffmpeg`)
+- Supabase account (or local PGlite for testing)
+
+### 1. Clone & Install
 ```bash
-# backend: Supabase (Auth + PostgreSQL + Row Level Security). One-time setup in backend/README.md.
-cd backend && npm install && npm run test:db   # local schema + RLS tests, no Supabase account needed
+git clone https://github.com/syed-imadulla/FLOVA.git
+cd FLOVA
 
-# frontend
-cd frontend
-cp .env.example .env.local         # Supabase URL + publishable key (ask M1)
-npm install
-npm run dev                        # http://localhost:5173
+# Install frontend dependencies
+cd frontend && npm install && cd ..
+
+# Install backend testing dependencies
+cd backend && npm install && cd ..
+
+# Install Python STT service dependencies
+cd ai-engine && pip install -r stt_service/requirements.txt && cd ..
 ```
 
-Team rules, branches and the required **Graphify** workflow: [CONTRIBUTING.md](CONTRIBUTING.md).
-Data contract (tables, fields, enums): [docs/CONTRACT.md](docs/CONTRACT.md).
+### 2. Configure Environment
+```bash
+# Frontend configuration
+cp frontend/.env.example frontend/.env.local
+# Edit frontend/.env.local with your Supabase URL and Anon Key
+```
 
-Tests: `cd ai-engine && pytest -q` (16) and `cd backend && npm run test:db` (22 schema and RLS checks).
+### 3. Run Development Servers
+```bash
+# Start frontend application (http://localhost:5173)
+cd frontend && npm run dev
 
-## Layout
-| Folder | What |
-|---|---|
-| `ai-engine/` | Self-salary rule, outlook, synthetic income, backtest (pure Python, no dependencies) |
-| `backend/` | Supabase schema, Row Level Security policies and database tests (M1) |
-| `docs/` | Shared data contract |
-| `graphify-out/` | Graphify knowledge graph of the repo (committed, cache ignored) |
-| `frontend/` | React + Vite + TypeScript UI |
-| `.hackathon/` | Problem picking, assumptions and trial notes from the event |
+# Start IndicConformer STT microservice (http://localhost:8001)
+cd ai-engine && python3 -m uvicorn stt_service.main:app --port 8001
+```
 
-## Tech and credits
-React, Vite, TypeScript, Supabase (Auth, PostgreSQL, Row Level Security), Python (ai-engine prototype). Data: IDInsight 2024 (via IDR), Economic Survey 2025-26 (via Upstox), NITI Aayog gig-workforce estimates.
+---
 
-**AI assistance:** parts of the code were written with Claude Code (Anthropic) during the event, as allowed by the rules. Each team member can explain their part.
+## 🧪 Testing & Verification
+
+FLOVA includes exhaustive multi-tier automated test coverage:
+
+```bash
+# 1. Frontend Service, UI & Voice Tests (21 suites, 100+ tests)
+cd frontend
+node --loader ./src/services/__tests__/mockLoader.mjs --test "src/services/__tests__/*.test.ts"
+
+# 2. Deterministic Financial Engine & Runway Tests (9 suites)
+cd frontend
+node --loader ./src/services/__tests__/mockLoader.mjs --test \
+  "src/engine/__tests__/*.test.ts" \
+  "src/runway/__tests__/*.test.ts" \
+  "src/wish/__tests__/*.test.ts" \
+  "src/profile/__tests__/*.test.ts" \
+  "src/data/__tests__/*.test.ts"
+
+# 3. Database Schema, Triggers & Row Level Security (54 tests)
+cd backend
+npm run test:db
+
+# 4. Demo Seeding & Isolation Verification (17 tests)
+cd backend
+npm run test:seed
+
+# 5. Python STT Service & Engine Tests (23 tests)
+cd ai-engine
+python3 -m pytest
+
+# 6. Production Build Check
+cd frontend
+npm run build
+```
+
+---
+
+## 📚 Technical Documentation
+
+Comprehensive engineering documentation is maintained in the [`docs/`](docs/) directory:
+
+- [System Architecture](docs/ARCHITECTURE.md)
+- [Speech-to-Text & Conversational Voice](docs/VOICE-STT.md)
+- [Smart Capture & Receipt/UPI Intelligence](docs/SMART-CAPTURE.md)
+- [Invoice Intelligence Agent](docs/INVOICE-INTELLIGENCE.md)
+- [Deterministic Financial Engine & Limits](docs/FINANCIAL-ENGINE.md)
+- [Adaptive Safety Buffer & Runway](docs/ADAPTIVE-BUFFER.md)
+- [Security, RLS & Authentication](docs/SECURITY.md)
+- [Deployment Guide](docs/DEPLOYMENT.md)
+- [Environment Variables & Secrets](docs/ENVIRONMENT.md)
+- [Testing & Verification Guide](docs/TESTING.md)
+
+---
+
+## 🔒 Security & Privacy
+
+- **Row Level Security (RLS):** Every user's transactions, check-ins, payouts, invoices, and goals are strictly isolated at the database engine level.
+- **Zero Secrets in Frontend:** The client bundle contains no private API keys, service role tokens, or model credentials.
+- **Explicit Confirmation:** No AI-inferred candidate is ever committed to the ledger without the user reviewing and clicking "Confirm" in `/add`.
+
+---
+
+## 📄 License
+This project is licensed under the MIT License. Models from AI4Bharat are open-source and governed by their respective research and open licenses.

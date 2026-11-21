@@ -7,7 +7,7 @@
 // and rules in docs/CONTRACT.md.
 // =====================================================================
 
-import type { FinancialExtractionDTO } from "../engine/extractionTypes";
+import type { FinancialExtractionDTO, ExtractedTransactionData } from "../engine/extractionTypes";
 import { todayLocalISO } from "../data/dates";
 
 // Normalize Indic numerals (Devanagari, Kannada, Telugu, Eastern Arabic/Perso-Arabic) to ASCII 0-9
@@ -105,18 +105,34 @@ const WORK_KEYWORDS = [
 
 const CATEGORY_MAP: Record<string, string> = {
   // Income
+  "freelance":   "freelance",
+  "freelancing": "freelance",
+  "फ्रीलांस":    "freelance",
+  "फ्रीलांसिंग": "freelance",
+  "salary":      "salary",
+  "सैलरी":       "salary",
+  "वेतन":        "salary",
+  "commission":  "commission",
+  "कमीशन":       "commission",
+  "sales":       "business_sales",
+  "बिक्री":       "business_sales",
+  "delivery":    "delivery_earnings",
+  "डिलीवरी":     "delivery_earnings",
+  "service fee": "service_income",
+  "service income": "service_income",
+  "consulting":  "service_income",
   "earnings":    "earnings",
   "earned":      "earnings",
-  "salary":      "earnings",
   "tips":        "tips",
   "tip":         "tips",
-  "incentive":   "incentive",
-  "bonus":       "incentive",
+  "टिप":         "tips",
+  "incentive":   "tips",
+  "bonus":       "tips",
   "payout":      "payout",
   "advance":     "advance",
   "कमाई":        "earnings",
   "कमाए":        "earnings",
-  "ಬಂತು":        "earnings",
+  "बंतु":        "earnings",
   "آمدنی":       "earnings",
   "సంపాదన":      "earnings",
   // Fuel / Work
@@ -152,8 +168,8 @@ const CATEGORY_MAP: Record<string, string> = {
   "breakfast":   "food",
   "food":        "food",
   "meal":        "food",
-  "groceries":   "food",
-  "grocery":     "food",
+  "groceries":   "groceries",
+  "grocery":     "groceries",
   "chai":        "food",
   "tea":         "food",
   "चाय":         "food",
@@ -259,9 +275,86 @@ const QUERY_PATTERNS = [
   /అద్దె కట్టవచ్చా/i,
 ];
 
+const CLAUSE_SPLIT_REGEX =
+  /\s+(?:and\s+then|and|but|also|और\s+फिर|और|तथा|एवं|फिर|aur|ಮತ್ತು|ಹಾಗೂ|ಆಮೇಲೆ|mattu|మరియు|మరియును|తర్వాత|mariyu|மற்றும்|மேலும்|பிறகு|matrum|اور\s+پھر|اور|پھر)\s+|[,;]\s*|[.?!]\s+(?=[A-Za-z0-9\u0900-\u0D7F])/i;
+
+function extractClauseDate(text: string): string {
+  const lower = text.toLowerCase();
+  if (/\byesterday\b|ನಿನ್ನೆ|कल|నిన్న|کل/i.test(lower)) {
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  }
+  if (/\bday before yesterday\b|ಮೊನ್ನೆ|परसों|మొన్న/i.test(lower)) {
+    const d = new Date();
+    d.setDate(d.getDate() - 2);
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  }
+  return todayLocalISO();
+}
+
+function extractTransactionClause(clauseText: string): ExtractedTransactionData | null {
+  const text = clauseText.trim();
+  if (!text) return null;
+  const lower = text.toLowerCase();
+
+  const amount = extractAmount(text);
+  const isIncome = INCOME_KEYWORDS.some((kw) => lower.includes(kw.toLowerCase()));
+  const isExpense = EXPENSE_KEYWORDS.some((kw) => lower.includes(kw.toLowerCase()));
+  const hasWorkWord = WORK_KEYWORDS.some((kw) => lower.includes(kw.toLowerCase()));
+  const hasLivingWord = LIVING_KEYWORDS.some((kw) => lower.includes(kw.toLowerCase()));
+
+  // If no financial keywords and no amount, this clause is not a transaction
+  if (!isIncome && !isExpense && !hasWorkWord && !hasLivingWord && !amount) {
+    return null;
+  }
+
+  let transactionType: "income" | "expense" | null = null;
+  if (isIncome && !isExpense) {
+    transactionType = "income";
+  } else if (isExpense && !isIncome) {
+    transactionType = "expense";
+  } else if (isExpense && isIncome) {
+    const firstIncome = Math.min(...INCOME_KEYWORDS.map((kw) => lower.indexOf(kw.toLowerCase())).filter((i) => i >= 0), Infinity);
+    const firstExpense = Math.min(...EXPENSE_KEYWORDS.map((kw) => lower.indexOf(kw.toLowerCase())).filter((i) => i >= 0), Infinity);
+    transactionType = firstExpense < firstIncome ? "expense" : "income";
+  } else if (!isIncome && !isExpense && (hasWorkWord || hasLivingWord)) {
+    transactionType = "expense";
+  } else if (amount) {
+    if (/\bon\b|spent|paid|kharche|kharcha/i.test(lower)) {
+      transactionType = "expense";
+    } else if (/\bfrom\b|se\b/i.test(lower) && !isIncome) {
+      // Ambiguous: e.g. "500 from Y" without clear income verb
+      transactionType = null;
+    } else {
+      transactionType = "expense";
+    }
+  }
+
+  if (transactionType === null && !amount) return null;
+
+  const category = transactionType ? guessCategory(text, transactionType) : "other";
+  const expenseType = transactionType === "expense" ? guessExpenseType(text) : null;
+  const description = guessDescription(text);
+  const clauseDate = extractClauseDate(text);
+
+  return {
+    type: transactionType,
+    amount,
+    category,
+    expense_type: expenseType,
+    ownership: "mine",
+    date: clauseDate,
+    description,
+  };
+}
+
 // ---- Main extractor ----
 export function extractTransaction(transcript: string, _language?: string): FinancialExtractionDTO {
-  const text = transcript.trim();
+  // Remove commas inside numbers (e.g. 1,500 -> 1500) so commas do not split numbers into separate clauses
+  const text = transcript.trim().replace(/(?<=\d),(?=\d)/g, "");
   const lower = text.toLowerCase();
 
   // 1. Check for financial queries first across all 5 languages
@@ -479,71 +572,75 @@ export function extractTransaction(transcript: string, _language?: string): Fina
   }
 
   // 4. Default: Transaction extraction across English and Indic scripts
-  const amount = extractAmount(text);
+  // Check for multi-clause transactions first (e.g. "I spent ₹250 on groceries and earned ₹800 from a freelance project")
+  let txList: ExtractedTransactionData[] = [];
+  if (CLAUSE_SPLIT_REGEX.test(text)) {
+    const rawClauses = text
+      .split(CLAUSE_SPLIT_REGEX)
+      .map((c) => c.trim())
+      .filter((c) => c.length > 0);
 
-  // Determine intent (income vs expense)
-  const isIncome = INCOME_KEYWORDS.some((kw) => lower.includes(kw.toLowerCase()));
-  const isExpense = EXPENSE_KEYWORDS.some((kw) => lower.includes(kw.toLowerCase()));
+    if (rawClauses.length >= 2) {
+      const candidates = rawClauses
+        .map((c) => extractTransactionClause(c))
+        .filter((tx): tx is ExtractedTransactionData => tx !== null);
 
-  // If text mentions work or living keywords directly without an explicit verb (e.g. "ಪೆಟ್ರೋಲ್ ಹಾಕಿಸಿದೆ" or "300 petrol"), it's an expense
-  const hasWorkWord = WORK_KEYWORDS.some((kw) => lower.includes(kw.toLowerCase()));
-  const hasLivingWord = LIVING_KEYWORDS.some((kw) => lower.includes(kw.toLowerCase()));
+      // Multi-transaction requires either:
+      // (a) At least 2 clauses each have an explicitly extracted amount, OR
+      // (b) One clause has distinct income intent and another has distinct expense intent
+      const candidatesWithAmount = candidates.filter((c) => c.amount !== null);
+      const hasIncome = candidates.some((c) => c.type === "income");
+      const hasExpense = candidates.some((c) => c.type === "expense");
 
-  let transactionType: "income" | "expense" | null = null;
-  if (isIncome && !isExpense) {
-    transactionType = "income";
-  } else if (isExpense && !isIncome) {
-    transactionType = "expense";
-  } else if (isExpense && isIncome) {
-    const firstIncome = Math.min(...INCOME_KEYWORDS.map((kw) => lower.indexOf(kw.toLowerCase())).filter((i) => i >= 0), Infinity);
-    const firstExpense = Math.min(...EXPENSE_KEYWORDS.map((kw) => lower.indexOf(kw.toLowerCase())).filter((i) => i >= 0), Infinity);
-    transactionType = firstExpense < firstIncome ? "expense" : "income";
-  } else if (!isIncome && !isExpense && (hasWorkWord || hasLivingWord)) {
-    // Implicit expense by mentioning fuel, food, etc.
-    transactionType = "expense";
+      if (candidatesWithAmount.length >= 2 || (hasIncome && hasExpense && candidates.length >= 2)) {
+        txList = candidates;
+      }
+    }
   }
 
-  const category = transactionType ? guessCategory(text, transactionType) : null;
-  const expenseType = transactionType === "expense" ? guessExpenseType(text) : null;
-  const description = guessDescription(text);
-
-  const missingAmount = !amount;
-  const missingType = !transactionType;
-  const missingExpenseType = transactionType === "expense" && !expenseType;
+  // If not multiple distinct clauses, extract as a single transaction
+  if (txList.length === 0) {
+    const singleTx = extractTransactionClause(text);
+    if (singleTx) {
+      txList = [singleTx];
+    }
+  }
 
   const clarificationQuestions: string[] = [];
-  if (missingAmount) clarificationQuestions.push("How much was the amount?");
-  if (missingType) clarificationQuestions.push("Was this income or an expense?");
-  if (missingExpenseType) clarificationQuestions.push("Was this a living expense (food, personal) or a work expense (fuel, phone)?");
+  for (let i = 0; i < txList.length; i++) {
+    const tx = txList[i];
+    const prefix = txList.length > 1 ? `Transaction ${i + 1} (${tx.description || tx.category || tx.type || "entry"}): ` : "";
+    if (!tx.amount) {
+      clarificationQuestions.push(`${prefix}How much was the amount?`);
+    }
+    if (!tx.type) {
+      clarificationQuestions.push(`${prefix}Was this income or an expense?`);
+    }
+    if (tx.type === "expense" && !tx.expense_type) {
+      clarificationQuestions.push(`${prefix}Was this a living expense (food, personal) or a work expense (fuel, phone)?`);
+    }
+  }
 
+  const primaryTx = txList[0] || null;
   const clarificationRequired = clarificationQuestions.length > 0;
-  const certainty = clarificationRequired
-    ? missingAmount && missingType ? 0.1 : 0.4
-    : expenseType || transactionType === "income" ? 0.9 : 0.75;
+  const certainty = txList.length === 0
+    ? 0.1
+    : clarificationRequired
+    ? txList.some((t) => !t.amount) ? 0.3 : 0.6
+    : 0.95;
 
   return {
-    entry_intent: transactionType ? "transaction" : "unknown",
+    entry_intent: txList.length > 0 ? "transaction" : "unknown",
     action_intent: "create",
     target_id: null,
-    transaction: transactionType
-      ? {
-          type: transactionType,
-          amount,
-          category,
-          expense_type: expenseType,
-          ownership: "mine",
-          date: todayLocalISO(),
-          description,
-        }
-      : null,
+    transactions: txList.length > 0 ? txList : undefined,
+    transaction: primaryTx,
     expected_payout: null,
     balance_checkin: null,
     metadata: {
       certainty,
       clarification_required: clarificationRequired,
-      clarification_reason: clarificationRequired
-        ? clarificationQuestions.join(" ")
-        : null,
+      clarification_reason: clarificationRequired ? clarificationQuestions.join(" ") : null,
       clarification_questions: clarificationQuestions,
       raw_utterance: text,
     },

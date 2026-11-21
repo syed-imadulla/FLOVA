@@ -177,8 +177,9 @@ Deno.serve(async (req: Request) => {
     }
 
     let transcript = "";
+    let sttProvider: "indicconformer" | "whisper" | "manual_text" = hasText ? "manual_text" : "whisper";
 
-    // 5. Audio Transcription via Groq Whisper
+    // 5. Audio Transcription: AI4Bharat IndicConformer (PRIMARY) with Groq Whisper (SECONDARY FALLBACK)
     if (hasAudio) {
       const rawBase64 = body.audioBase64!.replace(/^data:audio\/[a-zA-Z0-9.-]+;base64,/, "");
       const binaryString = atob(rawBase64);
@@ -193,41 +194,87 @@ Deno.serve(async (req: Request) => {
       else if (mime.includes("ogg")) extension = "ogg";
       else if (mime.includes("wav")) extension = "wav";
 
-      const audioBlob = new Blob([bytes], { type: mime });
-      const formData = new FormData();
-      formData.append("file", audioBlob, `recording.${extension}`);
-      formData.append("response_format", "json");
-      if (body.language && body.language !== "auto") {
-        formData.append("language", body.language.toLowerCase());
+      // 5A. PRIMARY: AI4Bharat IndicConformer STT Service
+      const indicUrl = Deno.env.get("INDICCONFORMER_URL");
+      const indicKey = Deno.env.get("INDICCONFORMER_KEY") || "flova-indicconformer-secure-token-2026";
+      let indicSucceeded = false;
+
+      if (indicUrl) {
+        try {
+          const abortController = new AbortController();
+          const timer = setTimeout(() => abortController.abort(), 7000); // 7s timeout
+
+          const indicRes = await fetch(indicUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-FLOVA-STT-KEY": indicKey,
+            },
+            body: JSON.stringify({
+              audioBase64: body.audioBase64,
+              mimeType: mime,
+              language: body.language || "kn",
+            }),
+            signal: abortController.signal,
+          });
+          clearTimeout(timer);
+
+          if (indicRes.ok) {
+            const indicData = await indicRes.json();
+            const candText = (indicData.transcript || "").trim();
+            if (candText.length > 0) {
+              transcript = candText;
+              sttProvider = "indicconformer";
+              indicSucceeded = true;
+            }
+          } else {
+            console.warn(`[STT] IndicConformer responded with status ${indicRes.status}. Falling back to Whisper.`);
+          }
+        } catch (e: any) {
+          console.warn("[STT] IndicConformer unreachable or timed out. Falling back to Groq Whisper:", e.message || e);
+        }
       }
 
-      const { res: whisperRes } = await groqWithModelFallback(groqApiKey, "stt", (sttModelId) => {
-        formData.set("model", sttModelId);
-        return fetch("https://api.groq.com/openai/v1/audio/transcriptions", {
-          method: "POST",
-          headers: { "Authorization": `Bearer ${groqApiKey}` },
-          body: formData,
+      // 5B. SECONDARY FALLBACK: Groq Whisper
+      if (!indicSucceeded) {
+        const audioBlob = new Blob([bytes], { type: mime });
+        const formData = new FormData();
+        formData.append("file", audioBlob, `recording.${extension}`);
+        formData.append("response_format", "json");
+        if (body.language && body.language !== "auto") {
+          formData.append("language", body.language.toLowerCase());
+        }
+
+        const { res: whisperRes } = await groqWithModelFallback(groqApiKey, "stt", (sttModelId) => {
+          formData.set("model", sttModelId);
+          return fetch("https://api.groq.com/openai/v1/audio/transcriptions", {
+            method: "POST",
+            headers: { "Authorization": `Bearer ${groqApiKey}` },
+            body: formData,
+          });
         });
-      });
 
-      if (!whisperRes.ok) {
-        const errText = await whisperRes.text();
-        return new Response(
-          JSON.stringify({ error: `Groq Whisper transcription failed (${whisperRes.status}): ${errText}` }),
-          { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
+        if (!whisperRes.ok) {
+          const errText = await whisperRes.text();
+          return new Response(
+            JSON.stringify({ error: `Groq Whisper transcription failed (${whisperRes.status}): ${errText}` }),
+            { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
 
-      const whisperData = await whisperRes.json();
-      transcript = (whisperData.text || "").trim();
-      if (!transcript) {
-        return new Response(
-          JSON.stringify({ error: "No audible speech was recognized in the audio recording." }),
-          { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+        const whisperData = await whisperRes.json();
+        transcript = (whisperData.text || "").trim();
+        sttProvider = "whisper";
+        if (!transcript) {
+          return new Response(
+            JSON.stringify({ error: "No audible speech was recognized in the audio recording." }),
+            { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
       }
     } else {
       transcript = body.text!.trim();
+      sttProvider = "manual_text";
     }
 
     // 6. Financial Intent Extraction via Groq Llama 3.3
@@ -255,6 +302,12 @@ Follow these strict rules:
    - For expenses (type="expense" and ownership="mine"), expense_type MUST be specified as "living" (food, tea, personal) or "work" (petrol, bike repair, phone recharge). If ambiguous, set expense_type to null and clarification_required to true.
    - For income, expense_type MUST be null (never living or work).
    - For Cash On Delivery (COD) collections or platform handovers, set ownership to "not_mine".
+   - MULTIPLE TRANSACTIONS & ANTI-DUPLICATION (CRITICAL):
+     If the user utterance describes multiple financial events (e.g. "I spent ₹250 on groceries and earned ₹800 from a freelance project"):
+     - Extract EACH distinct transaction separately into the "transactions" array.
+     - NEVER duplicate or copy an amount across transactions. In "I spent ₹250 on groceries and earned ₹800 from a freelance project", the expense has amount="250" (groceries, living) and the income has amount="800" (freelance).
+     - NEVER reuse an amount from one clause for another unless explicitly stated by the user. If an event has no amount mentioned, set its amount to null and clarification_required to true.
+     - Also set "transaction" to the first transaction object for backwards compatibility.
    - If intent is "financial_query", DO NOT attempt to answer or calculate balances in the LLM. Set entry_intent="financial_query", populate financial_query.query_type ("runway_check", "balance_check", "payout_check", "commitment_check", or "general"), and leave transaction=null.
    - All amounts in the DTO MUST be decimal rupee strings (e.g. "120" or "450.50") or null.
 
@@ -263,6 +316,17 @@ Follow these strict rules:
   "entry_intent": "transaction" | "expected_payout" | "balance_checkin" | "financial_query" | "unknown",
   "action_intent": "create" | "correct" | "clarify" | "cancel" | "unknown",
   "target_id": null,
+  "transactions": [
+    {
+      "type": "income" | "expense" | null,
+      "amount": string | null,
+      "category": string | null,
+      "expense_type": "living" | "work" | null,
+      "ownership": "mine" | "not_mine" | null,
+      "date": "YYYY-MM-DD" | null,
+      "description": string | null
+    }
+  ],
   "transaction": {
     "type": "income" | "expense" | null,
     "amount": string | null,
@@ -347,52 +411,70 @@ Follow these strict rules:
     };
     extraction.metadata.raw_utterance = transcript;
 
-    // 7. Construct candidate for transaction intents
+    // 7. Construct candidates for transaction intents
     let candidate = null;
-    if (extraction.entry_intent === "transaction" && extraction.transaction) {
-      const tx = extraction.transaction;
-      let amountPaise: number | null = null;
-      if (tx.amount !== null && tx.amount !== undefined) {
-        const num = Number(tx.amount);
-        if (!isNaN(num) && num > 0) {
-          amountPaise = Math.round(num * 100);
+    const candidates = [];
+    const txList = Array.isArray(extraction.transactions) && extraction.transactions.length > 0
+      ? extraction.transactions
+      : extraction.transaction ? [extraction.transaction] : [];
+
+    if (extraction.entry_intent === "transaction" && txList.length > 0) {
+      for (let i = 0; i < txList.length; i++) {
+        const tx = txList[i];
+        let amountPaise: number | null = null;
+        if (tx.amount !== null && tx.amount !== undefined) {
+          const num = Number(tx.amount);
+          if (!isNaN(num) && num > 0) {
+            amountPaise = Math.round(num * 100);
+          }
         }
+
+        const missingFields: string[] = [];
+        if (amountPaise === null) missingFields.push("amount");
+        if (!tx.type) missingFields.push("type");
+        if (tx.type === "expense" && (!tx.ownership || tx.ownership === "mine") && !tx.expense_type) {
+          missingFields.push("expenseType");
+        }
+
+        const needsReview =
+          missingFields.length > 0 ||
+          extraction.metadata.clarification_required ||
+          (typeof extraction.metadata.certainty === "number" && extraction.metadata.certainty < 0.85);
+
+        const candidateId = i === 0 && body.candidateId ? body.candidateId : crypto.randomUUID();
+
+        const c = {
+          id: candidateId,
+          transcript,
+          stt_provider: sttProvider,
+          type: tx.type === "income" || tx.type === "expense" ? tx.type : null,
+          amountPaise,
+          category: tx.category || (tx.type === "income" ? "earnings" : "other"),
+          expenseType: tx.type === "expense" && (tx.expense_type === "living" || tx.expense_type === "work") ? tx.expense_type : null,
+          date: tx.date || new Date().toISOString().slice(0, 10),
+          ownership: tx.ownership === "not_mine" ? "not_mine" : "mine",
+          confidence: typeof extraction.metadata.certainty === "number" ? extraction.metadata.certainty : 0.8,
+          needsReview,
+          missingFields,
+        };
+        candidates.push(c);
       }
-
-      const missingFields: string[] = [];
-      if (amountPaise === null) missingFields.push("amount");
-      if (!tx.type) missingFields.push("type");
-      if (tx.type === "expense" && (!tx.ownership || tx.ownership === "mine") && !tx.expense_type) {
-        missingFields.push("expenseType");
+      candidate = candidates[0] || null;
+      if (!extraction.transaction) {
+        extraction.transaction = txList[0];
       }
-
-      const needsReview =
-        missingFields.length > 0 ||
-        extraction.metadata.clarification_required ||
-        (typeof extraction.metadata.certainty === "number" && extraction.metadata.certainty < 0.85);
-
-      const candidateId = body.candidateId || crypto.randomUUID();
-
-      candidate = {
-        id: candidateId,
-        transcript,
-        type: tx.type === "income" || tx.type === "expense" ? tx.type : null,
-        amountPaise,
-        category: tx.category || (tx.type === "income" ? "earnings" : "other"),
-        expenseType: tx.type === "expense" && (tx.expense_type === "living" || tx.expense_type === "work") ? tx.expense_type : null,
-        date: tx.date || new Date().toISOString().slice(0, 10),
-        ownership: tx.ownership === "not_mine" ? "not_mine" : "mine",
-        confidence: typeof extraction.metadata.certainty === "number" ? extraction.metadata.certainty : 0.8,
-        needsReview,
-        missingFields,
-      };
+      if (!extraction.transactions) {
+        extraction.transactions = txList;
+      }
     }
 
     return new Response(
       JSON.stringify({
         transcript,
+        stt_provider: sttProvider,
         extraction,
         candidate,
+        candidates,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

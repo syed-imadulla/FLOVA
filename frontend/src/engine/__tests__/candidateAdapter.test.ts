@@ -26,10 +26,14 @@ describe("Phase 7 Candidate Adapter (FinancialExtractionDTO Mapping)", () => {
     assertStrictEqual(safeConvertRupeeStringToPaise("10.05"), 1005);
     assertStrictEqual(safeConvertRupeeStringToPaise("0"), 0);
     assertStrictEqual(safeConvertRupeeStringToPaise("0.00"), 0);
-    assertStrictEqual(safeConvertRupeeStringToPaise("1500000"), 150000000);
+    assertStrictEqual(safeConvertRupeeStringToPaise("1000000"), 100000000); // ₹10,00,000 upper boundary
   });
 
   it("2. invalid and unsafe amount rejection", () => {
+    // Over ₹10 Lakh application limit must throw
+    assertThrows(() => safeConvertRupeeStringToPaise("1000001"), /exceeds ₹10,00,000/);
+    assertThrows(() => safeConvertRupeeStringToPaise("1500000"), /exceeds ₹10,00,000/);
+
     // Negative amounts must throw
     assertThrows(() => safeConvertRupeeStringToPaise("-100"), /must be a positive decimal/);
     assertThrows(() => safeConvertRupeeStringToPaise("-0.01"), /must be a positive decimal/);

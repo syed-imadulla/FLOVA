@@ -20,24 +20,33 @@ Work is executed exclusively on branch `feature/backend` and shipped as pull req
 - [x] **Phase 9.1: Multilingual Voice Support & Language-Specific Financial Extraction** - Support for English, Hindi, Kannada, Urdu, and Telugu with Whisper language parameter routing, Indic intent extraction, and truthful uncertainty. (Completed 2026-11-21)
 - [x] **Phase 10: Connect Activity and Money Overview to existing financial services** - Wire Activity timeline and Money Overview to data services, maintaining manual usability if AI fails. (Completed 2026-11-21)
 - [x] **Phase 10.2: Application UI shell and screens** - One persistent mobile layout with a bottom navbar, every screen rebuilt on the existing services, multilingual voice, monthly timeline, live Groq AI layer (see `phases/10.2-app-ui-shell/`). (Completed 2026-11-21)
-- [ ] **Phase 11: Deployment readiness** - Production environment variables, Vercel SPA deployment configuration, and Supabase auth redirect settings.
-- [ ] **Phase 12: Final verification** - End-to-end demo walkthrough (Quick Capture -> FLOVA Catch -> Activity -> Money Overview), smoke testing, and release freeze.
+- [x] **Phase 13: Core Financial Correctness, Navigation and Account Management** - Voice amount deduplication, separate income categories, navigation fixes, logout & RLS isolation, ₹10L individual and daily aggregate limits. (Completed 2026-11-21)
+- [x] **Phase 14: Smart Capture, Receipt Intelligence & UPI Share Integration** - Physical receipts with line items and date fallback, UPI screenshots (Google Pay, PhonePe, Paytm, CRED) with status detection & UTR reference, duplicate payment detection, camera/gallery distinction, PWA Web Share Target, and unified `/add` review & confirmation. (Completed 2026-11-21)
+- [x] **Phase 16: Complete Receipt & UPI Extraction Pipeline Repair** - Active Groq vision model migration (qwen/qwen3.8-27b), 20 MB image support with client canvas downscaling & compression, line-item parsing, arithmetic discrepancy checks, and multi-step progress UX. (Completed 2026-11-21)
+- [x] **Phase 17: AI4Bharat IndicConformer Primary STT Migration** - AI4Bharat IndicConformer primary STT engine with Groq Whisper secondary fallback, FastAPI STT microservice in ai-engine/stt_service/, singleton model caching, X-FLOVA-STT-KEY authentication, benchmark suite, and full integration test coverage. (Completed 2026-11-21)
+- [x] **Phase 18: Final Project Consolidation, Documentation & Main Branch Release** - Full project audit, 10 technical documentation guides in docs/, README/CLAUDE/HANDOFF consolidation, security audit, 100% automated test verification across frontend/backend/AI, safe merge to main branch, and verified push to GitHub. (Completed 2026-11-21)
 
 ## Phase Details
 
 ### Phase 6: Demo data
+
 **Goal**: Implement an isolated, repeatable, and idempotent demo seeding script for FLOVA that populates the canonical Ravi delivery partner scenario, ensuring unrelated user data is never touched and the deterministic engine reproduces the Saturday −₹1,170 shortfall.
 **Plans**:
+
 - [x] 06-01: Implement `backend/scripts/seed-demo.mjs` with UUID-isolated seeding, PGlite isolation tests, and runway shortfall verification. (Completed 2026-11-21)
 
 ### Phase 7: Financial data contracts
+
 **Goal**: Extend shared data contracts to support receipt extraction candidates, voice transaction candidates, and unified activity timelines with truthful missing-data representation, while preserving existing tables, idempotency, and RLS policies.
 **Plans**:
+
 - [x] 07-01: Add `ExtractedReceiptCandidate`, `VoiceTransactionCandidate`, and `ActivityItem` to `contracts.ts`, implement `listActivityTimeline()` and `confirmCandidateTransaction()` in `data.ts`, and verify via automated unit tests. (Completed 2026-11-21)
 
 ### Phase 8: Secure FLOVA Catch receipt extraction integration
+
 **Goal**: Build an end-to-end receipt extraction flow that uses Groq via a secure Supabase Edge Function (`extract-receipt`), outputs truthful `ExtractedReceiptCandidate` suggestions without fabricating financial figures, provides an interactive review/edit UI, and persists confirmed expenses using `confirmCandidateTransaction()`.
 **Plans**:
+
 - [x] 08-01: Implement `extract-receipt` Edge Function, frontend receipt service, FLOVA Catch review UI (`/catch`), and automated regression tests. (Completed 2026-11-21)
 
 ## Progress
@@ -60,3 +69,47 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 10. Activity & Money Overview | 1/1 | Completed | 2026-11-21 |
 | 11. Deployment readiness | 0/1 | Pending | - |
 | 12. Final verification | 0/1 | Pending | - |
+| 13. Core Financial Correctness | 1/1 | Completed | 2026-11-21 |
+| 14. Smart Capture & Receipt Intelligence | 1/1 | Completed | 2026-11-21 |
+| 15. Conversational & Adaptive Financial Intelligence | 1/1 | Completed | 2026-11-21 |
+| 16. Complete Receipt & UPI Extraction Repair | 1/1 | Completed | 2026-11-21 |
+
+### Phase 13: Core Financial Correctness, Navigation and Account Management
+
+**Goal:** Fix voice amount duplication, add adapted income categories, stabilize navigation and logout, and enforce the ₹10 Lakh application transaction limit.
+**Status:** Completed (2026-11-21)
+**Plans:** 1 plan
+
+Plans:
+
+- [x] 13-01: Core financial correctness, navigation and account management implementation and regression verification. (Completed 2026-11-21)
+
+### Phase 14: Smart Capture, Receipt Intelligence & UPI Share Integration
+
+**Goal:** Multi-source capture (receipts, UPI screenshots, gallery, camera, share target), date fallback rules, duplicate detection, and unified confirmation.
+**Status:** Completed (2026-11-21)
+**Plans:** 1 plan
+
+Plans:
+
+- [x] 14-01: Smart capture, receipt line items & date fallback, UPI screenshots, duplicate detection, PWA Share Target, and unified review. (Completed 2026-11-21)
+
+### Phase 15: Conversational & Adaptive Financial Intelligence
+
+**Goal:** Conversational multi-transaction extraction, batch arithmetic, invoice management & settlements, spending intelligence, adaptive buffers, income forecasting, scenario simulation, and persistent WISH 2.0.
+**Status:** Completed (2026-11-21)
+**Plans:** 1 plan
+
+Plans:
+
+- [x] 15-01: Multi-transaction extraction, batch arithmetic, invoice intelligence, financial intelligence, and WISH 2.0 database persistence. (Completed 2026-11-21)
+
+### Phase 16: Complete Receipt & UPI Extraction Pipeline Repair
+
+**Goal:** Repair Edge Function extraction failure by upgrading to active Groq vision models (`qwen/qwen3.8-27b`), support 20 MB image uploads with client-side downscaling and compression, add line-item parsing, arithmetic discrepancy checks, and multi-step progress UX.
+**Status:** Completed (2026-11-21)
+**Plans:** 1 plan
+
+Plans:
+
+- [x] 16-01: Repair vision models on Groq, implement 20MB client image optimizer, add line items and arithmetic verification, update CatchScreen progress UI, and add unit tests. (Completed 2026-11-21)
