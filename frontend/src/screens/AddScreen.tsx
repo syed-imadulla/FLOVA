@@ -4,13 +4,16 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { emptyDraft, TransactionForm, type TxDraft, type TxSubmit } from "../app/TransactionForm";
-import { categoryLabel } from "../app/categories";
+import { categoryLabel, EXPENSE_CATEGORIES, INCOME_CATEGORIES } from "../app/categories";
 import { useDataVersion } from "../data/DataVersionProvider";
+import { todayLocalISO } from "../data/dates";
 import { formatINR } from "../lib/money";
 import { useProfile } from "../profile/useProfile";
 import { addTransaction, confirmCandidateTransaction } from "../services/data";
-import type { ExtractedReceiptCandidate, VoiceTransactionCandidate } from "../types/contracts";
-import { Notice, Screen } from "../ui/kit";
+import { calculateBatchSummary } from "../engine/batchArithmetic";
+import type { ExtractedReceiptCandidate, VoiceTransactionCandidate, ExpenseType, TransactionType } from "../types/contracts";
+import { Button, Card, Notice, Screen, Segmented } from "../ui/kit";
+import { IconTrash } from "../ui/icons";
 
 export interface QueuedReviewCandidate {
   candidateId: string;
@@ -22,7 +25,7 @@ export interface QueuedReviewCandidate {
 
 export interface ReviewState {
   /** Omitted for a manual entry opened with pre-filled values (e.g. paying a bill). */
-  origin?: "voice" | "receipt" | "upi_screenshot" | "shared_upi";
+  origin?: "voice" | "receipt" | "upi_screenshot" | "shared_upi" | "batch_voice";
   candidateId?: string;
   draft: TxDraft;
   aiNote?: string;
@@ -30,6 +33,8 @@ export interface ReviewState {
   transcript?: string;
   /** Queue of additional candidates to review sequentially (e.g. from multi-transaction voice utterances) */
   remainingCandidates?: QueuedReviewCandidate[];
+  /** Complete list of candidates for batch review together */
+  batchCandidates?: VoiceTransactionCandidate[];
   /** 1-based index and total count for multi-entry progress indication */
   queueIndex?: number;
   queueTotal?: number;
@@ -57,6 +62,16 @@ export function AddScreen() {
   const review = (location.state as ReviewState | null) ?? null;
   const [fallbackId] = useState<string>(() => newId());
   const activeCandidateId = review?.candidateId || fallbackId;
+
+  // Batch review state
+  const [batchCandidates, setBatchCandidates] = useState<VoiceTransactionCandidate[]>(
+    () => review?.batchCandidates || []
+  );
+  const [batchMode, setBatchMode] = useState<boolean>(
+    () => !!review?.batchCandidates && review.batchCandidates.length > 1
+  );
+  const [batchSubmitting, setBatchSubmitting] = useState(false);
+  const [batchError, setBatchError] = useState<string | null>(null);
 
   async function save(v: TxSubmit) {
     if (review?.origin === "receipt" || review?.origin === "upi_screenshot" || review?.origin === "shared_upi") {
@@ -138,9 +153,76 @@ export function AddScreen() {
     navigate("/activity", { replace: true, state: { flash: `Saved ${formatINR(v.amountPaise)} ${what}.` } });
   }
 
+  // Confirm all transactions in a batch
+  async function confirmAllBatch() {
+    if (batchCandidates.length === 0) return;
+    setBatchSubmitting(true);
+    setBatchError(null);
+
+    try {
+      for (const cand of batchCandidates) {
+        const amountPaise = cand.amountPaise ?? cand.amount_paise ?? null;
+        if (!amountPaise || amountPaise <= 0) {
+          throw new Error(`Transaction "${cand.description || cand.category || "entry"}" is missing an amount.`);
+        }
+        if (!cand.type) {
+          throw new Error(`Please choose whether "${cand.description || "entry"}" is income or expense.`);
+        }
+        if (cand.type === "expense" && (!cand.ownership || cand.ownership === "mine") && !cand.expenseType && !cand.expense_type) {
+          throw new Error(`Please choose whether "${cand.description || "expense"}" is living or work.`);
+        }
+
+        await confirmCandidateTransaction({
+          id: cand.id || cand.candidate_id || newId(),
+          transcript: cand.transcript || review?.transcript || "",
+          description: cand.description || null,
+          type: cand.type,
+          amountPaise,
+          category: cand.category || (cand.type === "income" ? "earnings" : "other"),
+          expenseType: cand.expenseType ?? cand.expense_type ?? null,
+          date: cand.date || todayLocalISO(),
+          ownership: cand.ownership || "mine",
+          needsReview: false,
+          missingFields: [],
+        });
+      }
+
+      bump();
+      const summary = calculateBatchSummary(batchCandidates);
+      navigate("/activity", {
+        replace: true,
+        state: {
+          flash: `Saved ${batchCandidates.length} transactions (${formatINR(summary.totalIncomePaise)} income, ${formatINR(summary.totalExpensesPaise)} expenses).`,
+        },
+      });
+    } catch (err: any) {
+      setBatchError(err.message || "Failed to confirm batch transactions.");
+    } finally {
+      setBatchSubmitting(false);
+    }
+  }
+
+  function updateBatchCandidate(id: string, patch: Partial<VoiceTransactionCandidate>) {
+    setBatchCandidates((prev) =>
+      prev.map((c) => {
+        const candId = c.id || c.candidate_id;
+        if (candId === id) {
+          return { ...c, ...patch, needsReview: false, clarification_required: false };
+        }
+        return c;
+      })
+    );
+  }
+
+  function removeBatchCandidate(id: string) {
+    setBatchCandidates((prev) => prev.filter((c) => (c.id || c.candidate_id) !== id));
+  }
+
   const queueTotal = review?.queueTotal;
   const queueIndex = review?.queueIndex;
-  const title = review?.origin
+  const title = batchMode
+    ? `Batch Review (${batchCandidates.length} transactions)`
+    : review?.origin
     ? queueTotal && queueTotal > 1
       ? `Review details (${queueIndex} of ${queueTotal})`
       : "Review details"
@@ -172,6 +254,201 @@ export function AddScreen() {
     }
   }
 
+  // --- Render Batch Review View ---
+  if (batchMode && batchCandidates.length > 0) {
+    const summary = calculateBatchSummary(batchCandidates);
+
+    return (
+      <Screen
+        title={title}
+        subtitle="Review and edit all extracted transactions together"
+        back
+      >
+        {batchError && (
+          <div className="mb-4">
+            <Notice tone="danger" title="Error">
+              {batchError}
+            </Notice>
+          </div>
+        )}
+
+        {/* Batch Summary Card */}
+        <Card className="p-4 mb-4">
+          <p className="text-xs font-semibold text-neutral-500 mb-2">BATCH ARITHMETIC SUMMARY</p>
+          <div className="grid grid-cols-3 gap-2 text-center">
+            <div className="rounded-xl bg-emerald-50/70 p-2.5 border border-emerald-100">
+              <span className="block text-[11px] font-semibold text-emerald-800">Total Income</span>
+              <span className="text-base font-extrabold text-emerald-950 tabular-nums">
+                {formatINR(summary.totalIncomePaise)}
+              </span>
+            </div>
+            <div className="rounded-xl bg-red-50/70 p-2.5 border border-red-100">
+              <span className="block text-[11px] font-semibold text-red-800">Total Expenses</span>
+              <span className="text-base font-extrabold text-red-950 tabular-nums">
+                {formatINR(summary.totalExpensesPaise)}
+              </span>
+            </div>
+            <div className="rounded-xl bg-sky-50/70 p-2.5 border border-sky-100">
+              <span className="block text-[11px] font-semibold text-sky-800">Net Movement</span>
+              <span className="text-base font-extrabold text-sky-950 tabular-nums">
+                {summary.netMovementPaise >= 0 ? "+" : ""}{formatINR(summary.netMovementPaise)}
+              </span>
+            </div>
+          </div>
+          <p className="text-[11px] text-neutral-500 mt-2 text-center">
+            Note: Net movement is transaction difference, not your confirmed bank balance.
+          </p>
+        </Card>
+
+        {/* Candidate Cards */}
+        <div className="space-y-3 mb-6">
+          {batchCandidates.map((c, idx) => {
+            const candId = c.id || c.candidate_id || `cand-${idx}`;
+            const amountPaise = c.amountPaise ?? c.amount_paise ?? 0;
+            const isClarification = c.clarification_required || !c.type || !amountPaise;
+
+            return (
+              <Card
+                key={candId}
+                className={`p-3.5 space-y-3 border ${
+                  isClarification ? "border-amber-300 bg-amber-50/30" : "border-neutral-200"
+                }`}
+              >
+                <div className="flex justify-between items-center">
+                  <span className="text-xs font-bold text-neutral-600">Entry #{idx + 1}</span>
+                  <button
+                    type="button"
+                    onClick={() => removeBatchCandidate(candId)}
+                    className="text-xs text-red-600 hover:text-red-700 flex items-center gap-1"
+                  >
+                    <IconTrash size={13} /> Remove
+                  </button>
+                </div>
+
+                {isClarification && (
+                  <Notice tone="warn" title="Clarification Needed">
+                    {!c.type ? "Is this money you earned or money you spent?" : "Please verify the amount."}
+                  </Notice>
+                )}
+
+                {/* Type selector */}
+                <Segmented
+                  value={c.type || "expense"}
+                  onChange={(val) => updateBatchCandidate(candId, { type: val as TransactionType, expenseType: val === "income" ? null : "living" })}
+                  options={[
+                    { value: "expense", label: "Expense" },
+                    { value: "income", label: "Income" },
+                  ]}
+                />
+
+                {/* Amount and description */}
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-[11px] font-semibold text-neutral-600 mb-1">Amount (₹)</label>
+                    <input
+                      type="number"
+                      step="any"
+                      min="0"
+                      value={amountPaise ? (amountPaise / 100).toString() : ""}
+                      onChange={(e) => {
+                        const val = parseFloat(e.target.value);
+                        updateBatchCandidate(candId, { amountPaise: isNaN(val) ? null : Math.round(val * 100) });
+                      }}
+                      className="w-full h-10 px-3 rounded-xl border border-neutral-300 font-bold text-sm"
+                      placeholder="0.00"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-semibold text-neutral-600 mb-1">Category</label>
+                    <select
+                      value={c.category || (c.type === "income" ? "earnings" : "other")}
+                      onChange={(e) => updateBatchCandidate(candId, { category: e.target.value })}
+                      className="w-full h-10 px-2 rounded-xl border border-neutral-300 text-xs bg-white"
+                    >
+                      {(c.type === "income" ? INCOME_CATEGORIES : EXPENSE_CATEGORIES).map((cat) => (
+                        <option key={cat.value} value={cat.value}>
+                          {cat.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Expense living/work split */}
+                {c.type === "expense" && (
+                  <div>
+                    <label className="block text-[11px] font-semibold text-neutral-600 mb-1">Expense Type</label>
+                    <Segmented
+                      value={c.expenseType ?? c.expense_type ?? "living"}
+                      onChange={(val) => updateBatchCandidate(candId, { expenseType: val as ExpenseType })}
+                      options={[
+                        { value: "living", label: "Living (personal)" },
+                        { value: "work", label: "Work" },
+                      ]}
+                    />
+                  </div>
+                )}
+
+                {/* Date and Note */}
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div>
+                    <label className="block text-[11px] font-semibold text-neutral-600 mb-1">Date</label>
+                    <input
+                      type="date"
+                      value={c.date || todayLocalISO()}
+                      onChange={(e) => updateBatchCandidate(candId, { date: e.target.value })}
+                      className="w-full h-9 px-2 rounded-xl border border-neutral-300 bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-neutral-600 mb-1">Note</label>
+                    <input
+                      type="text"
+                      value={c.description || ""}
+                      onChange={(e) => updateBatchCandidate(candId, { description: e.target.value })}
+                      placeholder="e.g. Petrol, Groceries"
+                      className="w-full h-9 px-2 rounded-xl border border-neutral-300"
+                    />
+                  </div>
+                </div>
+              </Card>
+            );
+          })}
+        </div>
+
+        {/* Batch Action Buttons */}
+        <div className="space-y-2">
+          <Button
+            variant="primary"
+            className="w-full h-12 font-bold"
+            disabled={batchCandidates.length === 0 || batchSubmitting}
+            onClick={confirmAllBatch}
+          >
+            {batchSubmitting ? "Saving all..." : `Confirm All (${batchCandidates.length}) Transactions`}
+          </Button>
+
+          <Button
+            variant="secondary"
+            className="w-full text-xs"
+            onClick={() => setBatchMode(false)}
+          >
+            Review Step-by-Step Individually
+          </Button>
+
+          <Button
+            variant="ghost"
+            className="w-full text-xs text-neutral-500"
+            onClick={() => navigate("/app")}
+          >
+            Discard Batch
+          </Button>
+        </div>
+      </Screen>
+    );
+  }
+
+  // --- Render Single / Sequential Review View ---
   return (
     <Screen
       title={title}

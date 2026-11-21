@@ -69,6 +69,8 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 11. Deployment readiness | 0/1 | Pending | - |
 | 12. Final verification | 0/1 | Pending | - |
 | 13. Core Financial Correctness | 1/1 | Completed | 2026-11-21 |
+| 14. Smart Capture & Receipt Intelligence | 1/1 | Completed | 2026-11-21 |
+| 15. Conversational & Adaptive Financial Intelligence | 1/1 | Completed | 2026-11-21 |
 
 ### Phase 13: Core Financial Correctness, Navigation and Account Management
 
@@ -79,3 +81,23 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 Plans:
 
 - [x] 13-01: Core financial correctness, navigation and account management implementation and regression verification. (Completed 2026-11-21)
+
+### Phase 14: Smart Capture, Receipt Intelligence & UPI Share Integration
+
+**Goal:** Multi-source capture (receipts, UPI screenshots, gallery, camera, share target), date fallback rules, duplicate detection, and unified confirmation.
+**Status:** Completed (2026-11-21)
+**Plans:** 1 plan
+
+Plans:
+
+- [x] 14-01: Smart capture, receipt line items & date fallback, UPI screenshots, duplicate detection, PWA Share Target, and unified review. (Completed 2026-11-21)
+
+### Phase 15: Conversational & Adaptive Financial Intelligence
+
+**Goal:** Conversational multi-transaction extraction, batch arithmetic, invoice management & settlements, spending intelligence, adaptive buffers, income forecasting, scenario simulation, and persistent WISH 2.0.
+**Status:** Completed (2026-11-21)
+**Plans:** 1 plan
+
+Plans:
+
+- [x] 15-01: Multi-transaction extraction, batch arithmetic, invoice intelligence, financial intelligence, and WISH 2.0 database persistence. (Completed 2026-11-21)

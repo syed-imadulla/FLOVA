@@ -259,13 +259,16 @@ function mapTransactionToVoiceCandidate(
   const candidateId = resolveCandidateId(draftId, index, context);
 
   return {
+    id: candidateId,
     candidate_id: candidateId,
     draft_id: draftId,
     type,
     amount_paise: amountPaise,
+    amountPaise,
     amount_rupees: tx.amount ?? null,
     category: catRes.category,
     expense_type: expenseType,
+    expenseType,
     ownership,
     date: resolvedDate,
     extracted_date: extractedDate,
@@ -332,13 +335,16 @@ function mapTransactionToReceiptCandidate(
   const candidateId = resolveCandidateId(draftId, index, context);
 
   return {
+    id: candidateId,
     candidate_id: candidateId,
     draft_id: draftId,
     type,
     amount_paise: amountPaise,
+    amountPaise,
     amount_rupees: tx.amount ?? null,
     category: catRes.category,
     expense_type: expenseType,
+    expenseType,
     ownership,
     date: resolvedDate,
     extracted_date: extractedDate,

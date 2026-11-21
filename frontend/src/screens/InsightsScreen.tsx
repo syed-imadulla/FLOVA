@@ -7,8 +7,15 @@ import { useActivity } from "../app/useActivity";
 import { todayLocalISO } from "../data/dates";
 import { formatINR } from "../lib/money";
 import { useRunway } from "../runway/useRunway";
+import {
+  calculateAdaptiveBuffer,
+  generateIncomeForecast,
+  simulateScenario,
+  analyzeSpendingIntelligence,
+} from "../engine";
+import type { RunwayInput } from "../types/contracts";
 import { Card, ListRow, Notice, Screen, Segmented, Skeleton, cx, daysFromToday, formatDay, formatWeekday } from "../ui/kit";
-import { IconAlert, IconBulb, IconCalendar, IconClock, IconLayers, IconShield, IconWallet, IconPencil } from "../ui/icons";
+import { IconAlert, IconBulb, IconCalendar, IconClock, IconLayers, IconShield, IconWallet, IconPencil, IconSparkle } from "../ui/icons";
 
 export function InsightsScreen() {
   const [params, setParams] = useSearchParams();
@@ -58,7 +65,7 @@ function RunwayAndInsights({ tab }: { tab: "runway" | "insights" }) {
       ) : tab === "runway" ? (
         <RunwayTab runway={runway} dailyLiving={rawInput?.profile.dailyLivingEstimate ?? null} dailyWork={rawInput?.profile.dailyWorkEstimate ?? null} today={today} />
       ) : (
-        <InsightsTab runway={runway} today={today} />
+        <InsightsTab runway={runway} rawInput={rawInput} today={today} />
       )}
     </>
   );
@@ -158,8 +165,60 @@ function RunwayTab({ runway, dailyLiving, dailyWork, today }: { runway: Runway; 
   );
 }
 
-function InsightsTab({ runway, today }: { runway: Runway; today: string }) {
+function InsightsTab({ runway, rawInput, today }: { runway: Runway; rawInput: RunwayInput | null; today: string }) {
   const { items } = useActivity({ limit: 200, includeExpectedPayouts: false });
+
+  const transactions = useMemo(() => {
+    return (items ?? [])
+      .filter((it) => (it.kind === "transaction" || it.kind === "payout_receipt") && typeof it.amountPaise === "number" && !!it.date)
+      .map((it) => ({
+        id: it.id,
+        type: it.type === "income" ? ("income" as const) : ("expense" as const),
+        amountPaise: it.amountPaise!,
+        category: it.category || "other",
+        description: it.title || "",
+        expenseType: it.expenseType,
+        ownership: it.ownership || "mine",
+        date: it.date!,
+      }));
+  }, [items]);
+
+  // 1. Spending Intelligence Engine
+  const spendingReport = useMemo(() => {
+    return analyzeSpendingIntelligence(transactions, today);
+  }, [transactions, today]);
+
+  // 2. Adaptive Buffer Engine
+  const bufferRec = useMemo(() => {
+    return calculateAdaptiveBuffer({
+      profile: rawInput?.profile,
+      dailyLivingEstimatePaise: rawInput?.profile?.dailyLivingEstimate ?? 0,
+      dailyWorkEstimatePaise: rawInput?.profile?.dailyWorkEstimate ?? 0,
+      commitments: rawInput?.commitments ?? [],
+    });
+  }, [rawInput]);
+
+  // 3. Statistical Income Forecasting Engine
+  const incomeForecast = useMemo(() => {
+    return generateIncomeForecast({
+      transactions,
+      forecastHorizonDays: 7,
+    });
+  }, [transactions]);
+
+  // 4. Hypothetical What-If Simulator State
+  const [simIncomeChange, setSimIncomeChange] = useState<number>(0);
+  const [simDelayDays, setSimDelayDays] = useState<number>(0);
+  const [simEmergencyRupees, setSimEmergencyRupees] = useState<number>(0);
+
+  const scenarioResult = useMemo(() => {
+    if (!rawInput) return null;
+    return simulateScenario(rawInput, {
+      incomeChangePercent: simIncomeChange,
+      payoutDelayDays: simDelayDays,
+      oneTimeExpensePaise: simEmergencyRupees * 100,
+    });
+  }, [rawInput, simIncomeChange, simDelayDays, simEmergencyRupees]);
 
   const week = useMemo(() => {
     let earned = 0, living = 0, work = 0;
@@ -195,9 +254,10 @@ function InsightsTab({ runway, today }: { runway: Runway; today: string }) {
   if (!runway.safeRunwayBufferPaise) tips.push({ tone: "info", title: "Set a safety cushion", body: "Keep a small amount aside for emergencies. FLOVA will warn you before you touch it.", to: "/profile", cta: "Set cushion" });
 
   return (
-    <>
+    <div className="space-y-4">
+      {/* 1. Activity Overview */}
       <Card className="p-4">
-        <p className="text-[13px] font-semibold text-ink-soft">Last 7 days</p>
+        <p className="text-[13px] font-semibold text-ink-soft">Last 7 days confirmed</p>
         <div className="mt-3 grid grid-cols-2 gap-3">
           <div className="rounded-xl bg-brand-50 p-3">
             <p className="text-xs text-brand-800">Earned</p>
@@ -215,6 +275,226 @@ function InsightsTab({ runway, today }: { runway: Runway; today: string }) {
         ) : null}
       </Card>
 
+      {/* 2. Spending Intelligence & Categorisation */}
+      <Card className="p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <p className="text-[14px] font-bold text-ink">Spending Behavior</p>
+          {spendingReport.weekOverWeekChangePercent !== null ? (
+            <span className={cx(
+              "text-[11px] font-bold px-2 py-0.5 rounded-full",
+              spendingReport.weekOverWeekChangePercent > 0 ? "bg-amber-100 text-amber-800" : "bg-emerald-100 text-emerald-800"
+            )}>
+              {spendingReport.weekOverWeekChangePercent > 0 ? "+" : ""}{spendingReport.weekOverWeekChangePercent}% vs prior week
+            </span>
+          ) : null}
+        </div>
+
+        {spendingReport.totalPersonalExpensesPaise > 0 ? (
+          <>
+            <div className="space-y-1">
+              <div className="flex justify-between text-xs text-ink-muted">
+                <span>Personal Living ({spendingReport.livingPercent}%)</span>
+                <span>Work Tools/Fuel ({spendingReport.workPercent}%)</span>
+              </div>
+              <div className="w-full h-3 bg-neutral-200 rounded-full overflow-hidden flex" role="progressbar" aria-label="Living vs Work spending proportion">
+                <div className="bg-brand-600 h-full transition-all" style={{ width: `${spendingReport.livingPercent}%` }} />
+                <div className="bg-amber-500 h-full transition-all" style={{ width: `${spendingReport.workPercent}%` }} />
+              </div>
+            </div>
+
+            {spendingReport.topCategories.length > 0 ? (
+              <div className="space-y-1.5 pt-1">
+                <p className="text-[12px] font-semibold text-ink-muted">Top spending categories:</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {spendingReport.topCategories.map((c) => (
+                    <span key={c.category} className="text-xs px-2.5 py-1 rounded-lg bg-neutral-100 text-ink-soft border border-line">
+                      <strong className="capitalize">{c.category}</strong>: {formatINR(c.totalPaise)} ({c.percentage}%)
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+          </>
+        ) : (
+          <p className="text-xs text-ink-muted">No confirmed expenses yet to analyze spending categories.</p>
+        )}
+      </Card>
+
+      {/* 3. Adaptive Buffer Recommendation */}
+      <Card className="p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-[14px] font-bold text-ink">Adaptive Safety Cushion</p>
+            <p className="text-xs text-ink-muted">{bufferRec.protectionDays} days recommended protection horizon</p>
+          </div>
+          <span className="text-[18px] font-black text-brand-800 tabular-nums">
+            {formatINR(bufferRec.recommendedBufferPaise)}
+          </span>
+        </div>
+
+        <div className="rounded-xl bg-neutral-50 p-3 text-xs space-y-1 text-ink-soft border border-line">
+          <p className="font-semibold text-ink">Based on your essential needs:</p>
+          <ul className="list-disc pl-4 space-y-0.5">
+            {bufferRec.explanation.map((e, idx) => (
+              <li key={idx}>{e}</li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="flex items-center justify-between pt-1">
+          <span className="text-[11px] text-ink-faint">
+            Planning cushion only · Never deducted from balance
+          </span>
+          <Link to="/profile" className="text-xs font-semibold text-brand-700 hover:underline">
+            Adjust in profile →
+          </Link>
+        </div>
+      </Card>
+
+      {/* 4. Statistical Income Forecast */}
+      <Card className="p-4 space-y-2">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-[14px] font-bold text-ink">7-Day Income Forecast</p>
+            <p className="text-xs text-ink-muted">Statistical projection from your confirmed history</p>
+          </div>
+          <span className={cx(
+            "text-[10.5px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider",
+            incomeForecast.confidence === "high" ? "bg-emerald-100 text-emerald-800" :
+            incomeForecast.confidence === "moderate" ? "bg-sky-100 text-sky-800" :
+            "bg-neutral-100 text-neutral-600"
+          )}>
+            {incomeForecast.confidence}
+          </span>
+        </div>
+
+        {incomeForecast.hasSufficientData ? (
+          <div className="space-y-2">
+            <div className="flex items-baseline gap-2">
+              <span className="text-[20px] font-extrabold text-ink tabular-nums">
+                {formatINR(incomeForecast.expectedPaise)}
+              </span>
+              <span className="text-xs text-ink-muted">
+                (Range: {formatINR(incomeForecast.lowerBoundPaise)} – {formatINR(incomeForecast.upperBoundPaise)})
+              </span>
+            </div>
+            <p className="text-xs text-ink-muted">{incomeForecast.dataSummary}</p>
+          </div>
+        ) : (
+          <p className="text-xs text-ink-muted pt-1">
+            Need at least 3 confirmed personal income records to build a statistical forecast.
+          </p>
+        )}
+      </Card>
+
+      {/* 5. What-If Scenario Simulator */}
+      <Card tone="soft" className="p-4 space-y-3">
+        <div className="flex items-center gap-1.5 text-brand-800">
+          <IconSparkle size={16} />
+          <p className="text-[14px] font-bold">“What-If” Scenario Simulator</p>
+        </div>
+        <p className="text-xs text-ink-muted">
+          Test hypothetical changes without affecting your actual balance or transactions.
+        </p>
+
+        <div className="space-y-3 pt-1">
+          <div>
+            <label className="block text-xs font-semibold text-ink-soft mb-1">
+              Income shift: {simIncomeChange > 0 ? `+${simIncomeChange}%` : `${simIncomeChange}%`}
+            </label>
+            <div className="flex gap-2">
+              {[-30, -15, 0, 15, 30].map((pct) => (
+                <button
+                  key={pct}
+                  type="button"
+                  onClick={() => setSimIncomeChange(pct)}
+                  className={cx(
+                    "flex-1 py-1 text-xs font-semibold rounded-lg border",
+                    simIncomeChange === pct
+                      ? "bg-brand-700 text-white border-brand-700"
+                      : "bg-white text-ink-soft border-line hover:border-brand-200"
+                  )}
+                >
+                  {pct > 0 ? `+${pct}%` : `${pct}%`}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-ink-soft mb-1">
+              Payout delay: {simDelayDays} days
+            </label>
+            <div className="flex gap-2">
+              {[0, 3, 7, 14].map((d) => (
+                <button
+                  key={d}
+                  type="button"
+                  onClick={() => setSimDelayDays(d)}
+                  className={cx(
+                    "flex-1 py-1 text-xs font-semibold rounded-lg border",
+                    simDelayDays === d
+                      ? "bg-brand-700 text-white border-brand-700"
+                      : "bg-white text-ink-soft border-line hover:border-brand-200"
+                  )}
+                >
+                  {d === 0 ? "None" : `+${d}d`}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-ink-soft mb-1">
+              One-time expense shock: ₹{simEmergencyRupees}
+            </label>
+            <div className="flex gap-2">
+              {[0, 1000, 2500, 5000].map((amt) => (
+                <button
+                  key={amt}
+                  type="button"
+                  onClick={() => setSimEmergencyRupees(amt)}
+                  className={cx(
+                    "flex-1 py-1 text-xs font-semibold rounded-lg border",
+                    simEmergencyRupees === amt
+                      ? "bg-brand-700 text-white border-brand-700"
+                      : "bg-white text-ink-soft border-line hover:border-brand-200"
+                  )}
+                >
+                  {amt === 0 ? "₹0" : `₹${amt}`}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {scenarioResult ? (
+          <div className="mt-2 rounded-xl bg-white p-3 border border-line space-y-1.5">
+            <div className="flex justify-between items-center text-xs">
+              <span className="text-ink-muted">Runway projection:</span>
+              <span className="font-bold text-ink">
+                {scenarioResult.simulated.runwayDays} days (Baseline: {scenarioResult.baseline.runwayDays} days)
+              </span>
+            </div>
+            <div className="flex justify-between items-center text-xs">
+              <span className="text-ink-muted">Ending balance impact:</span>
+              <span className={cx(
+                "font-bold tabular-nums",
+                scenarioResult.deltaClosingBalancePaise >= 0 ? "text-brand-700" : "text-red-600"
+              )}>
+                {scenarioResult.deltaClosingBalancePaise >= 0 ? "+" : ""}{formatINR(scenarioResult.deltaClosingBalancePaise)}
+              </span>
+            </div>
+            <p className="text-[11.5px] text-ink-soft pt-1">{scenarioResult.explanation}</p>
+          </div>
+        ) : null}
+
+        <p className="text-[11px] text-amber-800 font-medium bg-amber-50 p-2 rounded-lg border border-amber-200">
+          ⚠️ Strictly hypothetical simulation. Does not alter your transactions or bank balance.
+        </p>
+      </Card>
+
+      {/* 6. Actionable Alerts & Rule-based Tips */}
       {tips.map((t, i) => (
         <Card key={i} tone={t.tone === "danger" ? "danger" : t.tone === "warn" ? "warn" : t.tone === "brand" ? "brand" : "white"} className="p-4 flex gap-3">
           <span className={cx("shrink-0 pt-0.5", t.tone === "danger" ? "text-red-600" : t.tone === "warn" ? "text-amber-600" : "text-brand-700")}>
@@ -235,6 +515,6 @@ function InsightsTab({ runway, today }: { runway: Runway; today: string }) {
       <div className="flex items-center justify-center gap-1.5 text-[11.5px] text-ink-faint">
         <IconShield size={14} /> Guidance is rule-based from your own numbers, never guessed.
       </div>
-    </>
+    </div>
   );
 }

@@ -58,6 +58,7 @@ export function VoiceScreen() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [answer, setAnswer] = useState<{ q: string; r: QueryResolutionResult } | null>(null);
+  const [speaking, setSpeaking] = useState(false);
   const [unclear, setUnclear] = useState<string | null>(null);
   const [aiOffline, setAiOffline] = useState(false);
   const handledBlob = useRef<Blob | null>(null);
@@ -133,7 +134,7 @@ export function VoiceScreen() {
       const txList = Array.isArray(dto.transactions) && dto.transactions.length > 0 ? dto.transactions : dto.transaction ? [dto.transaction] : [];
 
       if (candidates.length > 1) {
-        // Multi-transaction utterance: Queue each distinct transaction for sequential review on /add
+        // Multi-transaction utterance: Queue distinct transactions for batch & sequential review on /add
         const first = candidates[0];
         const firstTx = txList[0];
         const firstType = first.type ?? firstTx?.type ?? "expense";
@@ -161,7 +162,8 @@ export function VoiceScreen() {
           origin: "voice",
           candidateId: first.id || first.candidate_id,
           transcript: said,
-          aiNote: `FLOVA extracted ${candidates.length} transactions from: “${said}”. Reviewing 1 of ${candidates.length}:`,
+          aiNote: `FLOVA extracted ${candidates.length} transactions from: “${said}”. Review candidates together or one by one.`,
+          batchCandidates: candidates,
           remainingCandidates,
           queueIndex: 1,
           queueTotal: candidates.length,
@@ -237,7 +239,25 @@ export function VoiceScreen() {
   const micError = useBrowserSpeech ? (speech.status === "error" ? speech.error : null) : recorder.errorMessage;
   const examples = EXAMPLES[lang] ?? EXAMPLES.en;
 
+  function speakText(txt: string) {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+    window.speechSynthesis.cancel();
+    if (speaking) {
+      setSpeaking(false);
+      return;
+    }
+    const utter = new SpeechSynthesisUtterance(txt);
+    utter.onend = () => setSpeaking(false);
+    utter.onerror = () => setSpeaking(false);
+    setSpeaking(true);
+    window.speechSynthesis.speak(utter);
+  }
+
   function toggleMic() {
+    if (speaking && typeof window !== "undefined" && "speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+      setSpeaking(false);
+    }
     setError(null);
     setUnclear(null);
     setAnswer(null);
@@ -355,7 +375,19 @@ export function VoiceScreen() {
 
       {answer ? (
         <Card tone="brand" className="p-4 space-y-2">
-          {answer.q ? <p className="text-xs text-brand-800">You asked: “{answer.q}”</p> : null}
+          <div className="flex items-center justify-between">
+            {answer.q ? <p className="text-xs text-brand-800">You asked: “{answer.q}”</p> : <span />}
+            {typeof window !== "undefined" && "speechSynthesis" in window ? (
+              <button
+                type="button"
+                onClick={() => speakText(`${answer.r.answer}. ${answer.r.details.join(". ")}`)}
+                className="text-xs font-semibold text-brand-700 bg-brand-50 hover:bg-brand-100 px-2.5 py-1 rounded-full flex items-center gap-1 border border-brand-200"
+                aria-label={speaking ? "Stop speaking" : "Listen to answer"}
+              >
+                {speaking ? "■ Stop" : "🔊 Listen"}
+              </button>
+            ) : null}
+          </div>
           <p className="text-[15px] font-semibold text-ink">{answer.r.answer}</p>
           {answer.r.details.length ? (
             <ul className="text-[13px] text-ink-soft list-disc pl-5 space-y-0.5">

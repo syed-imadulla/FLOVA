@@ -276,7 +276,24 @@ const QUERY_PATTERNS = [
 ];
 
 const CLAUSE_SPLIT_REGEX =
-  /\s+(?:and\s+then|and|but|also|और\s+फिर|और|तथा|एवं|फिर|aur|ಮತ್ತು|ಹಾಗೂ|ಆಮೇಲೆ|mattu|మరియు|మరియును|తర్వాత|mariyu|மற்றும்|மேலும்|பிறகு|matrum|اور\s+پھر|اور|پھر)\s+|[,;]\s*/i;
+  /\s+(?:and\s+then|and|but|also|और\s+फिर|और|तथा|एवं|फिर|aur|ಮತ್ತು|ಹಾಗೂ|ಆಮೇಲೆ|mattu|మరియు|మరియును|తర్వాత|mariyu|மற்றும்|மேலும்|பிறகு|matrum|اور\s+پھر|اور|پھر)\s+|[,;]\s*|[.?!]\s+(?=[A-Za-z0-9\u0900-\u0D7F])/i;
+
+function extractClauseDate(text: string): string {
+  const lower = text.toLowerCase();
+  if (/\byesterday\b|ನಿನ್ನೆ|कल|నిన్న|کل/i.test(lower)) {
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  }
+  if (/\bday before yesterday\b|ಮೊನ್ನೆ|परसों|మొన్న/i.test(lower)) {
+    const d = new Date();
+    d.setDate(d.getDate() - 2);
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  }
+  return todayLocalISO();
+}
 
 function extractTransactionClause(clauseText: string): ExtractedTransactionData | null {
   const text = clauseText.trim();
@@ -306,14 +323,22 @@ function extractTransactionClause(clauseText: string): ExtractedTransactionData 
   } else if (!isIncome && !isExpense && (hasWorkWord || hasLivingWord)) {
     transactionType = "expense";
   } else if (amount) {
-    transactionType = "expense";
+    if (/\bon\b|spent|paid|kharche|kharcha/i.test(lower)) {
+      transactionType = "expense";
+    } else if (/\bfrom\b|se\b/i.test(lower) && !isIncome) {
+      // Ambiguous: e.g. "500 from Y" without clear income verb
+      transactionType = null;
+    } else {
+      transactionType = "expense";
+    }
   }
 
-  if (!transactionType && !amount) return null;
+  if (transactionType === null && !amount) return null;
 
   const category = transactionType ? guessCategory(text, transactionType) : "other";
   const expenseType = transactionType === "expense" ? guessExpenseType(text) : null;
   const description = guessDescription(text);
+  const clauseDate = extractClauseDate(text);
 
   return {
     type: transactionType,
@@ -321,14 +346,15 @@ function extractTransactionClause(clauseText: string): ExtractedTransactionData 
     category,
     expense_type: expenseType,
     ownership: "mine",
-    date: todayLocalISO(),
+    date: clauseDate,
     description,
   };
 }
 
 // ---- Main extractor ----
 export function extractTransaction(transcript: string, _language?: string): FinancialExtractionDTO {
-  const text = transcript.trim();
+  // Remove commas inside numbers (e.g. 1,500 -> 1500) so commas do not split numbers into separate clauses
+  const text = transcript.trim().replace(/(?<=\d),(?=\d)/g, "");
   const lower = text.toLowerCase();
 
   // 1. Check for financial queries first across all 5 languages

@@ -12,6 +12,7 @@ const GROUPS: Array<{ title: string; items: Array<{ to: string; icon: React.Reac
     title: "Plan",
     items: [
       { to: "/wish", icon: <IconTarget size={20} />, label: "WISH savings goal", hint: "Save for what matters" },
+      { to: "/invoices", icon: <IconCalendar size={20} />, label: "Invoices & client bills", hint: "Track receivables and payables" },
       { to: "/commitments", icon: <IconCalendar size={20} />, label: "Bills & debts", hint: "Rent, EMI, fees" },
       { to: "/payouts", icon: <IconClock size={20} />, label: "Expected payments", hint: "Money you're owed" },
     ],

@@ -24,7 +24,12 @@ await db.exec(`
 const migrationsDir = new URL("../supabase/migrations", import.meta.url);
 const files = fs.readdirSync(migrationsDir).filter((f) => f.endsWith(".sql")).sort();
 for (const file of files) {
-  await db.exec(fs.readFileSync(new URL(`../supabase/migrations/${file}`, import.meta.url), "utf8"));
+  try {
+    await db.exec(fs.readFileSync(new URL(`../supabase/migrations/${file}`, import.meta.url), "utf8"));
+  } catch (err) {
+    console.error(`Error applying migration ${file}:`, err.message);
+    throw err;
+  }
 }
 
 await db.exec(`
@@ -148,6 +153,44 @@ const C = "33333333-3333-3333-3333-333333333333";
 await db.exec(`reset role; insert into auth.users (id, raw_user_meta_data) values ('${C}', '{"display_name":"New Irregular Earner"}');`);
 const profC = (await db.query(`select work_profile, income_variability, handles_cod from public.profiles where id = '${C}'`)).rows[0];
 ok(profC.work_profile === "other" && profC.income_variability === "variable" && profC.handles_cod === false, "new sign-up defaults to work_profile='other', variability='variable', handles_cod=false");
+
+// Invoices & Settlements RLS and trigger verification (Phase 15)
+const invRes = await as(A, `insert into public.invoices (user_id, direction, customer_name, total_amount, due_date) values ('${A}', 'receivable', 'Acme Corp', 8000.00, '2026-12-01') returning id, status, paid_amount`);
+const invId = invRes.rows[0].id;
+ok(invRes.rows[0].status === "unpaid" && Number(invRes.rows[0].paid_amount) === 0, "invoice created as unpaid with 0.00 paid");
+
+const bInvoices = await as(B, `select * from public.invoices`);
+ok(bInvoices.rows.length === 0, "B cannot read A's invoices");
+
+await as(A, `insert into public.invoice_items (invoice_id, name, amount) values ('${invId}', 'UI Design', 8000.00)`);
+const bItems = await as(B, `select * from public.invoice_items`);
+ok(bItems.rows.length === 0, "B cannot read A's invoice items");
+
+// Partial settlement of ₹5,000
+await as(A, `insert into public.invoice_settlements (invoice_id, user_id, amount, notes) values ('${invId}', '${A}', 5000.00, 'Advance payment')`);
+const invPartial = (await as(A, `select paid_amount, status from public.invoices where id = '${invId}'`)).rows[0];
+ok(Number(invPartial.paid_amount) === 5000 && invPartial.status === "partially_paid", "settlement trigger updates invoice to partially_paid (5000.00)");
+
+// Remaining settlement of ₹3,000
+await as(A, `insert into public.invoice_settlements (invoice_id, user_id, amount, notes) values ('${invId}', '${A}', 3000.00, 'Final payment')`);
+const invFull = (await as(A, `select paid_amount, status from public.invoices where id = '${invId}'`)).rows[0];
+ok(Number(invFull.paid_amount) === 8000 && invFull.status === "paid", "second settlement updates invoice to paid (8000.00)");
+
+// WISH 2.0 Goals & Contributions RLS and trigger verification (Phase 15)
+const wishRes = await as(A, `insert into public.wish_goals (user_id, title, target_amount) values ('${A}', 'New Laptop', 50000.00) returning id, status, saved_amount`);
+const wishId = wishRes.rows[0].id;
+ok(wishRes.rows[0].status === "active" && Number(wishRes.rows[0].saved_amount) === 0, "wish goal created with status active");
+
+const bWish = await as(B, `select * from public.wish_goals`);
+ok(bWish.rows.length === 0, "B cannot read A's wish goals");
+
+await as(A, `insert into public.wish_contributions (goal_id, user_id, amount) values ('${wishId}', '${A}', 20000.00)`);
+const wishPartial = (await as(A, `select saved_amount, status from public.wish_goals where id = '${wishId}'`)).rows[0];
+ok(Number(wishPartial.saved_amount) === 20000 && wishPartial.status === "active", "wish contribution syncs saved_amount to 20000.00");
+
+await as(A, `insert into public.wish_contributions (goal_id, user_id, amount) values ('${wishId}', '${A}', 30000.00)`);
+const wishFull = (await as(A, `select saved_amount, status from public.wish_goals where id = '${wishId}'`)).rows[0];
+ok(Number(wishFull.saved_amount) === 50000 && wishFull.status === "completed", "wish goal completes when saved >= target");
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

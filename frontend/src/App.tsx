@@ -21,6 +21,7 @@ import { CatchScreen } from "./screens/CatchScreen";
 import { PayoutsScreen } from "./screens/PayoutsScreen";
 import { CommitmentsScreen } from "./screens/CommitmentsScreen";
 import { WishScreen } from "./screens/WishScreen";
+import { InvoicesScreen } from "./screens/InvoicesScreen";
 import { ProfileScreen } from "./screens/ProfileScreen";
 
 export default function App() {
@@ -58,11 +59,13 @@ export default function App() {
                 <Route path="/catch" element={<CatchScreen />} />
                 <Route path="/payouts" element={<PayoutsScreen />} />
                 <Route path="/commitments" element={<CommitmentsScreen />} />
+                <Route path="/invoices" element={<InvoicesScreen />} />
                 <Route path="/wish" element={<WishScreen />} />
                 <Route path="/profile" element={<ProfileScreen />} />
               </Route>
 
               {/* Legacy URLs → their single current screen */}
+              <Route path="/bills" element={<Navigate to="/invoices" replace />} />
               <Route path="/dashboard" element={<Navigate to="/app" replace />} />
               <Route path="/history" element={<Navigate to="/activity" replace />} />
               <Route path="/transactions" element={<Navigate to="/activity" replace />} />

@@ -391,3 +391,88 @@ export interface ActivityItem {
   source?: EntrySource | "system";
   note?: string | null;
 }
+
+// ---------- Invoices & Settlements (Phase 15) ----------
+export type InvoiceDirection = "receivable" | "payable";
+export type InvoiceStatus = "uploaded" | "unpaid" | "partially_paid" | "paid" | "overdue" | "cancelled";
+
+export interface InvoiceItem {
+  id: string;
+  invoice_id: string;
+  name: string;
+  quantity?: number | null;
+  unit_price?: RupeeString | null;
+  amount: RupeeString;
+}
+
+export interface InvoiceSettlement {
+  id: string;
+  invoice_id: string;
+  user_id: string;
+  amount: RupeeString;
+  settled_at: ISODate;
+  transaction_id?: string | null;
+  payout_id?: string | null;
+  notes?: string | null;
+  created_at: ISOTimestamp;
+}
+
+export interface Invoice {
+  id: string;
+  user_id: string;
+  direction: InvoiceDirection;
+  supplier_name?: string | null;
+  customer_name?: string | null;
+  invoice_number?: string | null;
+  invoice_date: ISODate;
+  due_date?: ISODate | null;
+  total_amount: RupeeString;
+  paid_amount: RupeeString;
+  status: InvoiceStatus;
+  file_path?: string | null;
+  notes?: string | null;
+  metadata?: Record<string, unknown>;
+  items?: InvoiceItem[];
+  settlements?: InvoiceSettlement[];
+  created_at: ISOTimestamp;
+  updated_at: ISOTimestamp;
+}
+
+// ---------- WISH 2.0 Persistent Savings Goals (Phase 15) ----------
+export type WishGoalStatus = "active" | "completed" | "paused" | "cancelled";
+
+export interface WishContribution {
+  id: string;
+  goal_id: string;
+  user_id: string;
+  amount: RupeeString;
+  contributed_at: ISODate;
+  notes?: string | null;
+  created_at: ISOTimestamp;
+}
+
+export interface WishGoal {
+  id: string;
+  user_id: string;
+  title: string;
+  target_amount: RupeeString;
+  saved_amount: RupeeString;
+  target_date?: ISODate | null;
+  category?: string | null;
+  icon?: string | null;
+  status: WishGoalStatus;
+  contributions?: WishContribution[];
+  created_at: ISOTimestamp;
+  updated_at: ISOTimestamp;
+}
+
+// ---------- Multi-Transaction Conversational Intelligence (Phase 15) ----------
+export interface BatchTransactionSummary {
+  totalIncomePaise: Paise;
+  totalExpensesPaise: Paise;
+  netMovementPaise: Paise;
+  candidateCount: number;
+  validCount: number;
+  clarificationCount: number;
+  categoryTotals: Record<string, Paise>;
+}

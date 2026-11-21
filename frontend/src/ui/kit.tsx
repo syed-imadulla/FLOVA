@@ -346,6 +346,8 @@ export function Sheet({ open, onClose, title, children }: { open: boolean; onClo
   );
 }
 
+export { Sheet as Modal };
+
 // ---------- List row ----------
 export function ListRow({
   icon,

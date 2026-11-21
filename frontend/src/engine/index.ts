@@ -87,3 +87,34 @@ export {
   type ValidatedFinancialExtractionDTO,
   type ValidationContext,
 } from "./extractionPrompt";
+
+export {
+  calculateBatchSummary,
+  validateBatchCandidate,
+  type BatchCandidateValidationResult,
+} from "./batchArithmetic";
+
+export {
+  calculateAdaptiveBuffer,
+  deriveProtectionHorizon,
+  type AdaptiveBufferInput,
+  type AdaptiveBufferRecommendation,
+} from "./adaptiveBuffer";
+
+export {
+  generateIncomeForecast,
+  type IncomeForecastInput,
+  type IncomeForecastResult,
+} from "./incomeForecast";
+
+export {
+  simulateScenario,
+  type ScenarioParameters,
+  type ScenarioSimulationResult,
+} from "./scenarioSimulator";
+
+export {
+  analyzeSpendingIntelligence,
+  type CategorySpending,
+  type SpendingIntelligenceReport,
+} from "./spendingIntelligence";
