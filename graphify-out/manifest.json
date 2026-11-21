@@ -558,9 +558,9 @@
     "semantic_hash": ""
   },
   "frontend/src/engine/index.ts": {
-    "mtime": 1795208957.301354,
-    "seen": 1795209815.8582084,
-    "ast_hash": "f25edc1e4f860fd9ea8ade091cc768aa",
+    "mtime": 1795216587.0295978,
+    "seen": 1795216746.2563539,
+    "ast_hash": "392f9447a02c36ad834c52cf2a7ff931",
     "semantic_hash": ""
   },
   "frontend/src/engine/runway.ts": {
@@ -900,14 +900,14 @@
     "semantic_hash": ""
   },
   "ai-engine/EXTRACTION_CONTRACT.md": {
-    "mtime": 1795214637.6832626,
-    "seen": 1795214745.8068523,
+    "mtime": 1795215053.323775,
+    "seen": 1795216746.2563539,
     "ast_hash": "3f27fce50a1d9ec2074df7c68c50a64b",
     "semantic_hash": ""
   },
   "frontend/src/engine/EXTRACTION_CONTRACT.md": {
-    "mtime": 1795214629.3980362,
-    "seen": 1795214745.8068523,
+    "mtime": 1795215053.418337,
+    "seen": 1795216746.2563539,
     "ast_hash": "3f27fce50a1d9ec2074df7c68c50a64b",
     "semantic_hash": ""
   },
@@ -930,14 +930,14 @@
     "semantic_hash": ""
   },
   "frontend/src/engine/extractionPrompt.ts": {
-    "mtime": 1795214516.1864374,
-    "seen": 1795214745.8005247,
+    "mtime": 1795215053.6546464,
+    "seen": 1795216746.2563539,
     "ast_hash": "ca74276c823c22cbd05c2ea06f722640",
     "semantic_hash": ""
   },
   "ai-engine/M1_GROQ_INTEGRATION.md": {
-    "mtime": 1795214578.5749311,
-    "seen": 1795214745.8068523,
+    "mtime": 1795215053.3770163,
+    "seen": 1795216746.2563539,
     "ast_hash": "9feeceb743bd03e551d541bc8d0d5b91",
     "semantic_hash": ""
   },
@@ -960,15 +960,15 @@
     "semantic_hash": ""
   },
   "frontend/src/engine/__tests__/candidateAdapter.test.ts": {
-    "mtime": 1795214690.6719003,
-    "seen": 1795214745.8005247,
-    "ast_hash": "6ff6b898efc38d4affff92efbd02b9a1",
+    "mtime": 1795218340.4210975,
+    "seen": 1795218747.5803125,
+    "ast_hash": "232161e1de6a471e4345c45acfe2b73f",
     "semantic_hash": ""
   },
   "frontend/src/engine/candidateAdapter.ts": {
-    "mtime": 1795214463.508301,
-    "seen": 1795214745.8005247,
-    "ast_hash": "2b7ac84857da2bfda3a24fdff80ea227",
+    "mtime": 1795218340.515317,
+    "seen": 1795218747.5803125,
+    "ast_hash": "d705b390c72dccb132875b677b0d211d",
     "semantic_hash": ""
   },
   "frontend/src/engine/candidateTypes.ts": {
