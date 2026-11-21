@@ -8,6 +8,10 @@ import "./balance.test";
 import "./runway.test";
 import "./lifecycle.test";
 import "./remainingBudget.test";
+import "./extraction.test";
+import "./extractionPrompt.test";
+import "./candidateAdapter.test";
+import "./safeBuffer.test";
 import { runAllTests } from "./testUtils";
 
 void runAllTests().then(({ failed }) => {

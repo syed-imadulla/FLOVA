@@ -1,22 +1,38 @@
-# FLOVA AI Extraction Contract Specification (v1 · Owner: M3)
+# FLOVA AI Extraction Contract Specification (v1.2 · Owner: M3)
 
 ## 1. Overview & Architectural Boundaries
 
-This document defines the standardized **AI Extraction Data Transfer Object (DTO)** and **Strict JSON Schema** for natural language financial text and receipt parsing in FLOVA.
+This document defines the standardized **AI Extraction Data Transfer Object (DTO)**, **Validation Adapter Rules**, and **Strict JSON Schema** for natural language financial text, voice transcripts, and receipt parsing in FLOVA.
 
 ### Architectural Rules
 1. **Separation of Concerns:**
-   - The AI extraction engine (Groq / Gemini) outputs raw structured DTOs containing extraction metadata (`certainty`, `clarification_required`, `clarification_questions`).
+   - The AI extraction engine (Groq / Gemini) outputs raw structured DTOs containing extraction metadata (`input_source`, `certainty`, `clarification_required`, `clarification_questions`).
    - The AI model **never** writes directly to the database or calls backend persistence services.
-   - Extraction metadata fields are **extraction-only** and are **never inserted into database tables**.
+   - Extraction metadata fields and proposed adapter fields are **extraction-only** and are **never inserted into database tables** without explicit M1 schema approval.
 2. **Decimal Safety:**
-   - All extracted amounts in the DTO are represented as **decimal rupee strings** (e.g., `"450"`, `"120.50"`), nullable (`null` if omitted).
+   - All extracted amounts in the DTO are represented as **decimal rupee strings** (e.g., `"2500"`, `"120.50"`), nullable (`null` if omitted).
    - Amounts are converted to integer `Paise` using `toPaise()` in `frontend/src/lib/money.ts` only upon user review and validation prior to persistence. No floating-point financial arithmetic is permitted.
 3. **No Fabricated Data:**
    - Missing amounts, dates, or categories remain `null`. The extractor must **never** default missing financial values to `0` or invent dates.
 4. **Preservation of Ownership & Payout Separation:**
    - Cash On Delivery (COD) collections and remittances must explicitly set `ownership: "not_mine"`. COD money must never be classified as personal income or expense.
    - Expected payouts must extract as `expected_payout` entities and must **never** be generated as received `income` transactions.
+5. **Multiple Transactions per Utterance:**
+   - Single utterances or receipts frequently describe multiple financial movements (e.g., *"received 2500 from customer and spent 300 on raw materials"*). The DTO represents transactions as an array `transactions: ExtractedTransactionData[]`.
+6. **Receipt Verification Safety:**
+   - Extracted receipt metadata (`evidence_type`, `verification_status`) MUST default to `"receipt_reported"`, and **NEVER** `"independently_verified"`.
+   - All receipt extension values (`payment_method`, `evidence_type`, `verification_status`) are proposed adapter values requiring M1 schema approval before database persistence.
+7. **Canonical Category Normalization:**
+   - Only categories present in `SUGGESTED_CATEGORIES` (`income`: `["earnings", "tips", "payout", "incentive", "advance", "cod_collection", "other"]`; `expense`: `["food", "fuel", "phone", "maintenance", "rent", "emi", "cod_handover", "other"]`) are accepted directly.
+   - Unknown or colloquial categories are mapped to `"other"` and flagged for user clarification.
+8. **Correction Safety & Target Draft Scoping:**
+   - The AI model must **never** invent target IDs or modify persisted transactions.
+   - Corrections require an existing unpersisted draft ID (`target_draft_id`) passed in the application context. If missing, invented, or ambiguous across multiple draft matches, the adapter requires clarification and halts automatic application.
+9. **Balance Check-in Completeness:**
+   - Missing physical cash or bank amounts must remain `null`. They cannot default to zero. If either is missing, the adapter requires clarification before creating a `NewBalanceCheckin`.
+10. **Voice & Text Financial Queries:**
+    - Basic financial queries (e.g., *"How much did I spend today?"*, *"Show pending payments"*) are classified as `entry_intent: "query"`.
+    - The engine extracts query parameters (`query_type`, `target_date`, `filter_subject`) for M1 backend service retrieval. It **never** fabricates balances or answers.
 
 ---
 
@@ -26,124 +42,117 @@ The extraction DTO strictly aligns with existing FLOVA enums in `frontend/src/ty
 
 | Enum / Field | Allowed Values | Contract Notes |
 |---|---|---|
-| **Entry Intent** | `"transaction"`, `"expected_payout"`, `"balance_checkin"`, `"unknown"` | Core discriminator for the financial entity type. |
+| **Entry Intent** | `"transaction"`, `"expected_payout"`, `"balance_checkin"`, `"query"`, `"unknown"` | Core discriminator for the financial entity type. |
 | **Action Intent** | `"create"`, `"correct"`, `"clarify"`, `"cancel"`, `"unknown"` | Supports conversation and amendment lifecycle. |
+| **Input Source** | `"text"`, `"voice_transcript"`, `"shared_receipt_text"`, `"shared_receipt_image"` | Discriminates user input medium. |
+| **Query Type** | `"today_spending"`, `"pending_payments"`, `"other"` | Supported financial query intents. |
 | **Transaction Type** | `"income"`, `"expense"` | Matches `TRANSACTION_TYPES`. Always positive amount; type indicates flow. |
 | **Expense Type** | `"living"`, `"work"` | Matches `EXPENSE_TYPES`. Required for own expenses (`ownership: "mine"`). Must be `null` for income or `not_mine`. |
 | **Money Ownership** | `"mine"`, `"not_mine"` | Matches `MONEY_OWNERSHIP`. Default `"mine"`. COD collections and handovers are `"not_mine"`. |
-| **Suggested Categories (Income)** | `"earnings"`, `"tips"`, `"payout"`, `"incentive"`, `"advance"`, `"cod_collection"`, `"other"` | Preset presets in `SUGGESTED_CATEGORIES.income`. Custom string allowed (≤ 40 chars). |
-| **Suggested Categories (Expense)**| `"food"`, `"fuel"`, `"phone"`, `"maintenance"`, `"rent"`, `"emi"`, `"cod_handover"`, `"other"` | Preset presets in `SUGGESTED_CATEGORIES.expense`. Custom string allowed (≤ 40 chars). |
+| **Canonical Income Categories** | `"earnings"`, `"tips"`, `"payout"`, `"incentive"`, `"advance"`, `"cod_collection"`, `"other"` | Enforced via `SUGGESTED_CATEGORIES.income`. Unknown categories map to `"other"`. |
+| **Canonical Expense Categories**| `"food"`, `"fuel"`, `"phone"`, `"maintenance"`, `"rent"`, `"emi"`, `"cod_handover"`, `"other"` | Enforced via `SUGGESTED_CATEGORIES.expense`. Unknown categories map to `"other"`. |
 | **Payout Kind** | `"platform_payout"`, `"incentive"`, `"client_payment"`, `"advance"`, `"other"` | Matches `PAYOUT_KINDS`. |
 | **Payout Status (Extraction)** | `"scheduled"`, `"estimated"`, `"unearned"` | Extractor **only** extracts forward-looking statuses. `partial`, `settled`, `cancelled` are DB-trigger/lifecycle managed. |
-| **Entry Source** | `"voice"`, `"ai_suggestion"` | When saved to database, `source` is set to `"voice"` or `"ai_suggestion"`. |
+
+### Proposed Adapter Extensions (Extraction-Only · Requiring M1 Approval)
+| Field | Proposed Allowed Values | Restriction Note |
+|---|---|---|
+| **Proposed Payment Method** | `"cash"`, `"upi"`, `"bank_transfer"`, `"card"`, `"other"` | Extraction-tier only. Requires M1 approval before DB addition. |
+| **Proposed Evidence Type** | `"voice_transcript"`, `"user_text"`, `"receipt_text"`, `"receipt_image"`, `"bank_sms"` | Extraction-tier only. Defaults to `"receipt_reported"` for receipts. |
+| **Proposed Verification Status** | `"receipt_reported"`, `"user_asserted"`, `"independently_verified"` | MUST default to `"receipt_reported"`, NEVER `"independently_verified"`. |
 
 ---
 
 ## 3. TypeScript DTO Definitions
 
 ```typescript
-/**
- * Primary intent of the natural language or voice statement.
- */
 export type ExtractionEntryIntent =
   | "transaction"
   | "expected_payout"
   | "balance_checkin"
+  | "query"
   | "unknown";
 
-/**
- * Operational action intended by the user (supports corrections & clarifications).
- */
 export type ExtractionActionIntent =
-  | "create"    // New financial entry
-  | "correct"   // Modification to a pending or previously extracted item
-  | "clarify"   // User answering an agent clarification question
-  | "cancel"    // User discarding a suggestion
-  | "unknown";  // Ambiguous or non-financial input
+  | "create"
+  | "correct"
+  | "clarify"
+  | "cancel"
+  | "unknown";
 
-/**
- * Extracted transaction payload (Income, Personal Expense, or COD Handover/Collection).
- */
-export interface ExtractedTransactionData {
-  type: "income" | "expense" | null;
-  /** Decimal rupee string e.g. "450" or "120.50". Null if unspecified. */
-  amount: string | null;
-  /** Category identifier or free-text string (max 40 chars). */
-  category: string | null;
-  /** Required when type='expense' and ownership='mine'. Must be null otherwise. */
-  expense_type: "living" | "work" | null;
-  /** "mine" for personal money; "not_mine" for COD or platform money. */
-  ownership: "mine" | "not_mine" | null;
-  /** ISO date string "YYYY-MM-DD". Null if unspecified. */
-  date: string | null;
-  description: string | null;
+export type ExtractionInputSource =
+  | "text"
+  | "voice_transcript"
+  | "shared_receipt_text"
+  | "shared_receipt_image";
+
+export type FinancialQueryType =
+  | "today_spending"
+  | "pending_payments"
+  | "other";
+
+export interface ExtractedQueryData {
+  query_type: FinancialQueryType;
+  target_date?: string | null;
+  filter_subject?: string | null;
 }
 
-/**
- * Extracted expected payout payload (Platform payouts, future incentives, client advances).
- * Note: Expected payouts NEVER represent received cash.
- */
+export interface ExtractedTransactionData {
+  type: "income" | "expense" | null;
+  amount: string | null;
+  category: string | null;
+  expense_type: "living" | "work" | null;
+  ownership: "mine" | "not_mine" | null;
+  date: string | null;
+  description: string | null;
+  payment_method?: ProposedPaymentMethod | null;
+  evidence_type?: ProposedEvidenceType | null;
+  verification_status?: ProposedVerificationStatus | null;
+  merchant_or_counterparty?: string | null;
+  external_reference?: string | null;
+}
+
 export interface ExtractedPayoutData {
-  /** Decimal rupee string e.g. "3500". Null if unspecified. */
   expected_amount: string | null;
   kind: "platform_payout" | "incentive" | "client_payment" | "advance" | "other" | null;
   source: string | null;
-  /** ISO date string "YYYY-MM-DD". Null if date is unknown or uncertain. */
   expected_date: string | null;
   status: "scheduled" | "estimated" | "unearned" | null;
   note: string | null;
 }
 
-/**
- * Extracted wallet & bank check-in payload.
- */
 export interface ExtractedCheckinData {
-  /** Decimal rupee string for physical cash in hand. Null if omitted. */
   cash_amount: string | null;
-  /** Decimal rupee string for bank account balance. Null if omitted. */
   bank_amount: string | null;
-  /** Decimal rupee string for custodial COD money in possession. Default "0" if explicit. */
   not_mine_amount: string | null;
   note: string | null;
-  /** ISO timestamp if specified; defaults to current instant upon confirmation. */
   checked_at: string | null;
 }
 
-/**
- * Metadata capturing ambiguity and clarification needs.
- * Extracted for UI orchestration; NEVER persisted into core tables.
- */
 export interface ExtractionMetadata {
-  /** Confidence score between 0.0 and 1.0. */
+  input_source: ExtractionInputSource;
   certainty: number;
-  /** True if essential financial data is missing or ambiguous. */
   clarification_required: boolean;
-  /** Human-readable explanation of why clarification is needed. */
   clarification_reason: string | null;
-  /** Targeted questions to ask the worker to resolve the ambiguity. */
   clarification_questions: string[];
-  /** Raw utterance or transcription segment. */
   raw_utterance: string;
 }
 
-/**
- * Complete AI Extraction DTO returned by Groq / LLM inference.
- */
 export interface FinancialExtractionDTO {
   entry_intent: ExtractionEntryIntent;
   action_intent: ExtractionActionIntent;
-  /** If action_intent is "correct" or "cancel", target entry ID if referenced. */
-  target_id: string | null;
-  transaction: ExtractedTransactionData | null;
+  target_draft_id: string | null;
+  transactions: ExtractedTransactionData[];
   expected_payout: ExtractedPayoutData | null;
   balance_checkin: ExtractedCheckinData | null;
+  query?: ExtractedQueryData | null;
   metadata: ExtractionMetadata;
 }
 ```
 
 ---
 
-## 4. Strict JSON Schema (OpenAPI 3.1 / Draft 2020-12 Compatible)
+## 4. Strict JSON Schema (Draft 2020-12 Compatible)
 
 ```json
 {
@@ -153,8 +162,8 @@ export interface FinancialExtractionDTO {
   "required": [
     "entry_intent",
     "action_intent",
-    "target_id",
-    "transaction",
+    "target_draft_id",
+    "transactions",
     "expected_payout",
     "balance_checkin",
     "metadata"
@@ -163,27 +172,52 @@ export interface FinancialExtractionDTO {
   "properties": {
     "entry_intent": {
       "type": "string",
-      "enum": ["transaction", "expected_payout", "balance_checkin", "unknown"]
+      "enum": ["transaction", "expected_payout", "balance_checkin", "query", "unknown"]
     },
     "action_intent": {
       "type": "string",
       "enum": ["create", "correct", "clarify", "cancel", "unknown"]
     },
-    "target_id": {
+    "target_draft_id": {
       "type": ["string", "null"]
     },
-    "transaction": {
-      "type": ["object", "null"],
-      "additionalProperties": false,
-      "required": ["type", "amount", "category", "expense_type", "ownership", "date", "description"],
-      "properties": {
-        "type": { "type": ["string", "null"], "enum": ["income", "expense", null] },
-        "amount": { "type": ["string", "null"], "pattern": "^[0-9]+(\\.[0-9]{1,2})?$" },
-        "category": { "type": ["string", "null"], "maxLength": 40 },
-        "expense_type": { "type": ["string", "null"], "enum": ["living", "work", null] },
-        "ownership": { "type": ["string", "null"], "enum": ["mine", "not_mine", null] },
-        "date": { "type": ["string", "null"], "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
-        "description": { "type": ["string", "null"], "maxLength": 200 }
+    "transactions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "type",
+          "amount",
+          "category",
+          "expense_type",
+          "ownership",
+          "date",
+          "description"
+        ],
+        "properties": {
+          "type": { "type": ["string", "null"], "enum": ["income", "expense", null] },
+          "amount": { "type": ["string", "null"], "pattern": "^[0-9]+(\\.[0-9]{1,2})?$" },
+          "category": { "type": ["string", "null"], "maxLength": 40 },
+          "expense_type": { "type": ["string", "null"], "enum": ["living", "work", null] },
+          "ownership": { "type": ["string", "null"], "enum": ["mine", "not_mine", null] },
+          "date": { "type": ["string", "null"], "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+          "description": { "type": ["string", "null"], "maxLength": 200 },
+          "payment_method": {
+            "type": ["string", "null"],
+            "enum": ["cash", "upi", "bank_transfer", "card", "other", null]
+          },
+          "evidence_type": {
+            "type": ["string", "null"],
+            "enum": ["voice_transcript", "user_text", "receipt_text", "receipt_image", "bank_sms", null]
+          },
+          "verification_status": {
+            "type": ["string", "null"],
+            "enum": ["receipt_reported", "user_asserted", "independently_verified", null]
+          },
+          "merchant_or_counterparty": { "type": ["string", "null"], "maxLength": 80 },
+          "external_reference": { "type": ["string", "null"], "maxLength": 80 }
+        }
       }
     },
     "expected_payout": {
@@ -211,11 +245,32 @@ export interface FinancialExtractionDTO {
         "checked_at": { "type": ["string", "null"] }
       }
     },
+    "query": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["query_type"],
+      "properties": {
+        "query_type": { "type": "string", "enum": ["today_spending", "pending_payments", "other"] },
+        "target_date": { "type": ["string", "null"] },
+        "filter_subject": { "type": ["string", "null"] }
+      }
+    },
     "metadata": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["certainty", "clarification_required", "clarification_reason", "clarification_questions", "raw_utterance"],
+      "required": [
+        "input_source",
+        "certainty",
+        "clarification_required",
+        "clarification_reason",
+        "clarification_questions",
+        "raw_utterance"
+      ],
       "properties": {
+        "input_source": {
+          "type": "string",
+          "enum": ["text", "voice_transcript", "shared_receipt_text", "shared_receipt_image"]
+        },
         "certainty": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
         "clarification_required": { "type": "boolean" },
         "clarification_reason": { "type": ["string", "null"] },
@@ -232,225 +287,108 @@ export interface FinancialExtractionDTO {
 
 ---
 
-## 5. Five Concrete Extraction Examples
+## 5. Concrete Extraction Examples
 
-### Example 1: Simple Personal Income
-**User says:** *"Got ₹650 from Zomato orders today"*
+### Example 1: Multi-Transaction Sentence (Income + Expense)
+**User says:** *"Received 2500 from customer and spent 300 on raw materials"*
 ```json
 {
   "entry_intent": "transaction",
   "action_intent": "create",
-  "target_id": null,
-  "transaction": {
-    "type": "income",
-    "amount": "650",
-    "category": "earnings",
-    "expense_type": null,
-    "ownership": "mine",
-    "date": "2026-11-21",
-    "description": "Zomato orders"
-  },
+  "target_draft_id": null,
+  "transactions": [
+    {
+      "type": "income",
+      "amount": "2500",
+      "category": "earnings",
+      "expense_type": null,
+      "ownership": "mine",
+      "date": "2026-11-21",
+      "description": "Customer payment"
+    },
+    {
+      "type": "expense",
+      "amount": "300",
+      "category": "other",
+      "expense_type": "work",
+      "ownership": "mine",
+      "date": "2026-11-21",
+      "description": "Raw materials"
+    }
+  ],
   "expected_payout": null,
   "balance_checkin": null,
+  "query": null,
   "metadata": {
-    "certainty": 0.98,
-    "clarification_required": false,
-    "clarification_reason": null,
-    "clarification_questions": [],
-    "raw_utterance": "Got ₹650 from Zomato orders today"
-  }
-}
-```
-
-### Example 2: Personal Work Expense
-**User says:** *"Filled ₹120 petrol just now"*
-```json
-{
-  "entry_intent": "transaction",
-  "action_intent": "create",
-  "target_id": null,
-  "transaction": {
-    "type": "expense",
-    "amount": "120",
-    "category": "fuel",
-    "expense_type": "work",
-    "ownership": "mine",
-    "date": "2026-11-21",
-    "description": "Petrol"
-  },
-  "expected_payout": null,
-  "balance_checkin": null,
-  "metadata": {
-    "certainty": 0.97,
-    "clarification_required": false,
-    "clarification_reason": null,
-    "clarification_questions": [],
-    "raw_utterance": "Filled ₹120 petrol just now"
-  }
-}
-```
-
-### Example 3: Expected Platform Payout (Forward-Looking)
-**User says:** *"Swiggy payout of ₹1,800 is expected on Monday"*
-```json
-{
-  "entry_intent": "expected_payout",
-  "action_intent": "create",
-  "target_id": null,
-  "transaction": null,
-  "expected_payout": {
-    "expected_amount": "1800",
-    "kind": "platform_payout",
-    "source": "Swiggy",
-    "expected_date": "2026-11-23",
-    "status": "scheduled",
-    "note": "Weekly Swiggy payout"
-  },
-  "balance_checkin": null,
-  "metadata": {
-    "certainty": 0.95,
-    "clarification_required": false,
-    "clarification_reason": null,
-    "clarification_questions": [],
-    "raw_utterance": "Swiggy payout of ₹1,800 is expected on Monday"
-  }
-}
-```
-
-### Example 4: Cash On Delivery (COD) Collection
-**User says:** *"Collected ₹600 cash on delivery from customer for order #402"*
-```json
-{
-  "entry_intent": "transaction",
-  "action_intent": "create",
-  "target_id": null,
-  "transaction": {
-    "type": "income",
-    "amount": "600",
-    "category": "cod_collection",
-    "expense_type": null,
-    "ownership": "not_mine",
-    "date": "2026-11-21",
-    "description": "Order #402 COD collection"
-  },
-  "expected_payout": null,
-  "balance_checkin": null,
-  "metadata": {
+    "input_source": "voice_transcript",
     "certainty": 0.96,
     "clarification_required": false,
     "clarification_reason": null,
     "clarification_questions": [],
-    "raw_utterance": "Collected ₹600 cash on delivery from customer for order #402"
+    "raw_utterance": "Received 2500 from customer and spent 300 on raw materials"
   }
 }
 ```
 
-### Example 5: Complete Balance Check-In
-**User says:** *"I have ₹1500 cash in my pocket and ₹2500 in my bank account. ₹600 of the cash is COD money."*
+### Example 2: Today's Spending Voice Query
+**User says:** *"How much did I spend today?"*
 ```json
 {
-  "entry_intent": "balance_checkin",
-  "action_intent": "create",
-  "target_id": null,
-  "transaction": null,
+  "entry_intent": "query",
+  "action_intent": "unknown",
+  "target_draft_id": null,
+  "transactions": [],
   "expected_payout": null,
-  "balance_checkin": {
-    "cash_amount": "1500",
-    "bank_amount": "2500",
-    "not_mine_amount": "600",
-    "note": "Wallet and bank check-in",
-    "checked_at": "2026-11-21T01:15:00Z"
+  "balance_checkin": null,
+  "query": {
+    "query_type": "today_spending",
+    "target_date": "2026-11-21",
+    "filter_subject": null
   },
   "metadata": {
-    "certainty": 0.99,
+    "input_source": "voice_transcript",
+    "certainty": 0.98,
     "clarification_required": false,
     "clarification_reason": null,
     "clarification_questions": [],
-    "raw_utterance": "I have ₹1500 cash in my pocket and ₹2500 in my bank account. ₹600 of the cash is COD money."
+    "raw_utterance": "How much did I spend today?"
+  }
+}
+```
+
+### Example 3: Pending Payments Voice Query
+**User says:** *"Show me all my pending payments"*
+```json
+{
+  "entry_intent": "query",
+  "action_intent": "unknown",
+  "target_draft_id": null,
+  "transactions": [],
+  "expected_payout": null,
+  "balance_checkin": null,
+  "query": {
+    "query_type": "pending_payments",
+    "target_date": null,
+    "filter_subject": null
+  },
+  "metadata": {
+    "input_source": "voice_transcript",
+    "certainty": 0.97,
+    "clarification_required": false,
+    "clarification_reason": null,
+    "clarification_questions": [],
+    "raw_utterance": "Show me all my pending payments"
   }
 }
 ```
 
 ---
 
-## 6. Ambiguity Handling & Clarification Rules
+## 6. M1 Backend & Edge Function Integration
 
-When processing colloquial or incomplete voice/text messages:
-
-1. **Expense Classification Ambiguity:**
-   - If user says *"Spent ₹300"* without category:
-     - `amount`: `"300"`, `type`: `"expense"`, `category`: `"other"`, `expense_type`: `null`.
-     - `clarification_required`: `true`.
-     - `clarification_reason`: `"Expense type must be specified as living (food/personal) or work (fuel/phone/maintenance)."`.
-     - `clarification_questions`: `["Was this ₹300 spent on living expenses (food, tea) or work expenses (petrol, bike, phone)?"]`.
-2. **Missing Amount:**
-   - If user says *"Put petrol today"*:
-     - `amount`: `null`.
-     - `clarification_required`: `true`.
-     - `clarification_reason`: `"Amount was not provided."`.
-     - `clarification_questions`: `["How much did you spend on petrol?"]`.
-3. **Ambiguous Check-in Aggregates:**
-   - If user says *"I have ₹4,000 in total"*:
-     - `clarification_required`: `true`.
-     - `clarification_reason`: `"Breakdown between physical cash and bank balance is required to track cash runway."`.
-     - `clarification_questions`: `["How much of that ₹4,000 is physical cash in hand, and how much is in your bank account?"]`.
-4. **Correction Commands:**
-   - If user says *"Actually it was ₹150 not ₹120 for petrol"*:
-     - `entry_intent`: `"transaction"`.
-     - `action_intent`: `"correct"`.
-     - `transaction.amount`: `"150"`.
-     - `metadata.clarification_required`: `false`.
-
----
-
-## 7. Mapping to FLOVA Application Contracts (Consumer Adapter)
-
-When the worker clicks **Confirm** in the client UI, the client converts the verified DTO to M1's service interfaces:
-
-```typescript
-import { toPaise } from "../lib/money";
-import type { NewTransaction, NewPayout, NewBalanceCheckin } from "../types/contracts";
-
-export function dtoToNewTransaction(dto: FinancialExtractionDTO): NewTransaction {
-  if (dto.entry_intent !== "transaction" || !dto.transaction || !dto.transaction.amount) {
-    throw new Error("Invalid transaction DTO");
-  }
-  return {
-    type: dto.transaction.type ?? "expense",
-    amount: toPaise(dto.transaction.amount), // Converts decimal string to integer Paise
-    category: dto.transaction.category ?? "other",
-    expenseType: dto.transaction.expense_type ?? undefined,
-    ownership: dto.transaction.ownership ?? "mine",
-    date: dto.transaction.date ?? undefined,
-    description: dto.transaction.description ?? undefined,
-    source: "ai_suggestion",
-  };
-}
-
-export function dtoToNewPayout(dto: FinancialExtractionDTO): NewPayout {
-  if (dto.entry_intent !== "expected_payout" || !dto.expected_payout || !dto.expected_payout.expected_amount) {
-    throw new Error("Invalid expected payout DTO");
-  }
-  return {
-    expected: toPaise(dto.expected_payout.expected_amount),
-    kind: dto.expected_payout.kind ?? "platform_payout",
-    source: dto.expected_payout.source ?? undefined,
-    expectedDate: dto.expected_payout.expected_date ?? null,
-    status: dto.expected_payout.status ?? "scheduled",
-    note: dto.expected_payout.note ?? undefined,
-  };
-}
-
-export function dtoToNewCheckin(dto: FinancialExtractionDTO): NewBalanceCheckin {
-  if (dto.entry_intent !== "balance_checkin" || !dto.balance_checkin) {
-    throw new Error("Invalid checkin DTO");
-  }
-  return {
-    cash: dto.balance_checkin.cash_amount ? toPaise(dto.balance_checkin.cash_amount) : 0,
-    bank: dto.balance_checkin.bank_amount ? toPaise(dto.balance_checkin.bank_amount) : 0,
-    notMine: dto.balance_checkin.not_mine_amount ? toPaise(dto.balance_checkin.not_mine_amount) : 0,
-    note: dto.balance_checkin.note ?? undefined,
-    checkedAt: dto.balance_checkin.checked_at ?? undefined,
-  };
-}
-```
+See `ai-engine/M1_GROQ_INTEGRATION.md` for full backend specifications:
+- Canonical voice/text endpoint: `POST /functions/v1/process-voice`
+- Dedicated receipt endpoint: `POST /functions/v1/extract-receipt`
+- Model: `llama-3.3-70b-versatile` (Groq API, JSON mode)
+- Secret key: `GROQ_API_KEY` kept server-side only in Supabase secrets
+- Client passes audio blob (Mode 1) or `input_text` JSON (Mode 2); Edge function runs inference with `EXTRACTION_SYSTEM_PROMPT` and returns raw JSON for M3 client-side validation (`validateExtractionOutput`).

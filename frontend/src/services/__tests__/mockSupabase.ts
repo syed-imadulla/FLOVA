@@ -14,12 +14,14 @@ export interface MockState {
   transactions: Transaction[];
   balanceCheckins: BalanceCheckin[];
   payouts: Payout[];
+  profile?: any;
 }
 
 export const mockState: MockState = {
   transactions: [],
   balanceCheckins: [],
   payouts: [],
+  profile: null,
 };
 
 export function resetMockState(): void {
@@ -29,6 +31,7 @@ export function resetMockState(): void {
   mockState.transactions = [];
   mockState.balanceCheckins = [];
   mockState.payouts = [];
+  mockState.profile = null;
 }
 
 class MockQueryBuilder<T> implements PromiseLike<{ data: T[]; error: null }> {
@@ -203,6 +206,41 @@ export const supabase = {
                     : payload;
                   mockState.payouts.push(rec as Payout);
                   return Promise.resolve({ data: rec, error: null });
+                },
+              };
+            },
+          };
+        },
+      };
+    }
+
+    if (table === "profiles") {
+      return {
+        select(_cols?: string) {
+          return {
+            single: async () => {
+              if (mockState.selectSingleHandler) {
+                return mockState.selectSingleHandler("profile");
+              }
+              return { data: mockState.profile ?? null, error: null };
+            },
+          };
+        },
+        update(patch: Record<string, unknown>) {
+          return {
+            eq(_col: string, _val: string) {
+              return {
+                select() {
+                  return {
+                    single: async () => {
+                      if (mockState.insertHandler) {
+                        return mockState.insertHandler(patch);
+                      }
+                      const updated = { ...(mockState.profile || {}), ...patch };
+                      mockState.profile = updated as any;
+                      return { data: updated, error: null };
+                    },
+                  };
                 },
               };
             },
