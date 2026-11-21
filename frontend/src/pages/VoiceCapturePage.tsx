@@ -9,7 +9,7 @@
 // Zero automatic database mutations. Preserves candidate UUID for idempotency.
 // =====================================================================
 
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { todayLocalISO } from "../data/dates";
 import { useRunway } from "../runway/useRunway";
@@ -73,6 +73,9 @@ export function VoiceCapturePage() {
   // Extraction results
   const [extractionDTO, setExtractionDTO] = useState<FinancialExtractionDTO | null>(null);
   const [currentCandidate, setCurrentCandidate] = useState<VoiceTransactionCandidate | null>(null);
+  // Stable id for a manually completed transaction when extraction returned no candidate.
+  // Minted once per review so confirm retries reuse it (idempotent insert), cleared on discard.
+  const fallbackCandidateIdRef = useRef<string | null>(null);
   const [queryResult, setQueryResult] = useState<QueryResolutionResult | null>(null);
 
   // Editable transaction candidate fields
@@ -179,7 +182,7 @@ export function VoiceCapturePage() {
 
     const confirmedAmountPaise = parsedAmount.ok ? parsedAmount.paise : 0;
     const candidateToConfirm: VoiceTransactionCandidate = {
-      id: currentCandidate?.id || (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function" ? crypto.randomUUID() : undefined),
+      id: currentCandidate?.id || currentCandidate?.candidate_id || getFallbackCandidateId(),
       transcript: description || currentCandidate?.transcript || "Voice transaction",
       type: txType,
       amountPaise: confirmedAmountPaise,
@@ -258,8 +261,16 @@ export function VoiceCapturePage() {
     }
   }
 
+  function getFallbackCandidateId(): string | undefined {
+    if (!fallbackCandidateIdRef.current && typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+      fallbackCandidateIdRef.current = crypto.randomUUID();
+    }
+    return fallbackCandidateIdRef.current ?? undefined;
+  }
+
   function handleDiscard() {
     setCurrentCandidate(null);
+    fallbackCandidateIdRef.current = null;
     setExtractionDTO(null);
     setQueryResult(null);
     audioRecorder.resetRecording();
