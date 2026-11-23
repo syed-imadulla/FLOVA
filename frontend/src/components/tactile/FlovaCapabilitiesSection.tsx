@@ -8,7 +8,7 @@ import {
 } from "./Icons";
 import { SectionHeading } from "./SectionHeading";
 
-export const AbyssCapabilitiesSection: React.FC = () => {
+export const FlovaCapabilitiesSection: React.FC = () => {
   return (
     <section id="features" className="py-28 px-4 sm:px-6 lg:px-8 relative overflow-hidden bg-[#f7f5f0]">
       <SectionHeading

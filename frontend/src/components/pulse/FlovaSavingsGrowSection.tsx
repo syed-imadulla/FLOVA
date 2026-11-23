@@ -1,6 +1,6 @@
 import React from "react";
 
-export const PhonePeSmartSavings: React.FC = () => {
+export const FlovaSavingsGrowSection: React.FC = () => {
   const savingsCards = [
     {
       id: "gold",
@@ -8,7 +8,7 @@ export const PhonePeSmartSavings: React.FC = () => {
       desc: "Buy 24K pure gold securely, starting from just ₹5. Manage, sell, or gift gold digitally anytime.",
       illustration: (
         <svg viewBox="0 0 100 80" className="w-16 h-14 mx-auto">
-          {/* Glass Jar with Gold Coins (Matching Screenshot 9) */}
+          {/* Glass Jar with Gold Coins (FLOVA Design Specification) */}
           {/* Jar Base */}
           <path
             d="M30 30 C30 20 70 20 70 30 L66 68 C66 74 34 74 34 68 Z"
@@ -39,7 +39,7 @@ export const PhonePeSmartSavings: React.FC = () => {
       desc: "Invest in 24K pure gold every month, starting from just ₹100. Set up a Gold SIP and grow your savings effortlessly.",
       illustration: (
         <svg viewBox="0 0 100 80" className="w-16 h-14 mx-auto">
-          {/* Gold Bars & Gift Bag (Matching Screenshot 9) */}
+          {/* Gold Bars & Gift Bag (FLOVA Design Specification) */}
           {/* Purple/Blue Gift Shopping Bag */}
           <rect x="44" y="32" width="36" height="38" rx="4" fill="#6366f1" />
           {/* Bag Handles */}
@@ -88,13 +88,13 @@ export const PhonePeSmartSavings: React.FC = () => {
   return (
     <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
       <div className="max-w-4xl mx-auto">
-        {/* Section Headline (Matching Screenshot 9) */}
+        {/* Section Headline (FLOVA Design Specification) */}
         <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#23173d] tracking-tight text-center mb-14">
           Smart savings <br className="sm:hidden" />
           start here
         </h2>
 
-        {/* Stacked Double-Lobed Stadium Capsule Cards (Matching Screenshot 9 Exactly) */}
+        {/* Stacked Double-Lobed Stadium Capsule Cards (FLOVA Design Specification) */}
         <div className="space-y-6">
           {savingsCards.map((card) => (
             <div

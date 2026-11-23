@@ -1,11 +1,11 @@
 import React from "react";
 
-interface PhonePeHeroPillarsProps {
+interface FlovaFeaturePillarsProps {
   onExploreSolutions?: () => void;
   onLaunchStage: () => void;
 }
 
-export const PhonePeHeroPillars: React.FC<PhonePeHeroPillarsProps> = ({
+export const FlovaFeaturePillars: React.FC<FlovaFeaturePillarsProps> = ({
   onLaunchStage,
 }) => {
   const pillars = [
@@ -156,13 +156,13 @@ export const PhonePeHeroPillars: React.FC<PhonePeHeroPillarsProps> = ({
   return (
     <section id="solutions" className="pt-24 pb-16 px-4 sm:px-6 lg:px-8 bg-white">
       <div className="max-w-7xl mx-auto">
-        {/* 4 Elevated White Cards Grid (Matching Screenshot 2 Exactly) */}
+        {/* 4 Elevated White Cards Grid (FLOVA Design Specification) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {pillars.map((pillar) => (
             <div
               key={pillar.id}
               onClick={onLaunchStage}
-              className="phonepe-card p-7 flex flex-col justify-between group cursor-pointer border border-[#f0edf5] hover:border-[#d9c4f4] bg-white rounded-[24px]"
+              className="flova-pulse-card p-7 flex flex-col justify-between group cursor-pointer border border-[#f0edf5] hover:border-[#d9c4f4] bg-white rounded-[24px]"
             >
               {/* Top Colorful 3D SVG Illustration */}
               <div className="pt-2 pb-4 flex justify-center group-hover:scale-105 transition-transform duration-300">

@@ -6,7 +6,7 @@ interface NavbarProps {
   onLaunchStage: () => void;
 }
 
-export const AbyssNavbar: React.FC<NavbarProps> = ({ onLaunchStage }) => {
+export const FlovaPrimaryNavbar: React.FC<NavbarProps> = ({ onLaunchStage }) => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -41,8 +41,8 @@ export const AbyssNavbar: React.FC<NavbarProps> = ({ onLaunchStage }) => {
             href="#"
             className="flex items-center gap-2.5 group focus:outline-hidden focus-visible:ring-2 focus-visible:ring-stone-900 rounded-lg p-1"
           >
-            <div className="w-9 h-9 rounded-xl bg-[#121316] text-[#faf8f5] flex items-center justify-center font-mono font-bold text-base shadow-sm group-hover:scale-105 transition-transform duration-200">
-              <span className="text-emerald-400">₹</span>F
+            <div className="w-9 h-9 rounded-xl bg-white flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform duration-200 overflow-hidden border border-stone-200">
+              <img src="/favicon.svg" alt="FLOVA" className="w-7 h-7 object-contain" />
             </div>
             <div className="flex flex-col">
               <span className="font-extrabold tracking-tight text-lg text-[#121316] flex items-center gap-1.5">

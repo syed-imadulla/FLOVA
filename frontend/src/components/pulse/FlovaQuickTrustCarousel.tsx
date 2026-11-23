@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-export const PhonePeSafeQuickCarousel: React.FC = () => {
+export const FlovaQuickTrustCarousel: React.FC = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
 
   const stories = [
@@ -44,7 +44,7 @@ export const PhonePeSafeQuickCarousel: React.FC = () => {
   return (
     <section className="py-24 px-4 sm:px-6 lg:px-8 bg-white">
       <div className="max-w-4xl mx-auto text-center">
-        {/* Top 3D Purple Play Button with Light Rays & Soft Blue Clouds (Matching Screenshot 8 Exactly) */}
+        {/* Top 3D Purple Play Button with Light Rays & Soft Blue Clouds (FLOVA Design Specification) */}
         <div className="relative flex items-center justify-center mb-10">
           {/* Light Rays Burst */}
           <div className="absolute w-96 h-48 flex items-center justify-center pointer-events-none">
@@ -77,7 +77,7 @@ export const PhonePeSafeQuickCarousel: React.FC = () => {
           </div>
         </div>
 
-        {/* Section Headline (Matching Screenshot 8) */}
+        {/* Section Headline (FLOVA Design Specification) */}
         <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#23173d] tracking-tight mb-5 leading-tight">
           Payments on FLOVA are safe, <br className="hidden sm:inline" />
           reliable, and quick

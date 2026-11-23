@@ -1,28 +1,28 @@
-# Graph Report - FLOVA  (2026-11-21)
+# Graph Report - FLOVA  (2026-11-23)
 
 ## Corpus Check
-- 336 files · ~220,996 words
+- 344 files · ~278,193 words
 - Verdict: corpus is large enough that graph structure adds value.
-- Unclassified: 13 file(s) not represented in the graph (top: .css 5, (none) 3, .example 3)
+- Unclassified: 15 file(s) not represented in the graph (top: (none) 5, .css 5, .example 3)
 
 ## Summary
-- 2129 nodes · 4927 edges · 172 communities (142 shown, 30 thin omitted)
-- Extraction: 93% EXTRACTED · 7% INFERRED · 0% AMBIGUOUS · INFERRED: 330 edges (avg confidence: 0.95)
+- 2234 nodes · 5057 edges · 165 communities (138 shown, 27 thin omitted)
+- Extraction: 93% EXTRACTED · 7% INFERRED · 0% AMBIGUOUS · INFERRED: 340 edges (avg confidence: 0.95)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `cefa0071`
+- Built from commit: `6250b735`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
-- main.py
-- testUtils.ts
+- benchmark_stt.py
+- RunwayInput
 - VERDICT — pick-f1-irregular-income
 - contracts.ts
 - frontend/package.json
-- Architecture
-- toPaise
+- dev-runner.py
+- icons.tsx
 - backend/package.json
 - STATEMENTS — The Big Hack 2.0
 - Scenario B: Live Date Browser Checks (Interactive / Manual)
@@ -45,23 +45,23 @@
 - Tests
 - react
 - FLOVA Financial Engine (M3)
-- dates.test.ts
+- FlovaPulseLandingPage.tsx
 - Project State
 - Tests
-- ActivityScreen.tsx
-- 2. Work Breakdown & Execution Waves
+- todayLocalISO
+- dates.test.ts
 - Technology Stack
 - Testing Patterns
 - Card
-- App.tsx
+- RequireAuth
 - Tests
 - 01-01-PLAN.md
 - Plan 02-01: Profile and Onboarding Persistence
 - browser-audit.mjs
 - Phase 4: Runway Feed Verification Report
-- Progress
+- 1. Core Invariants
 - Plan 03-01: Data Capture Hooks and Pages
-- Icons.tsx
+- FlovaTactileLandingPage.tsx
 - FLOVA (Udaan 2.0)
 - Goal Achievement
 - v1 Requirements
@@ -69,19 +69,16 @@
 - voice.ts
 - validation.ts
 - Plan 08-01: Secure FLOVA Catch (Receipt Extraction)
-- PhonePeLandingPage.tsx
-- Locked Architectural Decisions (From Discussion)
-- Goal Achievement
-- engine/index.ts
+- test_stt_service.py
+- extractionAdapter.ts
 - engine/index.ts
 - FLOVA AI Extraction Contract Specification (v1.2 · Owner: M3)
-- icons.tsx
-- Key Architectural & Design Decisions
+- main.py
+- ActivityItem
 - loadRunwayInput
 - smartCaptureReceiptUpi.test.ts
 - useWish.ts
 - VoiceScreen.tsx
-- Key Architectural & Design Decisions
 - extractTransaction.ts
 - OneRupeeCoin
 - data.ts
@@ -92,15 +89,14 @@
 - 2. Band-by-Band Cadence in Video 2
 - v1 Requirements
 - Tasks
-- coreFinancialCorrectness.test.ts
-- FLOVA data contract (v1 · owner: M1)
+- Tables
 - ProfileScreen.tsx
 - MockQueryBuilder
 - FLOVA Hero Section Blueprint: Video 1 Deep Analysis
-- candidateAdapter.ts
+- coreFinancialCorrectness.test.ts
 - listActivityTimeline
 - Phase 9.1 User Acceptance Testing (UAT)
-- FinancialExtractionDTO
+- README.md
 - Phase 7 Verification Report: Financial Data Contracts
 - Phase 8 Verification Report: Secure FLOVA Catch
 - Phase 10 User Acceptance Testing (UAT)
@@ -108,23 +104,20 @@
 - Phase 6 Verification Report: Realistic Demo Data
 - Phase 6: Support Realistic Demo Data - Context & Invariants
 - Phase 9.1 Verification Report
-- Implementation Decisions
+- Phase 1: Auth flow - Context
 - Architecture & Work Breakdown
-- Phase 10.2: Application UI shell and screens — Plan 01
+- AppLayout.tsx
 - Phase 10.2 Plan 01: Summary
 - sw.js
 - useVoiceRecorder.ts
 - useSpeechToText.ts
-- wish.ts
 - 1. Architecture & Design Decisions
 - 1. Locked Architecture Decisions
 - 1. Requirements & Acceptance Criteria Verification
 - receiptUpiRepair.test.ts
-- InsightsScreen.tsx
+- kit.tsx
 - Phase 5: Payout Synchronization Hardening & Idempotency Verification Report
 - invoices.ts
-- Phase 8 Plan 01 Summary: Secure FLOVA Catch (Receipt Extraction)
-- PhonePeAppstoreHalo.tsx
 - test-db.mjs
 - Plan 10-01: Financial Activity, Money Overview & Deterministic Insights
 - FLOVA (Udaan 2.0)
@@ -133,58 +126,58 @@
 - FLOVA AI Extraction Contract Specification (v1.2 · Owner: M3)
 - Implementation Tasks
 - Implementation Decisions
-- Goal Achievement
+- ProfileProvider.tsx
 - Phase 17 Verification: AI4Bharat IndicConformer Primary STT Migration
-- formatINR
+- useMonthSummary.ts
 - 2. Work Breakdown
 - 1. Requirements & Acceptance Criteria Verification
 - FinancialExtractionDTO
 - Phase 1: Core Financial Correctness, Navigation and Account Management Verification Report
 - Technical Decisions & Architecture
 - seed-demo.mjs
-- Phase 7 Plan 01 Summary: Financial Data Contracts & Timeline Helpers
-- auth.ts
-- ravi.test.ts
-- Phase 9 Verification Report: Secure Voice Transcription & Intent Integration
 - Detailed Task Breakdown
-- FLOVA
+- Verification Results
 - FLOVA: Deployment & Operations Guide
-- useSession.ts
 - README.md
-- Phase 9 User Acceptance Testing (UAT) Report: Voice Transcription & Intent Integration
+- Phase 19 Context: FLOVA App Icon & Favicon Integration
 - 2. Locked Implementation Decisions
 - Working on FLOVA (team rules for the 24-hour build)
 - 2. Database Schema & Entities
 - FLOVA: Speech-to-Text & Conversational Voice Architecture
-- AuthProvider
-- External Integrations
+- useSession
+- signOut
 - Phase 16 Verification: Complete Receipt & UPI Extraction Pipeline Repair
 - FLOVA: Deterministic Financial Engine & Invariants
 - FLOVA: Security, Authentication & Database RLS Architecture
 - FLOVA: Smart Capture & Receipt/UPI Intelligence
 - 2. Test Execution Commands
-- financialIntelligence.test.ts
+- Phase 19 Verification: FLOVA App Icon & Favicon Integration
 - mockLoader.mjs
 - FLOVA — Project Handoff & Release State (2026-11-21)
-- Coding Conventions
 - Onboarding Summary
 - main
 - FLOVA: Adaptive Safety Buffer & Runway Engine
 - FLOVA: Environment Variables & Secrets Reference
 - Codebase Structure
-- 🌟 Core Capabilities
 - CDPClient
-- Plan 05-02 Summary: Idempotent Retry UX Fix in `addTransaction`
 - Plan 06-01: Realistic Demo Data Seeding & Isolation
-- Decisions
+- useSession
+- Plan 19-01: FLOVA App Icon and Favicon Generation & Integration
+- 2. Locked Decisions
+- Tasks
+- scripts
+- Phase 18 Verification: Final Project Consolidation, Documentation & Main Branch Release
+- Key Features
+- FlovaHeroSlider.tsx
+- FlovaAppShowcase.tsx
 
 ## God Nodes (most connected - your core abstractions)
 1. `react` - 85 edges
-2. `toPaise()` - 68 edges
+2. `toPaise()` - 69 edges
 3. `todayLocalISO()` - 52 edges
 4. `Notice()` - 44 edges
 5. `Paise` - 41 edges
-6. `formatINR()` - 38 edges
+6. `formatINR()` - 39 edges
 7. `Card()` - 38 edges
 8. `useSession()` - 36 edges
 9. `Button()` - 34 edges
@@ -205,39 +198,39 @@
 ## Import Cycles
 - None detected.
 
-## Communities (172 total, 30 thin omitted)
+## Communities (165 total, 27 thin omitted)
 
-### Community 0 - "main.py"
-Cohesion: 0.06
-Nodes (18): generate_test_audio(), run_benchmarks(), convert_audio_to_16k_mono_wav(), load_wav_as_numpy(), Settings, IndicConformerEngine, health_check(), HealthResponse (+10 more)
+### Community 0 - "benchmark_stt.py"
+Cohesion: 0.11
+Nodes (4): generate_test_audio(), run_benchmarks(), Settings, IndicConformerEngine
 
-### Community 1 - "testUtils.ts"
-Cohesion: 0.25
-Nodes (13): RunwayProjectionInput, baseProfile, RFC-4122, baseProfile, assertMatch(), assertStrictEqual(), assertThrows(), describe() (+5 more)
+### Community 1 - "RunwayInput"
+Cohesion: 0.14
+Nodes (28): calculateConfirmedBalance(), addDays(), calculateDailyRunway(), RunwayProjectionInput, RunwayProjectionResult, simulateScenario(), baseProfile, baseProfile (+20 more)
 
 ### Community 2 - "VERDICT — pick-f1-irregular-income"
 Cohesion: 0.05
 Nodes (40): An alternative approach (same problem, same user), Contradictions between jurors, If I were your team…, Next experiment (30 min), Ranked improvements, Ratings /10, VERDICT — pick-f1-irregular-income, Votes (+32 more)
 
 ### Community 3 - "contracts.ts"
-Cohesion: 0.11
-Nodes (24): ProfileContext, ProfileContextType, assertStrictEqual(), assertTrue(), it(), runTests(), APP_LANGUAGES, AppLanguage (+16 more)
+Cohesion: 0.09
+Nodes (18): BatchCandidateValidationResult, validateBatchCandidate(), RFC-4122, APP_LANGUAGES, AppLanguage, BatchTransactionSummary, COMMITMENT_KINDS, COMMITMENT_STATUSES (+10 more)
 
 ### Community 4 - "frontend/package.json"
-Cohesion: 0.06
-Nodes (33): dependencies, react, react-dom, react-router-dom, @supabase/supabase-js, devDependencies, autoprefixer, postcss (+25 more)
+Cohesion: 0.05
+Nodes (34): dependencies, react, react-dom, react-router-dom, @supabase/supabase-js, devDependencies, autoprefixer, postcss (+26 more)
 
-### Community 5 - "Architecture"
-Cohesion: 0.20
-Nodes (9): Architectural Constraints, Architecture, Component Responsibilities, Data Flow, Entry Points, Error Handling, Key Abstractions, Pattern Overview (+1 more)
+### Community 5 - "dev-runner.py"
+Cohesion: 0.08
+Nodes (16): detect_python_binary(), detect_tunnel_tool(), get_pid_on_port(), is_port_in_use(), kill_process_on_port(), print_banner(), print_tunnel_banner(), run_dev() (+8 more)
 
-### Community 6 - "toPaise"
-Cohesion: 0.32
-Nodes (16): toPaise(), InvoicesScreen(), handleCreateInvoice(), handleLinkToRunway(), handleRecordSettlement(), loadData(), resetNewForm(), addInvoiceSettlement() (+8 more)
+### Community 6 - "icons.tsx"
+Cohesion: 0.19
+Nodes (25): ActivityRow(), HomeScreen(), QuickAction(), RunwayStatus(), StatusLink(), GROUPS, MoreScreen(), IconAlert (+17 more)
 
 ### Community 7 - "backend/package.json"
-Cohesion: 0.13
-Nodes (14): description, devDependencies, @electric-sql/pglite, @supabase/supabase-js, @supabase/supabase-js, name, private, scripts (+6 more)
+Cohesion: 0.18
+Nodes (10): description, devDependencies, @electric-sql/pglite, @supabase/supabase-js, @supabase/supabase-js, license, name, private (+2 more)
 
 ### Community 8 - "STATEMENTS — The Big Hack 2.0"
 Cohesion: 0.12
@@ -272,8 +265,8 @@ Cohesion: 0.40
 Nodes (4): All assumptions, ASSUMPTIONS — F1 irregular income (idea not chosen yet), Status history, Test-first list
 
 ### Community 17 - "CLAUDE.md — FLOVA Engineering Guide"
-Cohesion: 0.22
-Nodes (8): 1. Graphify Knowledge Graph, 2. Architecture & Invariants, 3. Speech-to-Text & AI Architecture, 4. Coding Conventions, 5. Testing Commands, 6. Git Workflow, CLAUDE.md — FLOVA Engineering Guide, Core Invariants:
+Cohesion: 0.18
+Nodes (10): 1. Graphify Knowledge Graph, 2. Architecture & Invariants, 3. Speech-to-Text & AI Architecture, 4. Coding Conventions, 5. Development & Testing Commands, 6. Git Workflow, Automated Testing:, CLAUDE.md — FLOVA Engineering Guide (+2 more)
 
 ### Community 33 - "Tests"
 Cohesion: 0.10
@@ -287,9 +280,9 @@ Nodes (12): FlovaBottomCTA(), FlovaClarityShowcase(), FlovaFooter(), FlovaHero()
 Cohesion: 0.20
 Nodes (9): Architectural Principles, Calculation Semantics (Option A), FLOVA Financial Engine (M3), Historical Ravi Fixture Preservation, Key Rules:, Option A: Remaining Daily Budget Logic, Problem Addressed, Results: (+1 more)
 
-### Community 36 - "dates.test.ts"
-Cohesion: 0.40
-Nodes (4): d1, d2, iso1, iso2
+### Community 36 - "FlovaPulseLandingPage.tsx"
+Cohesion: 0.13
+Nodes (16): FlovaBillsAndUtilities(), FlovaBrandOrbitalFooter(), FlovaConcentricShowcase(), FlovaDeviceGrid(), FlovaFeaturePillars(), FlovaFeaturePillarsProps, FlovaPanIndiaBanner(), FlovaPulseLandingPage() (+8 more)
 
 ### Community 37 - "Project State"
 Cohesion: 0.29
@@ -299,13 +292,13 @@ Nodes (6): Current Position, Integration Milestone (2026-11-21), Performance Met
 Cohesion: 0.13
 Nodes (14): 1. Logged out redirect to /login (B1), 2. Sign up with new email and display name (B2), 3. Session persistence on refresh (B3), 4. Logout and route protection (B4), 5. Login error handling (B5), 6. Redirect authenticated user away from /login (B6), 7. Client-side password length validation (B7), A. Live RLS Test (+6 more)
 
-### Community 39 - "ActivityScreen.tsx"
-Cohesion: 0.13
-Nodes (23): useActivity(), DataVersionContext, DataVersionContextType, useDataVersion(), useLatestCheckin(), parseOptionalRupees(), useRunway(), ActivityScreen() (+15 more)
+### Community 39 - "todayLocalISO"
+Cohesion: 0.17
+Nodes (19): categoryLabel(), EXPENSE_CATEGORIES, INCOME_CATEGORIES, PROFILE_INCOME_PRIORITY, emptyDraft(), TransactionForm(), calculateBatchSummary(), formatINR() (+11 more)
 
-### Community 40 - "2. Work Breakdown & Execution Waves"
-Cohesion: 0.20
-Nodes (9): 1. Overview & Objectives, 2. Work Breakdown & Execution Waves, Owner: M1 Backend & Integration, Phase: 15-conversational-adaptive-financial-intelligence, Plan 15-01: Conversational & Adaptive Financial Intelligence, Wave 2: Deterministic Intelligence Engines (M3 Integration), Wave 3: Invoice Intelligence & Voice Session Services, Wave 4: UI/UX Integration (+1 more)
+### Community 40 - "dates.test.ts"
+Cohesion: 0.40
+Nodes (4): d1, d2, iso1, iso2
 
 ### Community 41 - "Technology Stack"
 Cohesion: 0.25
@@ -316,12 +309,12 @@ Cohesion: 0.29
 Nodes (6): Mocking & Isolation, Required Pre-Shipping Checks, Test File Organization, Test Framework, Test Structure, Testing Patterns
 
 ### Community 43 - "Card"
-Cohesion: 0.16
-Nodes (47): TransactionForm(), submit(), parseRequiredRupees(), CommitmentForm(), save(), CommitmentsScreen(), OnboardingScreen(), KIND_LABEL (+39 more)
+Cohesion: 0.15
+Nodes (36): App(), submit(), parseOptionalRupees(), parseRequiredRupees(), RequireOnboarded(), useProfile(), CheckinPrefillState, CheckinScreen() (+28 more)
 
-### Community 44 - "App.tsx"
-Cohesion: 0.19
-Nodes (17): App(), RedirectIfAuthed(), RequireAuth(), useSession(), DataVersionProvider(), ProfileProvider(), RequireOnboarded(), Splash() (+9 more)
+### Community 44 - "RequireAuth"
+Cohesion: 0.13
+Nodes (13): FLOVA data contract (v1 · owner: M1), Frontend data hooks (`frontend/src/data/`), How to record each money situation, Rules for M3's runway engine (from the master plan), RequireAuth(), useLatestCheckin(), addCheckin(), Key Implementation Details (+5 more)
 
 ### Community 45 - "Tests"
 Cohesion: 0.12
@@ -335,13 +328,9 @@ Nodes (13): activitySrc, addSrc, aliases, catchSrc, chrome, client, __dirname, d
 Cohesion: 0.33
 Nodes (5): Goal Achievement, Investigation Findings: Previous Aggregate Test Command Failures, M1 Data Layer & M3 Engine Integration Audit, Observable Truths, Phase 4: Runway Feed Verification Report
 
-### Community 50 - "Progress"
-Cohesion: 0.17
-Nodes (11): Overview, Phase 13: Core Financial Correctness, Navigation and Account Management, Phase 14: Smart Capture, Receipt Intelligence & UPI Share Integration, Phase 15: Conversational & Adaptive Financial Intelligence, Phase 16: Complete Receipt & UPI Extraction Pipeline Repair, Phase 6: Demo data, Phase 8: Secure FLOVA Catch receipt extraction integration, Phase Details (+3 more)
-
-### Community 52 - "Icons.tsx"
-Cohesion: 0.05
-Nodes (77): api, BacktestRow, FALLBACK_PROFILES, OutlookWeek, Plan, Profile, Rider, rs() (+69 more)
+### Community 52 - "FlovaTactileLandingPage.tsx"
+Cohesion: 0.06
+Nodes (70): api, BacktestRow, FALLBACK_PROFILES, OutlookWeek, Plan, Profile, Rider, rs() (+62 more)
 
 ### Community 54 - "FLOVA (Udaan 2.0)"
 Cohesion: 0.25
@@ -360,88 +349,80 @@ Cohesion: 0.18
 Nodes (10): Goal, Plan 16-01: Complete Receipt & UPI Extraction Pipeline Repair, Task 1: Client-Side Image Optimizer & 20MB Validation, Task 2: Supabase Edge Function Upgrade (`extract-receipt`), Task 3: Frontend Receipt Extraction Service Upgrade, Task 4: Catch Screen Progress UI & Error Resilience, Task 5: Review & Add Screen Enhancement, Task 6: Comprehensive Automated Test Suite (+2 more)
 
 ### Community 58 - "voice.ts"
-Cohesion: 0.14
-Nodes (24): ExtractedQueryData, DailyProjectionEntry, publishableKey, supabase, url, ProcessedRunway, assertStrictEqual(), assertTrue() (+16 more)
+Cohesion: 0.16
+Nodes (25): ExtractedQueryData, assertStrictEqual(), assertTrue(), it(), runTests(), resetMockState(), assertStrictEqual(), assertTrue() (+17 more)
 
 ### Community 59 - "validation.ts"
-Cohesion: 0.29
-Nodes (17): calculateConfirmedBalance(), addDays(), calculateDailyRunway(), simulateScenario(), isValidISODate(), isValidISOTimestamp(), isValidPaise(), safeAdd() (+9 more)
+Cohesion: 0.51
+Nodes (9): validateExtractionOutput(), isValidISODate(), isValidISOTimestamp(), isValidPaise(), validateBalanceCheckin(), validatePayout(), validateRunwayInput(), validateTransaction() (+1 more)
 
 ### Community 60 - "Plan 08-01: Secure FLOVA Catch (Receipt Extraction)"
-Cohesion: 0.20
-Nodes (9): Edge Function Contract (`extract-receipt`), Implementation Tasks, Objectives, Plan 08-01: Secure FLOVA Catch (Receipt Extraction), Security Boundaries & Rules, Task 0: Supabase Edge Function (`backend/supabase/functions/extract-receipt/index.ts`), Task 1: Frontend Receipt Service (`frontend/src/services/receipt.ts`), Task 3: Automated Test Suite (`frontend/src/services/__tests__/receiptExtraction.test.ts`) (+1 more)
+Cohesion: 0.18
+Nodes (10): Edge Function Contract (`extract-receipt`), Implementation Tasks, Objectives, Plan 08-01: Secure FLOVA Catch (Receipt Extraction), Security Boundaries & Rules, Task 0: Supabase Edge Function (`backend/supabase/functions/extract-receipt/index.ts`), Task 1: Frontend Receipt Service (`frontend/src/services/receipt.ts`), Task 2: FLOVA Catch UI (`frontend/src/pages/FlovaCatchPage.tsx` & Route) (+2 more)
 
-### Community 61 - "PhonePeLandingPage.tsx"
-Cohesion: 0.11
-Nodes (19): PhonePeConcentricSection(), PhonePeConvenienceBills(), PhonePeDotWaveDevices(), PhonePeHeroPillars(), PhonePeHeroPillarsProps, PhonePeHeroSlider(), PhonePeHeroSliderProps, SlideData (+11 more)
+### Community 61 - "test_stt_service.py"
+Cohesion: 0.19
+Nodes (7): convert_audio_to_16k_mono_wav(), load_wav_as_numpy(), create_synthetic_wav(), test_audio_preprocessing_pipeline(), test_transcribe_audio_hindi(), test_transcribe_audio_kannada(), test_transcribe_audio_telugu()
 
-### Community 62 - "Locked Architectural Decisions (From Discussion)"
-Cohesion: 0.25
-Nodes (7): 1. Routing & Screen Anchoring, 2. Timeline Item Distinction & Expected Payouts, 3. Four Deterministic Financial Insights, 4. Financial Safety & Truthful Uncertainty, Locked Architectural Decisions (From Discussion), Phase 10 Context: Financial Activity, Money Overview & Insights, Phase Goal
-
-### Community 64 - "engine/index.ts"
-Cohesion: 0.11
-Nodes (30): ConfirmedBalanceResult, ConfirmedBalanceStatus, adaptExtractedCheckin(), adaptExtractedPayout(), adaptExtractedTransactions(), CategoryMappingResult, CheckinAdaptationResult, CorrectionResolutionResult (+22 more)
+### Community 64 - "extractionAdapter.ts"
+Cohesion: 0.17
+Nodes (15): 1. Overview & Architectural Boundaries, Architectural Rules, 1. Overview & Architectural Boundaries, Architectural Rules, adaptExtractedCheckin(), adaptExtractedPayout(), adaptExtractedTransactions(), CategoryMappingResult (+7 more)
 
 ### Community 65 - "engine/index.ts"
-Cohesion: 0.13
-Nodes (16): 1. Overview & Architectural Boundaries, Architectural Rules, AdaptiveBufferInput, AdaptiveBufferRecommendation, ProfileLike, ConfirmedBalanceBreakdown, 1. Overview & Architectural Boundaries, Architectural Rules (+8 more)
+Cohesion: 0.08
+Nodes (34): AdaptiveBufferInput, AdaptiveBufferRecommendation, calculateAdaptiveBuffer(), deriveProtectionHorizon(), ProfileLike, ConfirmedBalanceBreakdown, ConfirmedBalanceResult, ConfirmedBalanceStatus (+26 more)
 
 ### Community 66 - "FLOVA AI Extraction Contract Specification (v1.2 · Owner: M3)"
 Cohesion: 0.18
 Nodes (10): 2. Existing FLOVA Contract Enum Alignment, 3. TypeScript DTO Definitions, 4. Strict JSON Schema (Draft 2020-12 Compatible), 5. Concrete Extraction Examples, 6. M1 Backend & Edge Function Integration, Example 1: Multi-Transaction Sentence (Income + Expense), Example 2: Today's Spending Voice Query, Example 3: Pending Payments Voice Query (+2 more)
 
-### Community 67 - "icons.tsx"
-Cohesion: 0.12
-Nodes (33): ActivityRow(), AppLayout(), MORE_PATHS, Tab(), useProfile(), HomeScreen(), QuickAction(), StatusLink() (+25 more)
+### Community 67 - "main.py"
+Cohesion: 0.16
+Nodes (7): health_check(), HealthResponse, list_models(), transcribe_audio(), TranscribeRequest, TranscribeResponse, verify_stt_auth()
 
-### Community 68 - "Key Architectural & Design Decisions"
-Cohesion: 0.17
-Nodes (11): 1. Security Boundary & Server-Side Credentials, 2. Dual-Stage Groq AI Pipeline (Whisper + Llama 3.3), 3. Canonical Data Contracts: FinancialExtractionDTO & VoiceTransactionCandidate, 4. Truthful Uncertainty & Anti-Hallucination, 5. Mandatory User Confirmation & Read-Only Inference, 6. Fallback Input, Context, Key Architectural & Design Decisions (+3 more)
+### Community 68 - "ActivityItem"
+Cohesion: 0.04
+Nodes (44): ActivityItem, Objectives, Plan 07-01: Financial Data Contracts & Timeline Helpers, Tasks, Key Implementation Details, Outcome, Phase 7 Plan 01 Summary: Financial Data Contracts & Timeline Helpers, 1. Security Boundary & API Key Protection (+36 more)
 
 ### Community 69 - "loadRunwayInput"
-Cohesion: 0.14
-Nodes (15): Service functions (`frontend/src/services/`), getLatestCheckin(), getMyProfile(), loadRunwayInput(), Primary Runway Feed Path, Decisions, Phase 2 Context: Profile & Onboarding Data, Objectives (+7 more)
+Cohesion: 0.12
+Nodes (26): Rules everyone follows, Service functions (`frontend/src/services/`), paiseToRupeeString(), toPaise(), toPaiseOrNull(), getLatestCheckin(), getMyProfile(), loadRunwayInput() (+18 more)
 
 ### Community 70 - "smartCaptureReceiptUpi.test.ts"
-Cohesion: 0.12
-Nodes (29): confirmCandidateTransaction(), listTransactions(), checkDuplicateUpiReference(), ExtractionStage, extractReceipt(), extractReceiptFallback(), ExtractReceiptInput, ExtractReceiptResult (+21 more)
+Cohesion: 0.16
+Nodes (20): listTransactions(), checkDuplicateUpiReference(), ExtractionStage, extractReceipt(), extractReceiptFallback(), ExtractReceiptInput, ExtractReceiptResult, assertStrictEqual() (+12 more)
 
 ### Community 71 - "useWish.ts"
 Cohesion: 0.15
 Nodes (24): calculateWish(), ContributionCadence, CreateWishInput, formatDateISO(), formatMonthYear(), Wish, WishCalculation, WishStatus (+16 more)
 
 ### Community 72 - "VoiceScreen.tsx"
-Cohesion: 0.13
-Nodes (25): paiseToInput(), rupeeStringToInput(), emptyDraft(), todayLocalISO(), QueuedReviewCandidate, ReviewState, CatchScreen(), extract() (+17 more)
-
-### Community 73 - "Key Architectural & Design Decisions"
-Cohesion: 0.18
-Nodes (10): 1. Security Boundary & API Key Protection, 2. AI Provider: Groq (Verified Model Identifiers), 3. Truthful Uncertainty & Contract Alignment, 4. Mandatory User Confirmation, 5. Input Modes: Dual Image & Pasted-Text, 6. Idempotency & Retries, Context, Key Architectural & Design Decisions (+2 more)
+Cohesion: 0.10
+Nodes (31): paiseToInput(), rupeeStringToInput(), useActivity(), useMonthSummary(), useDataVersion(), todayLocalISO(), useRunway(), ActivityScreen() (+23 more)
 
 ### Community 74 - "extractTransaction.ts"
-Cohesion: 0.05
-Nodes (42): corsHeaders, ExtractReceiptRequest, GROQ_PIN, GROQ_PREFS, groqCandidates(), groqListModels(), groqModelUnavailable(), groqWithModelFallback() (+34 more)
+Cohesion: 0.06
+Nodes (38): corsHeaders, ExtractReceiptRequest, GROQ_PIN, GROQ_PREFS, groqCandidates(), groqListModels(), groqModelUnavailable(), groqWithModelFallback() (+30 more)
 
 ### Community 75 - "OneRupeeCoin"
 Cohesion: 0.26
 Nodes (8): HeroSection(), HeroSectionProps, LandingSections(), LandingSectionsProps, OneRupeeCoin(), OneRupeeCoinProps, MorphBridgeProps, OneRupeeMorphBridge()
 
 ### Community 76 - "data.ts"
-Cohesion: 0.17
-Nodes (24): useCommitments(), usePayouts(), paiseToRupeeString(), unwrap(), save(), addCheckin(), addCommitment(), addPayout() (+16 more)
+Cohesion: 0.27
+Nodes (15): useCommitments(), usePayouts(), unwrap(), addCommitment(), addPayout(), listCommitments(), listPayouts(), money() (+7 more)
 
 ### Community 77 - "addTransaction"
 Cohesion: 0.12
-Nodes (22): useTransactions(), remove(), addTransaction(), deleteTransaction(), receivePayout(), assertStrictEqual(), assertTrue(), it() (+14 more)
+Nodes (21): addTransaction(), receivePayout(), assertStrictEqual(), assertTrue(), it(), runTests(), NewTransaction, Task 1: Client-Side Idempotency (+13 more)
 
 ### Community 78 - "test_engine.py"
 Cohesion: 0.07
 Nodes (35): test_backtest_shape(), test_buffer_never_negative_and_money_is_conserved(), test_estimate_ignores_one_big_week(), test_estimate_with_little_history_is_cautious(), test_generate_year_is_reproducible(), test_lean_week_is_covered_by_buffer(), test_low_income_is_not_called_a_timing_problem(), test_negative_income_week_handled() (+27 more)
 
 ### Community 79 - "RunwayInput"
-Cohesion: 0.21
-Nodes (15): IncomeForecastInput, assertStrictEqual(), assertTrue(), it(), runTests(), mockState, resetMockState(), supabase (+7 more)
+Cohesion: 0.22
+Nodes (14): confirmCandidateTransaction(), assertStrictEqual(), assertTrue(), it(), runTests(), assertStrictEqual(), assertTrue(), it() (+6 more)
 
 ### Community 80 - "1. Locked Decisions & Core Architecture"
 Cohesion: 0.22
@@ -452,24 +433,20 @@ Cohesion: 0.13
 Nodes (14): 1. Hero-to-Followup 1-Rupee Indian Coin Morph Transition, 2. Band-by-Band Cadence in Video 2, 3. Currency & Data Rules Mapping (FLOVA Contract Compliance), 4. Master Build Roadmap (Step 3 Preview), Band 1: Dark Feature Showcase Card (`#111214` / `#141517`), Band 2: 4-Column Feature & Value Strip (Light Paper Surface), Band 3: Fine-Grid Testimonial & Real Worker Stories Band, Band 4: Vibrant Cyan/Aqua Callout Banner (`#25DCF5` / `#00D2F0`) (+6 more)
 
 ### Community 82 - "v1 Requirements"
-Cohesion: 0.18
-Nodes (10): Out of Scope, Phase 2: Profile & Onboarding Data, Phase 4: Runway Feed & Engine Integration, Phase 5: Secure AI Function (Stretch), Phase 6: Demo Data Seed & Test Fixtures, Phase 7: Deployment & Production Smoke Test, Phase 8: Verify & Release Freeze, Requirements: FLOVA (M1 Backend & Database) (+2 more)
+Cohesion: 0.17
+Nodes (11): Out of Scope, Phase 2: Profile & Onboarding Data, Phase 3: Data Capture Hooks & Mutation Services, Phase 4: Runway Feed & Engine Integration, Phase 5: Secure AI Function (Stretch), Phase 6: Demo Data Seed & Test Fixtures, Phase 7: Deployment & Production Smoke Test, Phase 8: Verify & Release Freeze (+3 more)
 
 ### Community 83 - "Tasks"
 Cohesion: 0.29
 Nodes (6): Objectives, Plan 05-01: Payout Synchronization Hardening & Idempotency, Task 0: Database Migration (`20261121000100_harden_payout_sync.sql`), Task 2: PGlite Comprehensive Regression Suite, Task 3: Real Multi-Connection PostgreSQL Concurrency Test, Tasks
 
-### Community 84 - "coreFinancialCorrectness.test.ts"
-Cohesion: 0.18
-Nodes (13): categoriesFor(), CategoryOption, EXPENSE_CATEGORIES, INCOME_CATEGORIES, PROFILE_INCOME_PRIORITY, DAILY_AGGREGATE_LIMIT_ERROR_MESSAGE, DAILY_ESTIMATE_LIMIT_ERROR_MESSAGE, LIMIT_ERROR_MESSAGE (+5 more)
-
-### Community 85 - "FLOVA data contract (v1 · owner: M1)"
-Cohesion: 0.17
-Nodes (11): `balance_checkins` (actual cash + bank at a moment), `commitments` (bills and debts), FLOVA data contract (v1 · owner: M1), Frontend data hooks (`frontend/src/data/`), How to record each money situation, `payouts` (money expected, **not cash until received**), `profiles` (one per user, created automatically at sign-up), Rules everyone follows (+3 more)
+### Community 85 - "Tables"
+Cohesion: 0.33
+Nodes (6): `balance_checkins` (actual cash + bank at a moment), `commitments` (bills and debts), `payouts` (money expected, **not cash until received**), `profiles` (one per user, created automatically at sign-up), Tables, `transactions` (money that actually moved)
 
 ### Community 86 - "ProfileScreen.tsx"
-Cohesion: 0.31
-Nodes (9): PAYOUT_LABELS, VARIABILITY_LABELS, WORK_LABELS, toPaiseOrNull(), ParseRequiredRupeesResult, ParseRupeesResult, IncomeVariability, PAYOUT_PATTERNS (+1 more)
+Cohesion: 0.29
+Nodes (10): PAYOUT_LABELS, VARIABILITY_LABELS, WORK_LABELS, INCOME_VARIABILITIES, IncomeVariability, PAYOUT_PATTERNS, PayoutPattern, WORK_PROFILES (+2 more)
 
 ### Community 87 - "MockQueryBuilder"
 Cohesion: 0.13
@@ -479,21 +456,21 @@ Nodes (3): MockQueryBuilder, Phase 7 UAT: Financial Data Contracts & Timeline He
 Cohesion: 0.20
 Nodes (9): 1. Canvas, Background Surface & Spatial Framing, 2. Top Navigation Bar (Fixed / Sticky Editorial Header), 3. Centered Typography Lockup & Easing Choreography, 4. Central Focal Visual (Centerpiece), 5. Hand-Drawn Sketch Annotations, Medallion & Secondary Visuals, 6. Reveal on Scroll (Sub-Hero Section at `t = 12s–17.8s`), 7. Motion Choreography & Parallax Execution Plan, 8. Readiness Checklist for Video 2 & Master Build (+1 more)
 
-### Community 89 - "candidateAdapter.ts"
-Cohesion: 0.22
-Nodes (17): 1. Overview & Ownership Boundaries, candidateToNewTransaction(), confirmCandidateTransaction(), deriveDeterministicUUID(), fnv1a32(), generateUUID(), getTransactionsFromDto(), isValidUUID() (+9 more)
+### Community 89 - "coreFinancialCorrectness.test.ts"
+Cohesion: 0.21
+Nodes (12): categoriesFor(), safeConvertRupeeStringToPaise(), DAILY_AGGREGATE_LIMIT_ERROR_MESSAGE, DAILY_ESTIMATE_LIMIT_ERROR_MESSAGE, LIMIT_ERROR_MESSAGE, MAX_TRANSACTION_LIMIT_PAISE, MAX_TRANSACTION_LIMIT_RUPEES, ParseRequiredRupeesResult (+4 more)
 
 ### Community 90 - "listActivityTimeline"
-Cohesion: 0.11
-Nodes (24): FinancialInsight, generateFinancialInsights(), InsightSeverity, listActivityTimeline(), assertStrictEqual(), assertTrue(), it(), runTests() (+16 more)
+Cohesion: 0.08
+Nodes (28): generateFinancialInsights(), listActivityTimeline(), assertStrictEqual(), assertTrue(), it(), runTests(), ActivityItemKind, 1. Extend Contracts & Timeline Service (+20 more)
 
 ### Community 91 - "Phase 9.1 User Acceptance Testing (UAT)"
 Cohesion: 0.25
 Nodes (7): Phase 9.1 User Acceptance Testing (UAT), Scenario 1: Language Pinned Transcription (Kannada), Scenario 2: Hindi Living Expense Extraction, Scenario 3: Truthful Uncertainty / Missing Amount (Kannada), Scenario 4: Platform Expected Payout Isolation (Telugu), Scenario 5: Balance Check-in Segregation (Urdu), Scenario 6: Multilingual Deterministic Financial Queries
 
-### Community 92 - "FinancialExtractionDTO"
-Cohesion: 0.18
-Nodes (10): Edge Function Contract (`process-voice`), Implementation Tasks, Objectives, Plan 09-01: Secure Voice Transcription and Financial Intent Integration, Security Boundaries & Guardrails, Task 1: Supabase Edge Function (`backend/supabase/functions/process-voice/index.ts`), Task 2: Frontend Voice Service & Audio Capture Hook, Task 4: Automated Test Suite (`frontend/src/services/__tests__/voiceIntent.test.ts`) (+2 more)
+### Community 92 - "README.md"
+Cohesion: 0.14
+Nodes (13): Acknowledgements, Contributing, Development Workflow, Documentation Index, How FLOVA Works, License, Project Structure, Security & Financial Principles (+5 more)
 
 ### Community 93 - "Phase 7 Verification Report: Financial Data Contracts"
 Cohesion: 0.33
@@ -523,17 +500,17 @@ Nodes (3): 1. Safety & Isolation Invariants, 2. Canonical Scenario (Ravi - Deliv
 Cohesion: 0.50
 Nodes (3): Phase 9.1 Verification Report, Test Summary, Verification Checklist
 
-### Community 100 - "Implementation Decisions"
-Cohesion: 0.14
-Nodes (13): 1. Routing & Dependencies, 2. Auth Context & Session Management, 3. Pages & UI Presentation, 4. Authentication Workflows & Form Behavior, 6. Backend Hygiene & Explicit Permissions, Canonical References, Established Patterns, Existing Code Insights (+5 more)
+### Community 100 - "Phase 1: Auth flow - Context"
+Cohesion: 0.25
+Nodes (7): Deferred Ideas, Established Patterns, Existing Code Insights, Integration Points, Phase 1: Auth flow - Context, Phase Boundary, Reusable Assets
 
 ### Community 101 - "Architecture & Work Breakdown"
 Cohesion: 0.22
 Nodes (8): Architecture & Work Breakdown, Invariants & Guardrails, Objective, Phase 17 Plan: AI4Bharat IndicConformer Primary STT Migration, Task 1: Build FastAPI IndicConformer STT Service (`ai-engine/stt_service/`), Task 2: Update Edge Function `process-voice` with Primary/Fallback Routing, Task 3: STT Benchmarking Suite, Task 4: Automated Testing & Invariant Verification
 
-### Community 102 - "Phase 10.2: Application UI shell and screens — Plan 01"
-Cohesion: 0.33
-Nodes (5): Decisions, Goal, Out of scope, Phase 10.2: Application UI shell and screens — Plan 01, Tasks
+### Community 102 - "AppLayout.tsx"
+Cohesion: 0.19
+Nodes (13): AppLayout(), MORE_PATHS, Tab(), IconActivity, IconChart, IconHome, IconMic, IconMore (+5 more)
 
 ### Community 103 - "Phase 10.2 Plan 01: Summary"
 Cohesion: 0.40
@@ -546,10 +523,6 @@ Nodes (3): RecorderState, useVoiceRecorder(), VoiceRecorderResult
 ### Community 108 - "useSpeechToText.ts"
 Cohesion: 0.40
 Nodes (5): getCtor(), Recognition, SPEECH_LOCALES, SpeechStatus, useSpeechToText()
-
-### Community 109 - "wish.ts"
-Cohesion: 0.51
-Nodes (8): assertEqual(), assertTrue(), run(), test(), addWishContribution(), createWishGoal(), listWishGoals(), migrateLocalStorageGoals()
 
 ### Community 110 - "1. Architecture & Design Decisions"
 Cohesion: 0.25
@@ -567,33 +540,33 @@ Nodes (9): 1. Requirements & Acceptance Criteria Verification, 2. Test Verificat
 Cohesion: 0.18
 Nodes (11): fallbackFileRead(), MAX_IMAGE_DIMENSION_PX, MAX_IMAGE_FILE_SIZE_BYTES, OPTIMIZATION_QUALITY, OptimizedImageResult, SUPPORTED_IMAGE_MIME_TYPES, validateAndOptimizeImage(), validateImageFile() (+3 more)
 
-### Community 114 - "InsightsScreen.tsx"
-Cohesion: 0.32
-Nodes (13): RunwayStatus(), InsightsScreen(), InsightsTab(), Runway, RunwayAndInsights(), RunwayTab(), IconAlert, IconBulb (+5 more)
+### Community 114 - "kit.tsx"
+Cohesion: 0.14
+Nodes (39): CommitmentsScreen(), InsightsScreen(), InsightsTab(), Runway, RunwayAndInsights(), RunwayTab(), MONTH_FMT, MonthView() (+31 more)
 
 ### Community 115 - "Phase 5: Payout Synchronization Hardening & Idempotency Verification Report"
 Cohesion: 0.40
 Nodes (4): Goal Achievement, Observable Truths, Phase 5: Payout Synchronization Hardening & Idempotency Verification Report, Technical Audit & Safety Bounds
 
 ### Community 116 - "invoices.ts"
-Cohesion: 0.17
-Nodes (14): AddInvoiceSettlementInput, CreateInvoiceInput, getInvoice(), AddWishContributionInput, CreateWishGoalInput, Invoice, InvoiceDirection, InvoiceItem (+6 more)
+Cohesion: 0.07
+Nodes (46): handleLinkToRunway(), addInvoiceSettlement(), AddInvoiceSettlementInput, convertPayableToCommitment(), convertReceivableToPayout(), createInvoice(), CreateInvoiceInput, getInvoice() (+38 more)
 
 ### Community 119 - "test-db.mjs"
 Cohesion: 0.18
 Nodes (10): allProfiles, allVariabilities, db, expectError(), files, migrationsDir, ok(), assert() (+2 more)
 
 ### Community 120 - "Plan 10-01: Financial Activity, Money Overview & Deterministic Insights"
-Cohesion: 0.12
-Nodes (11): Core Requirements & Boundaries, Goal, Phase 9.1 Context: Multilingual Voice Support & Language-Specific Financial Extraction, Objective, Owner: M1 (Backend/Contracts) & M2/M3 (Frontend & Insights Engine), Phase: 10, Plan: 01, Plan 10-01: Financial Activity, Money Overview & Deterministic Insights (+3 more)
+Cohesion: 0.33
+Nodes (5): Objective, Owner: M1 (Backend/Contracts) & M2/M3 (Frontend & Insights Engine), Phase: 10, Plan: 01, Plan 10-01: Financial Activity, Money Overview & Deterministic Insights
 
 ### Community 121 - "FLOVA (Udaan 2.0)"
 Cohesion: 0.22
 Nodes (8): Business & Problem Context, Constraints & Rules for Every Phase, Core Value, FLOVA (Udaan 2.0), Key Decisions Log, Team Ownership & Boundaries, Technical Environment & Architecture, What This Is
 
 ### Community 122 - "categories.ts"
-Cohesion: 0.25
-Nodes (16): TxDraft, TxSubmit, ExtractedReceiptCandidate, PendingDraftContext, VoiceTransactionCandidate, ProposedEvidenceType, ProposedPaymentMethod, ProposedVerificationStatus (+8 more)
+Cohesion: 0.12
+Nodes (35): 1. Overview & Ownership Boundaries, CategoryOption, TxDraft, TxSubmit, candidateToNewTransaction(), confirmCandidateTransaction(), deriveDeterministicUUID(), fnv1a32() (+27 more)
 
 ### Community 123 - "parseRupees.test.ts"
 Cohesion: 0.17
@@ -608,16 +581,20 @@ Cohesion: 0.25
 Nodes (7): Implementation Tasks, Objective, Plan 13-01: Core Financial Correctness, Navigation and Account Management, Task 1: Fix Voice Transaction Amount Duplication, Task 2: Add Income Categories & Profile Adaptation, Task 3: Fix Navigation and Redirects, Verification Plan
 
 ### Community 126 - "Implementation Decisions"
-Cohesion: 0.25
-Nodes (7): 1. Voice Transaction Amount Duplication, 2. Income Categories, 3. Navigation and Redirects, 5. Application Daily Limit (₹10 Lakh), Implementation Decisions, Phase 13 Context: Core Financial Correctness, Navigation and Account Management, Purpose & Scope
+Cohesion: 0.29
+Nodes (6): 2. Income Categories, 3. Navigation and Redirects, 5. Application Daily Limit (₹10 Lakh), Implementation Decisions, Phase 13 Context: Core Financial Correctness, Navigation and Account Management, Purpose & Scope
+
+### Community 127 - "ProfileProvider.tsx"
+Cohesion: 0.13
+Nodes (17): ProfileContext, ProfileContextType, ProfileProvider(), updateMyProfile(), assertStrictEqual(), assertTrue(), it(), runTests() (+9 more)
 
 ### Community 128 - "Phase 17 Verification: AI4Bharat IndicConformer Primary STT Migration"
 Cohesion: 0.33
 Nodes (5): 1. Migration & Implementation Summary, 2. Invariants & Financial Guardrails, 3. Test Results, Completed Milestones, Phase 17 Verification: AI4Bharat IndicConformer Primary STT Migration
 
-### Community 129 - "formatINR"
-Cohesion: 0.13
-Nodes (21): categoryLabel(), DayTotals, monthRange(), MonthSummary, pad(), shiftMonth(), summarise(), useMonthSummary() (+13 more)
+### Community 129 - "useMonthSummary.ts"
+Cohesion: 0.48
+Nodes (6): DayTotals, monthRange(), MonthSummary, pad(), shiftMonth(), summarise()
 
 ### Community 130 - "2. Work Breakdown"
 Cohesion: 0.20
@@ -628,8 +605,8 @@ Cohesion: 0.18
 Nodes (10): 1. Requirements & Acceptance Criteria Verification, 2. Test Execution Results, 3. Edge Function Deployment, Phase 14 Verification: Smart Capture, Receipt Intelligence & UPI Share Integration, Phase Overview, Task 1: Improved Receipt Scanning and Extraction, Task 2: Support for UPI Payment Screenshots, Task 3: Camera, Gallery & File Uploads (+2 more)
 
 ### Community 132 - "FinancialExtractionDTO"
-Cohesion: 0.16
-Nodes (13): 2. Canonical Edge Function Endpoint Specification: `process-voice`, 3. Dedicated Receipt Extraction Endpoint: `extract-receipt`, 4. Groq API Implementation Details for M1, 5. End-to-End Sequence Flow, Endpoint, Endpoint, FLOVA — M1 Edge Function Integration Contract (Owner: M3 / AI Engine), Mode 1: Audio Input (Microphone Recording) (+5 more)
+Cohesion: 0.05
+Nodes (36): 2. Canonical Edge Function Endpoint Specification: `process-voice`, 3. Dedicated Receipt Extraction Endpoint: `extract-receipt`, 4. Groq API Implementation Details for M1, 5. End-to-End Sequence Flow, Endpoint, Endpoint, FLOVA — M1 Edge Function Integration Contract (Owner: M3 / AI Engine), Mode 1: Audio Input (Microphone Recording) (+28 more)
 
 ### Community 133 - "Phase 1: Core Financial Correctness, Navigation and Account Management Verification Report"
 Cohesion: 0.50
@@ -643,45 +620,25 @@ Nodes (8): 1. Edge Function `extract-receipt` Enhancement, 2. Date Fallback Inva
 Cohesion: 0.20
 Nodes (9): RAVI_FIXTURE, runLiveSeeding(), runTestVerification(), seedDemoUser(), Key Implementation Details, Outcome, Phase 6 Plan 01 Summary: Realistic Demo Data Seeding & Isolation, Phase 6 UAT: Realistic Demo Data Seeding & Isolation (+1 more)
 
-### Community 136 - "Phase 7 Plan 01 Summary: Financial Data Contracts & Timeline Helpers"
-Cohesion: 0.50
-Nodes (3): Key Implementation Details, Outcome, Phase 7 Plan 01 Summary: Financial Data Contracts & Timeline Helpers
-
-### Community 137 - "auth.ts"
-Cohesion: 0.33
-Nodes (9): LoginPage(), handleSubmit(), SignupPage(), handleSubmit(), getSession(), onAuthChange(), signIn(), signUp() (+1 more)
-
-### Community 138 - "ravi.test.ts"
-Cohesion: 0.33
-Nodes (5): fridayEntry, mondayEntry, raviInput, result, saturdayEntry
-
-### Community 139 - "Phase 9 Verification Report: Secure Voice Transcription & Intent Integration"
-Cohesion: 0.40
-Nodes (4): Automated Test Log (`voiceIntent.test.ts`), Execution Context, Phase 9 Verification Report: Secure Voice Transcription & Intent Integration, Verification Verdict
-
 ### Community 140 - "Detailed Task Breakdown"
 Cohesion: 0.17
 Nodes (11): Detailed Task Breakdown, Objective, Phase 18 Plan: Final Project Consolidation, Documentation & Main Branch Release, Task 1: Complete Project Audit, Task 2: Author Technical Documentation Suite (`docs/`), Task 3: Root Documentation Overhaul, Task 4: Security and Database Audit, Task 5: Complete Test Verification (+3 more)
 
-### Community 142 - "FLOVA"
-Cohesion: 0.18
-Nodes (11): 1. Clone & Install, 2. Configure Environment, 3. Run Development Servers, 🏗️ Architecture & Technology Stack, FLOVA, 🚀 Getting Started, 📄 License, Prerequisites (+3 more)
+### Community 142 - "Verification Results"
+Cohesion: 0.14
+Nodes (13): make(), Task 2: Rewrite README.md, 1. License Verification, 2. Documentation Accuracy, 3. Automated Quality Assurance & Build Checks, 4. Git Invariants, Phase 20: Documentation Recovery and Open-Source Polish — Verification, Verification Results (+5 more)
 
 ### Community 143 - "FLOVA: Deployment & Operations Guide"
 Cohesion: 0.20
 Nodes (9): 1. Overview, 2. Frontend Deployment (Vercel / Static Hosting), 3. Supabase Edge Functions Deployment, 4. IndicConformer FastAPI Microservice Deployment, Build Command, Configure Edge Function Secrets, Docker Deployment, FLOVA: Deployment & Operations Guide (+1 more)
 
-### Community 144 - "useSession.ts"
-Cohesion: 0.31
-Nodes (4): client(), login(), AuthContext, AuthContextValue
-
 ### Community 145 - "README.md"
-Cohesion: 0.22
-Nodes (6): 1. System Philosophy & Core Invariants, 2. High-Level Architecture Diagram, 3. Component Directory Layout, FLOVA: High-Level Architecture & System Boundaries, 1. Overview, FLOVA: Automated Testing & Verification Guide
-
-### Community 146 - "Phase 9 User Acceptance Testing (UAT) Report: Voice Transcription & Intent Integration"
 Cohesion: 0.40
-Nodes (4): Phase 9 User Acceptance Testing (UAT) Report: Voice Transcription & Intent Integration, Scope of Verification, Test Results Summary, Verdict
+Nodes (4): 1. System Philosophy & Core Invariants, 2. High-Level Architecture Diagram, 3. Component Directory Layout, FLOVA: High-Level Architecture & System Boundaries
+
+### Community 146 - "Phase 19 Context: FLOVA App Icon & Favicon Integration"
+Cohesion: 0.22
+Nodes (8): 1. Objective, 2. Master Brand Asset Specification, 3. Asset Specification & Delivery Requirements, 4. Integration Touchpoints, 5. Verification & Acceptance Criteria, A. App Icon (PWA / Mobile / Home Screen), B. Favicon (Browser Tabs & Bookmarks), Phase 19 Context: FLOVA App Icon & Favicon Integration
 
 ### Community 147 - "2. Locked Implementation Decisions"
 Cohesion: 0.22
@@ -699,13 +656,13 @@ Nodes (7): 1. Scope & Objective, 2. Database Schema & Entities, 3. Automated Rec
 Cohesion: 0.25
 Nodes (7): 1. Overview, 2. Model Checkpoints & Priority Routing, 3. Audio Processing Pipeline, 4. Execution Flow & Fail-Safe Fallback, 5. Performance & Resource Consumption, 6. Multi-Transaction Extraction & Anti-Duplication, FLOVA: Speech-to-Text & Conversational Voice Architecture
 
-### Community 151 - "AuthProvider"
-Cohesion: 0.29
-Nodes (7): AuthProvider(), Codebase Concerns, Fragile Areas, Missing Critical Features (To be delivered in Roadmap), Security Considerations, Tech Debt, Phase 1: Authentication Flow
+### Community 151 - "useSession"
+Cohesion: 0.17
+Nodes (14): AuthContext, AuthContextValue, AuthProvider(), RedirectIfAuthed(), useSession(), Codebase Concerns, Fragile Areas, Missing Critical Features (To be delivered in Roadmap) (+6 more)
 
-### Community 152 - "External Integrations"
-Cohesion: 0.25
-Nodes (7): Authentication & Identity, CI/CD & Deployment, Data Storage, Environment Configuration, External Integrations, Monitoring & Observability, Webhooks & Callbacks
+### Community 152 - "signOut"
+Cohesion: 0.06
+Nodes (37): client(), login(), supabase, LoginPage(), handleSubmit(), SignupPage(), handleSubmit(), getSession() (+29 more)
 
 ### Community 153 - "Phase 16 Verification: Complete Receipt & UPI Extraction Pipeline Repair"
 Cohesion: 0.25
@@ -724,12 +681,12 @@ Cohesion: 0.29
 Nodes (6): 1. Overview, 2. Image Optimization & Size Handling (`imageOptimizer.ts`), 3. Serverless Vision Pipeline (`extract-receipt`), 4. Structured Receipt Parsing & Arithmetic Reconciliation, 5. UPI Screenshot Intelligence, FLOVA: Smart Capture & Receipt/UPI Intelligence
 
 ### Community 157 - "2. Test Execution Commands"
-Cohesion: 0.29
-Nodes (7): 2. Test Execution Commands, A. Frontend Service & UI Integration Tests (21 suites, 100+ tests), B. Deterministic Financial Engine & Runway Tests (9 suites), C. Backend Database Schema, Triggers & RLS Tests (54 tests), D. Demo Seeding & Isolation Verification (17 tests), E. Python STT Service & Engine Tests (23 tests), F. Frontend Production Build
+Cohesion: 0.20
+Nodes (9): 1. Overview, 2. Test Execution Commands, A. Frontend Service & UI Integration Tests (21 suites, 100+ tests), B. Deterministic Financial Engine & Runway Tests (9 suites), C. Backend Database Schema, Triggers & RLS Tests (54 tests), D. Demo Seeding & Isolation Verification (17 tests), E. Python STT Service & Engine Tests (23 tests), F. Frontend Production Build (+1 more)
 
-### Community 158 - "financialIntelligence.test.ts"
-Cohesion: 0.33
-Nodes (3): calculateAdaptiveBuffer(), deriveProtectionHorizon(), generateIncomeForecast()
+### Community 158 - "Phase 19 Verification: FLOVA App Icon & Favicon Integration"
+Cohesion: 0.22
+Nodes (8): 1. Executive Summary, 2. Asset Verification Matrix, 3. Integration & Web Standards Audit, 4. Production Build Verification, A. Document Head (`frontend/index.html`), B. Web App Manifest (`frontend/public/manifest.webmanifest`), C. Service Worker Precaching (`frontend/public/sw.js`), Phase 19 Verification: FLOVA App Icon & Favicon Integration
 
 ### Community 159 - "mockLoader.mjs"
 Cohesion: 0.29
@@ -738,10 +695,6 @@ Nodes (3): __dirname, __filename, mockSupabasePath
 ### Community 160 - "FLOVA — Project Handoff & Release State (2026-11-21)"
 Cohesion: 0.29
 Nodes (6): 1. Product Identity & Purpose, 2. Implemented Features & Verification Matrix, 3. Technology Stack Summary, 4. Repository Layout & Map, 5. Branch & Release Policy, FLOVA — Project Handoff & Release State (2026-11-21)
-
-### Community 161 - "Coding Conventions"
-Cohesion: 0.29
-Nodes (6): Code Style, Coding Conventions, Database Interaction Conventions, Error Handling, Financial & Money Conventions, Import Organization
 
 ### Community 162 - "Onboarding Summary"
 Cohesion: 0.29
@@ -763,37 +716,61 @@ Nodes (5): 1. Classification & Security Rules, 2. Frontend Environment (`fronten
 Cohesion: 0.33
 Nodes (5): Codebase Structure, Directory Layout, Directory Purposes, Key File Locations, Where to Add New Code
 
-### Community 167 - "🌟 Core Capabilities"
-Cohesion: 0.33
-Nodes (6): 1. Conversational Voice Intelligence, 2. Smart Capture & Receipt / UPI Intelligence, 3. Invoice Intelligence Agent, 4. Deterministic Financial Engine, 5. Adaptive Safety Buffer & Runway Outlook, 🌟 Core Capabilities
-
-### Community 169 - "Plan 05-02 Summary: Idempotent Retry UX Fix in `addTransaction`"
-Cohesion: 0.50
-Nodes (3): Artifacts Produced / Modified, Key Accomplishments, Plan 05-02 Summary: Idempotent Retry UX Fix in `addTransaction`
-
 ### Community 170 - "Plan 06-01: Realistic Demo Data Seeding & Isolation"
 Cohesion: 0.50
 Nodes (3): Objectives, Plan 06-01: Realistic Demo Data Seeding & Isolation, Tasks
 
+### Community 171 - "useSession"
+Cohesion: 0.12
+Nodes (14): DataVersionContext, DataVersionContextType, DataVersionProvider(), useTransactions(), remove(), save(), deleteTransaction(), updateTransaction() (+6 more)
+
+### Community 172 - "Plan 19-01: FLOVA App Icon and Favicon Generation & Integration"
+Cohesion: 0.25
+Nodes (7): Phase Overview, Plan 19-01: FLOVA App Icon and Favicon Generation & Integration, Task 1: Deterministic Icon & Favicon Asset Generation, Task 2: PWA & Document Head Integration, Task 3: Production Build & Asset Verification, Tasks, Verification Criteria
+
+### Community 173 - "2. Locked Decisions"
+Cohesion: 0.25
+Nodes (7): 1. Objective, 2. Locked Decisions, A. Licensing, B. Accurate Architecture & System Boundaries, C. Feature Status Classification, D. Documentation Style & Safety, Phase 20: Documentation Recovery and Open-Source Polish — Context
+
+### Community 175 - "Tasks"
+Cohesion: 0.29
+Nodes (6): Objective, Plan 20-01: Documentation Recovery and Open-Source Polish, Task 1: Initialize Canonical MIT LICENSE, Task 3: Documentation Consistency Audit, Task 4: Verification and Quality Assurance, Tasks
+
+### Community 177 - "scripts"
+Cohesion: 0.40
+Nodes (5): scripts, seed:demo, test:db, test:rls-live, test:seed
+
+### Community 178 - "Phase 18 Verification: Final Project Consolidation, Documentation & Main Branch Release"
+Cohesion: 0.40
+Nodes (4): 1. Scope & Execution Verification, 2. Invariants & Financial Integrity Checklist, 3. Git Release Verification, Phase 18 Verification: Final Project Consolidation, Documentation & Main Branch Release
+
+### Community 179 - "Key Features"
+Cohesion: 0.40
+Nodes (5): 📐 Financial Engine & Runway, 🧾 Invoice Intelligence, Key Features, 📸 Smart Capture & Receipt OCR, 🎙️ Voice Intelligence
+
+### Community 180 - "FlovaHeroSlider.tsx"
+Cohesion: 0.50
+Nodes (3): FlovaHeroSlider(), FlovaHeroSliderProps, SlideData
+
 ## Knowledge Gaps
 - **17 isolated node(s):** `udaan-engine`, `@supabase/supabase-js`, `PGPASSWORD`, `PGHOST`, `PGPORT` (+12 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 950 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **30 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 1018 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **27 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `react` connect `react` to `formatINR`, `contracts.ts`, `frontend/package.json`, `auth.ts`, `useSession.ts`, `ActivityScreen.tsx`, `Card`, `App.tsx`, `Icons.tsx`, `PhonePeLandingPage.tsx`, `icons.tsx`, `useWish.ts`, `VoiceScreen.tsx`, `OneRupeeCoin`, `data.ts`, `addTransaction`, `ProfileScreen.tsx`, `useAudioRecorder.ts`, `useVoiceRecorder.ts`, `useSpeechToText.ts`, `InsightsScreen.tsx`, `PhonePeAppstoreHalo.tsx`?**
-  _High betweenness centrality (0.137) - this node is a cross-community bridge._
-- **Are the 14 inferred relationships involving `toPaise()` (e.g. with `Architectural Rules` and `4. Coding Conventions`) actually correct?**
-  _`toPaise()` has 14 INFERRED edges - model-reasoned connections that need verification._
+- **Why does `react` connect `react` to `useMonthSummary.ts`, `frontend/package.json`, `icons.tsx`, `useSession`, `signOut`, `FlovaPulseLandingPage.tsx`, `todayLocalISO`, `useSession`, `RequireAuth`, `Card`, `FlovaTactileLandingPage.tsx`, `FlovaHeroSlider.tsx`, `FlovaAppShowcase.tsx`, `useWish.ts`, `VoiceScreen.tsx`, `OneRupeeCoin`, `data.ts`, `ProfileScreen.tsx`, `useAudioRecorder.ts`, `AppLayout.tsx`, `useVoiceRecorder.ts`, `useSpeechToText.ts`, `kit.tsx`, `ProfileProvider.tsx`?**
+  _High betweenness centrality (0.153) - this node is a cross-community bridge._
+- **Are the 15 inferred relationships involving `toPaise()` (e.g. with `Architectural Rules` and `4. Coding Conventions`) actually correct?**
+  _`toPaise()` has 15 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `udaan-engine`, `@supabase/supabase-js`, `PGPASSWORD` to the rest of the system?**
   _17 weakly-connected nodes found - possible documentation gaps or missing edges._
-- **Should `main.py` be split into smaller, more focused modules?**
-  _Cohesion score 0.056692242114237 - nodes in this community are weakly interconnected._
-- **Why does `main()` connect `main` to `FLOVA — Project Handoff & Release State (2026-11-21)`, `Onboarding Summary`, `loadRunwayInput`, `Project State`, `Detailed Task Breakdown`, `test_engine.py`, `CLAUDE.md — FLOVA Engineering Guide`, `v1 Requirements`, `Working on FLOVA (team rules for the 24-hour build)`, `FLOVA (Udaan 2.0)`?**
-  _High betweenness centrality (0.100) - this node is a cross-community bridge._
+- **Should `benchmark_stt.py` be split into smaller, more focused modules?**
+  _Cohesion score 0.11083743842364532 - nodes in this community are weakly interconnected._
+- **Why does `main()` connect `main` to `FLOVA — Project Handoff & Release State (2026-11-21)`, `Onboarding Summary`, `Detailed Task Breakdown`, `test_engine.py`, `CLAUDE.md — FLOVA Engineering Guide`, `Phase 18 Verification: Final Project Consolidation, Documentation & Main Branch Release`, `v1 Requirements`, `Working on FLOVA (team rules for the 24-hour build)`, `useSession`, `FLOVA (Udaan 2.0)`?**
+  _High betweenness centrality (0.134) - this node is a cross-community bridge._
 - **Are the 5 inferred relationships involving `todayLocalISO()` (e.g. with `Key Accomplishments` and `Decisions`) actually correct?**
   _`todayLocalISO()` has 5 INFERRED edges - model-reasoned connections that need verification._
-- **Should `VERDICT — pick-f1-irregular-income` be split into smaller, more focused modules?**
-  _Cohesion score 0.045454545454545456 - nodes in this community are weakly interconnected._
+- **Should `RunwayInput` be split into smaller, more focused modules?**
+  _Cohesion score 0.13588850174216027 - nodes in this community are weakly interconnected._

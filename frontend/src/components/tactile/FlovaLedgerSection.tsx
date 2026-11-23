@@ -3,7 +3,7 @@ import { RefreshCw, CheckCircle2 } from "./Icons";
 import { SectionHeading } from "./SectionHeading";
 import { StickyNote, RubberStamp } from "./FloatingElements";
 
-export const AbyssLedgerSection: React.FC = () => {
+export const FlovaLedgerSection: React.FC = () => {
   const [grossPocketRupees, setGrossPocketRupees] = useState<number>(6500);
   const [codLiabilityRupees, setCodLiabilityRupees] = useState<number>(2000);
 

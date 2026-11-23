@@ -12,7 +12,7 @@ interface HeroProps {
   onExplore: () => void;
 }
 
-export const AbyssHero: React.FC<HeroProps> = ({ onExplore }) => {
+export const FlovaTactileHero: React.FC<HeroProps> = ({ onExplore }) => {
   return (
     <section className="relative min-h-[92vh] pt-32 pb-20 overflow-hidden flex flex-col justify-center items-center">
       {/* Background Subtle Dot Pattern */}

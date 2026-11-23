@@ -1,6 +1,6 @@
 import React from "react";
 
-export const PhonePePanIndiaBanner: React.FC = () => {
+export const FlovaPanIndiaBanner: React.FC = () => {
   const internationalFlags = [
     {
       id: "singapore",
@@ -102,9 +102,9 @@ export const PhonePePanIndiaBanner: React.FC = () => {
   return (
     <section className="py-14 px-4 sm:px-6 lg:px-8 bg-white">
       <div className="max-w-6xl mx-auto">
-        {/* Large Rounded Royal Purple Container (Matching Screenshot 10 Exactly) */}
+        {/* Large Rounded Royal Purple Container (FLOVA Design Specification) */}
         <div className="rounded-[40px] bg-[#251A45] text-white py-16 px-6 sm:px-12 text-center relative overflow-hidden shadow-2xl">
-          {/* Top Globe with Purple Acoustic Waves (Matching Screenshot 10) */}
+          {/* Top Globe with Purple Acoustic Waves (FLOVA Design Specification) */}
           <div className="flex items-center justify-center gap-3 sm:gap-5 mb-6">
             {/* Left Acoustic Waves */}
             <div className="flex items-center gap-2">
@@ -134,7 +134,7 @@ export const PhonePePanIndiaBanner: React.FC = () => {
             </div>
           </div>
 
-          {/* Headline (Matching Screenshot 10) */}
+          {/* Headline (FLOVA Design Specification) */}
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white mb-4">
             FLOVA International &amp; Pan-India
           </h2>
@@ -144,7 +144,7 @@ export const PhonePePanIndiaBanner: React.FC = () => {
             Make UPI payments internationally at select merchants. Now active across Singapore, UAE, Nepal, Sri Lanka, Bhutan, and Mauritius.
           </p>
 
-          {/* 6 Country Flag Badges Row (Matching Screenshot 10 Exactly) */}
+          {/* 6 Country Flag Badges Row (FLOVA Design Specification) */}
           <div className="flex items-center justify-center gap-4 sm:gap-8 flex-wrap">
             {internationalFlags.map((item) => (
               <div

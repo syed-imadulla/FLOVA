@@ -3,7 +3,7 @@ import { Wifi, WifiOff } from "./Icons";
 import { SectionHeading } from "./SectionHeading";
 import { RubberStamp } from "./FloatingElements";
 
-export const AbyssResilienceSection: React.FC = () => {
+export const FlovaResilienceSection: React.FC = () => {
   const [networkMode, setNetworkMode] = useState<"broadband" | "low_bandwidth">("broadband");
 
   return (

@@ -1,28 +1,28 @@
 import React, { useCallback } from "react";
 import { Link } from "react-router-dom";
-import { AbyssNavbar } from "./AbyssNavbar";
-import { AbyssHero } from "./AbyssHero";
-import { AbyssLedgerSection } from "./AbyssLedgerSection";
-import { AbyssHowItWorks } from "./AbyssHowItWorks";
-import { AbyssAuditSection } from "./AbyssAuditSection";
-import { AbyssResilienceSection } from "./AbyssResilienceSection";
-import { AbyssCapabilitiesSection } from "./AbyssCapabilitiesSection";
-import { AbyssFinalCTA } from "./AbyssFinalCTA";
-import { AbyssFooter } from "./AbyssFooter";
+import { FlovaPrimaryNavbar } from "./FlovaPrimaryNavbar";
+import { FlovaTactileHero } from "./FlovaTactileHero";
+import { FlovaLedgerSection } from "./FlovaLedgerSection";
+import { FlovaTactileHowItWorks } from "./FlovaTactileHowItWorks";
+import { FlovaAuditSection } from "./FlovaAuditSection";
+import { FlovaResilienceSection } from "./FlovaResilienceSection";
+import { FlovaCapabilitiesSection } from "./FlovaCapabilitiesSection";
+import { FlovaFinalCTA } from "./FlovaFinalCTA";
+import { FlovaTactileFooter } from "./FlovaTactileFooter";
 import { RiderView } from "../RiderView";
 import { SmsView } from "../SmsView";
 import { EvidenceView } from "../EvidenceView";
 
 export type Tab = "week" | "sms" | "evidence";
 
-interface AbyssLandingPageProps {
+interface FlovaTactileLandingPageProps {
   tab: Tab;
   setTab: (tab: Tab) => void;
   riderId: number | null;
   onRider: (id: number | null) => void;
 }
 
-export const AbyssLandingPage: React.FC<AbyssLandingPageProps> = ({
+export const FlovaTactileLandingPage: React.FC<FlovaTactileLandingPageProps> = ({
   tab,
   setTab,
   riderId,
@@ -36,32 +36,32 @@ export const AbyssLandingPage: React.FC<AbyssLandingPageProps> = ({
   }, []);
 
   return (
-    <div className="flova-abyss-container selection:bg-stone-900 selection:text-white">
-      {/* 1. Abyss Tactile Top Navbar */}
-      <AbyssNavbar onLaunchStage={scrollToStage} />
+    <div className="flova-tactile-container selection:bg-stone-900 selection:text-white">
+      {/* 1. FLOVA Tactile Top Navbar */}
+      <FlovaPrimaryNavbar onLaunchStage={scrollToStage} />
 
       {/* Main Landing Page Experience */}
       <main className="flex-1">
         {/* SECTION 01 — HERO */}
-        <AbyssHero onExplore={scrollToStage} />
+        <FlovaTactileHero onExplore={scrollToStage} />
 
         {/* SECTION 02 — ACTUAL CASH VS. COD SEPARATION */}
-        <AbyssLedgerSection />
+        <FlovaLedgerSection />
 
         {/* SECTION 03 — 3-STEP ARCHITECTURE */}
-        <AbyssHowItWorks />
+        <FlovaTactileHowItWorks />
 
         {/* SECTION 04 — AUDIT & FRAUD DETECTION (Deep Navy #09111e) */}
-        <AbyssAuditSection />
+        <FlovaAuditSection />
 
         {/* SECTION 05 — RESILIENT CONNECTIVITY & SMS MODE */}
-        <AbyssResilienceSection />
+        <FlovaResilienceSection />
 
         {/* SECTION 06 — PRODUCT CAPABILITIES BENTO */}
-        <AbyssCapabilitiesSection />
+        <FlovaCapabilitiesSection />
 
         {/* SECTION 07 — FINAL CTA (Deep Forest-Green Cutting Mat #0b2318) */}
-        <AbyssFinalCTA onLaunch={scrollToStage} />
+        <FlovaFinalCTA onLaunch={scrollToStage} />
       </main>
 
       {/* Interactive Worker Workspace Stage (#flova-app-stage) */}
@@ -122,7 +122,7 @@ export const AbyssLandingPage: React.FC<AbyssLandingPageProps> = ({
       </section>
 
       {/* SECTION 08 — FOOTER */}
-      <AbyssFooter onLaunchStage={scrollToStage} />
+      <FlovaTactileFooter onLaunchStage={scrollToStage} />
     </div>
   );
 };

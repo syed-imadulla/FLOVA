@@ -1,14 +1,14 @@
 import React from "react";
 
-interface PhonePeAppstoreHaloProps {
+interface FlovaAppShowcaseProps {
   onExplore?: () => void;
 }
 
-export const PhonePeAppstoreHalo: React.FC<PhonePeAppstoreHaloProps> = ({ onExplore }) => {
+export const FlovaAppShowcase: React.FC<FlovaAppShowcaseProps> = ({ onExplore }) => {
   return (
     <section className="relative pt-20 pb-28 px-4 sm:px-6 lg:px-8 bg-white overflow-hidden">
-      {/* Warm Radiant Orange Halo Gradient in Background (Matching Screenshot 6) */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[650px] phonepe-orange-halo pointer-events-none" />
+      {/* Warm Radiant Orange Halo Gradient in Background (FLOVA Design Specification) */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[650px] flova-orange-halo pointer-events-none" />
 
       <div className="max-w-5xl mx-auto relative z-10 text-center">
         {/* Warm Orange Title */}
@@ -29,7 +29,7 @@ export const PhonePeAppstoreHalo: React.FC<PhonePeAppstoreHaloProps> = ({ onExpl
         {/* Central Smartphone Frame with Orbiting Badges */}
         <div className="relative max-w-sm sm:max-w-md mx-auto pt-4">
           {/* Floating Pill Badge 1: APPS (Top Left) */}
-          <div className="absolute top-12 -left-4 sm:-left-12 z-20 flex items-center gap-2.5 px-4 py-2 rounded-full bg-[#673ab7] text-white shadow-xl animate-phonepe-float border border-white/20">
+          <div className="absolute top-12 -left-4 sm:-left-12 z-20 flex items-center gap-2.5 px-4 py-2 rounded-full bg-[#673ab7] text-white shadow-xl animate-flova-float border border-white/20">
             <div className="w-6 h-6 rounded-md bg-white/20 grid grid-cols-2 gap-0.5 p-1">
               <span className="bg-amber-300 rounded-[2px]" />
               <span className="bg-pink-300 rounded-[2px]" />
@@ -41,7 +41,7 @@ export const PhonePeAppstoreHalo: React.FC<PhonePeAppstoreHaloProps> = ({ onExpl
 
           {/* Floating Pill Badge 2: TOP-UPS (Bottom Left) */}
           <div
-            className="absolute bottom-24 -left-6 sm:-left-16 z-20 flex items-center gap-2.5 px-4 py-2 rounded-full bg-[#673ab7] text-white shadow-xl animate-phonepe-float border border-white/20"
+            className="absolute bottom-24 -left-6 sm:-left-16 z-20 flex items-center gap-2.5 px-4 py-2 rounded-full bg-[#673ab7] text-white shadow-xl animate-flova-float border border-white/20"
             style={{ animationDelay: "1.5s" }}
           >
             <div className="w-6 h-6 rounded-full bg-amber-400 flex items-center justify-center text-amber-950 font-black text-xs shadow-xs">
@@ -52,7 +52,7 @@ export const PhonePeAppstoreHalo: React.FC<PhonePeAppstoreHaloProps> = ({ onExpl
 
           {/* Floating Pill Badge 3: GIFT CARDS (Right) */}
           <div
-            className="absolute top-36 -right-6 sm:-right-14 z-20 flex items-center gap-2.5 px-4 py-2 rounded-full bg-[#673ab7] text-white shadow-xl animate-phonepe-float border border-white/20"
+            className="absolute top-36 -right-6 sm:-right-14 z-20 flex items-center gap-2.5 px-4 py-2 rounded-full bg-[#673ab7] text-white shadow-xl animate-flova-float border border-white/20"
             style={{ animationDelay: "0.8s" }}
           >
             <span className="text-xs font-black tracking-wider uppercase">GIFT CARDS</span>
@@ -69,15 +69,15 @@ export const PhonePeAppstoreHalo: React.FC<PhonePeAppstoreHaloProps> = ({ onExpl
               {/* Dynamic Island / Notch */}
               <div className="w-24 h-4 bg-slate-900 rounded-full mx-auto mb-8" />
 
-              {/* Screen Inner Content (Matching Screenshot 6) */}
+              {/* Screen Inner Content (FLOVA Design Specification) */}
               <div className="text-center my-auto">
                 <span className="text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase block mb-4">
                   INTRODUCING
                 </span>
 
-                {/* Placeholder Emblem — replace with final FLOVA mark */}
-                <div className="w-20 h-20 mx-auto rounded-full bg-[#e65100] text-white flex items-center justify-center shadow-lg mb-4">
-                  <span className="text-2xl font-black tracking-tight leading-none select-none">F</span>
+                {/* FLOVA Master Emblem */}
+                <div className="w-20 h-20 mx-auto rounded-full bg-white flex items-center justify-center shadow-lg mb-4 overflow-hidden border-2 border-slate-100">
+                  <img src="/favicon.svg" alt="FLOVA" className="w-14 h-14 object-contain" />
                 </div>
 
                 <div className="text-2xl font-black text-[#e65100] tracking-tight">

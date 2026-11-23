@@ -38,6 +38,6 @@ The vision extractor returns an `ExtractedReceiptCandidate`:
 
 ## 5. UPI Screenshot Intelligence
 
-- **Supported Apps:** Google Pay, PhonePe, Paytm, CRED, BHIM.
+- **Supported Screenshot Formats:** Compatible with standard payment confirmation screens from major UPI applications (including Google Pay, PhonePe, Paytm, CRED, and BHIM). All third-party names are trademarks of their respective owners and are referenced solely for technical format compatibility.
 - **Status Classification:** `COMPLETED` (success), `PENDING` (processing), `FAILED` (declined). Only `COMPLETED` transactions suggest immediate expense creation; `FAILED` screenshots notify the user without creating expense records.
 - **Duplicate UTR Reference Check:** The 12-digit UPI reference number / UTR is extracted. Before confirmation, `checkDuplicateUpiReference(utr)` checks existing transactions. If a match is found, an alert prevents duplicate debit recording.
