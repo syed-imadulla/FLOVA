@@ -142,7 +142,7 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    // 2. Authentication check: Validate user JWT or publishable anon key
+    // 2. Authentication check: Validate user JWT (Strictly fail-closed)
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(JSON.stringify({ error: "Missing Authorization header." }), {
@@ -151,31 +151,38 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    const token = authHeader.replace(/^Bearer\s+/i, "");
+    const token = authHeader.replace(/^Bearer\s+/i, "").trim();
+    if (!token) {
+      return new Response(JSON.stringify({ error: "Missing bearer token in Authorization header." }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
 
-    if (supabaseUrl && supabaseAnonKey) {
-      const supabase = createClient(supabaseUrl, supabaseAnonKey);
-      const {
-        data: { user },
-        error: authErr,
-      } = await supabase.auth.getUser(token);
-
-      if (authErr || !user) {
-        const apikey = req.headers.get("apikey") || "";
-        const isAnon =
-          token === supabaseAnonKey ||
-          apikey === supabaseAnonKey ||
-          token.startsWith("sb_publishable_");
-
-        if (!isAnon) {
-          return new Response(JSON.stringify({ error: "Unauthorized. Invalid user token." }), {
-            status: 401,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
+    if (!supabaseUrl || !supabaseAnonKey) {
+      return new Response(
+        JSON.stringify({ error: "Server configuration error: SUPABASE_URL or SUPABASE_ANON_KEY is not configured." }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
         }
-      }
+      );
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    const {
+      data: { user },
+      error: authErr,
+    } = await supabase.auth.getUser(token);
+
+    if (authErr || !user) {
+      return new Response(JSON.stringify({ error: "Unauthorized. Invalid or expired user token." }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     // 3. API Key check
@@ -188,7 +195,16 @@ Deno.serve(async (req: Request) => {
     }
 
     // 4. Validate input payload
-    const body = (await req.json()) as ExtractReceiptRequest;
+    let body: ExtractReceiptRequest;
+    try {
+      body = (await req.json()) as ExtractReceiptRequest;
+    } catch {
+      return new Response(
+        JSON.stringify({ error: "Invalid JSON in request body." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const hasImage = typeof body.imageBase64 === "string" && body.imageBase64.length > 50;
     const hasText = typeof body.text === "string" && body.text.trim().length > 0;
 
@@ -283,9 +299,10 @@ Return strictly a JSON object matching this schema.`;
 
     if (!groqRes.ok) {
       const errText = await groqRes.text();
+      console.error(`[AI Provider Error] Groq API returned status ${groqRes.status}:`, errText);
       return new Response(
         JSON.stringify({
-          error: `AI extraction engine unavailable (${groqRes.status}): ${errText}`,
+          error: `AI extraction engine unavailable (${groqRes.status}). Please try again or enter details manually.`,
           code: "PROVIDER_ERROR",
           recoverable: true,
         }),
@@ -295,7 +312,7 @@ Return strictly a JSON object matching this schema.`;
 
     const groqData = await groqRes.json();
     const rawContent = groqData.choices?.[0]?.message?.content;
-    if (!rawContent) {
+    if (!rawContent || !rawContent.trim()) {
       return new Response(
         JSON.stringify({
           error: "Empty response received from extraction engine.",
@@ -306,7 +323,24 @@ Return strictly a JSON object matching this schema.`;
       );
     }
 
-    const parsed = JSON.parse(rawContent);
+    let parsed: any;
+    try {
+      let cleaned = rawContent.trim();
+      if (cleaned.startsWith("```")) {
+        cleaned = cleaned.replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "").trim();
+      }
+      parsed = JSON.parse(cleaned);
+    } catch (parseErr: any) {
+      console.error("[JSON Parse Error] Failed to parse Groq extraction output:", parseErr.message, rawContent);
+      return new Response(
+        JSON.stringify({
+          error: "Unable to parse structured response from extraction engine.",
+          code: "PARSE_ERROR",
+          recoverable: true,
+        }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     // 7. Normalization & Paise conversion
     let amountPaise: number | null = null;
@@ -336,8 +370,14 @@ Return strictly a JSON object matching this schema.`;
     }
 
     let dateStr: string | null = null;
-    if (typeof parsed.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(parsed.date)) {
-      dateStr = parsed.date;
+    if (typeof parsed.date === "string") {
+      const d = parsed.date.trim();
+      if (/^\d{4}-\d{2}-\d{2}$/.test(d)) {
+        dateStr = d;
+      } else if (/^(\d{2})[-/](\d{2})[-/](\d{4})$/.test(d)) {
+        const [, day, month, year] = d.match(/^(\d{2})[-/](\d{2})[-/](\d{4})$/)!;
+        dateStr = `${year}-${month}-${day}`;
+      }
     }
 
     // Arithmetic reconciliation check
@@ -352,12 +392,16 @@ Return strictly a JSON object matching this schema.`;
     }
 
     const missingFields: string[] = Array.isArray(parsed.missing_fields)
-      ? [...parsed.missing_fields]
+      ? parsed.missing_fields.map((f: string) => (f === "expense_type" ? "expenseType" : f))
       : [];
     if (amountPaise === null && !missingFields.includes("amount")) {
       missingFields.push("amount");
     }
-    if (!parsed.expense_type && !missingFields.includes("expenseType")) {
+    const validatedExpenseType =
+      parsed.expense_type === "living" || parsed.expense_type === "work"
+        ? parsed.expense_type
+        : null;
+    if (!validatedExpenseType && !missingFields.includes("expenseType")) {
       missingFields.push("expenseType");
     }
 
@@ -393,10 +437,7 @@ Return strictly a JSON object matching this schema.`;
       discountPaise,
       arithmeticDiscrepancy,
       category: parsed.category || "other",
-      expenseType:
-        parsed.expense_type === "living" || parsed.expense_type === "work"
-          ? parsed.expense_type
-          : null,
+      expenseType: validatedExpenseType,
       date: dateStr,
       extractedDate: dateStr,
       time: parsed.time || null,

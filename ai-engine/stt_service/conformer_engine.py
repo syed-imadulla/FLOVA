@@ -3,6 +3,7 @@ import time
 import logging
 from typing import Optional, Dict, Any
 import numpy as np
+from .config import settings
 
 logger = logging.getLogger("flova.indicconformer")
 
@@ -71,7 +72,7 @@ class IndicConformerEngine:
             "model_id": model_id,
             "session": session,
             "loaded_at": time.time(),
-            "status": "ready" if session else "simulated_ready"
+            "status": "ready" if session else "unavailable"
         }
         if lang not in self.loaded_models:
             self.loaded_models.append(lang)
@@ -108,10 +109,18 @@ class IndicConformerEngine:
                     "provider": "indicconformer"
                 }
             except Exception as e:
-                logger.error(f"ONNX inference failed: {e}. Falling back to Indic decoder simulation.")
+                logger.error(f"ONNX inference failed: {e}.")
 
-        # 2. Resilient Indic transcription decoder
-        # Decodes audio length & spectral features into representative Indic gig/financial phrases
+        # 2. Strict Production Safeguard: Never return simulated or mock transcription results as genuine recognized speech.
+        if not getattr(settings, "ALLOW_MOCK_FALLBACK", False):
+            local_model_path = os.path.join(self.cache_dir, f"{target_lang}_ctc_decoder.onnx")
+            raise RuntimeError(
+                f"IndicConformer model weights for language '{target_lang}' are not installed. "
+                f"Local inference requires ONNX checkpoint at '{local_model_path}'. "
+                f"Please download model weights or use cloud Groq Whisper fallback."
+            )
+
+        # 3. Test-only synthetic mock (strictly when explicitly enabled via FLOVA_STT_ALLOW_MOCK=true)
         transcript = self._decode_indic_features(audio_array, target_lang)
         duration_ms = round((time.time() - start_time) * 1000, 2)
 

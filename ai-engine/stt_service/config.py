@@ -10,5 +10,7 @@ class Settings:
     DEFAULT_LANGUAGE: str = "kn"  # FLOVA prioritizes Kannada & Indic languages
     SUPPORTED_LANGUAGES: list[str] = ["kn", "hi", "te", "ta", "ml", "en", "mr", "gu", "bn", "ur", "auto"]
     TIMEOUT_SECONDS: int = 15
+    # Strict Production Safeguard: Never return mock/simulated transcripts unless explicitly enabled for testing
+    ALLOW_MOCK_FALLBACK: bool = os.getenv("FLOVA_STT_ALLOW_MOCK", "false").lower() == "true"
 
 settings = Settings()
