@@ -246,7 +246,14 @@ Environment: https://myflova.vercel.app (build from `main` 1bcf45c), Claude desk
 - Both columns confirmed absent on the live database (read-only `information_schema` query).
 - Fix (frontend only, no DB change): settlement references are stored in `notes` (`notes · reference`); `reward_note` removed from the WISH insert and input type.
 - All frontend service suites (18, including the new conformance test) and engine suites pass; `tsc` clean.
-- **Status: fixed locally, not yet deployed.** Re-test invoice partial payment after deploy.
+- **Status: deployed** (`main` 4a2457f, bundle `index-Dd8HdVGR.js`). Production re-test: the settlement saved (note stored in `notes`). PASS for the column fix, but see §9.2c.
+
+### 9.2c Bug found: typed payment amount silently truncated (financial correctness)
+- Re-test: QA typed ₹1,500 into the payment field, which is pre-filled with the outstanding `5000.00`. The click put the cursor inside the pre-filled text, giving something like `5000.001500`. The app recorded **₹5,000** and marked the invoice paid (confirmed in the DB: one settlement of 5000, invoice `paid`). Fictional QA data only.
+- Root cause: `toPaise` (`frontend/src/lib/money.ts`) drops digits after the 2nd decimal place by design (safe for DB values, which are numeric(12,2)). Every other money form validates typed text with `parseRequiredRupees` first ("Cannot have more than 2 decimal places"); `InvoicesScreen` did not, for either invoice totals or payments.
+- Fix: `InvoicesScreen` validates both amounts with `parseRequiredRupees` and passes exact paise; payments above the outstanding amount are refused with a clear message; new `toPaiseStrict` rejects >2 decimals in the invoice and WISH services' rupee-string paths.
+- Test 9 in `invoiceIntelligence.test.ts` fails on the previous code with exactly this symptom and passes with the fix. All frontend suites pass; `tsc` clean; build passes.
+- **Status: fixed locally, not yet deployed.**
 
 ### 9.3 Not covered yet
 - Real microphone audio → Groq Whisper (needs a human voice; text path through the same LLM passed).
