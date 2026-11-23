@@ -6,6 +6,8 @@ build-backend = "setuptools.build_meta"
 name = "udaan-engine"
 version = "0.1.0"
 description = "Self-salary rule, lean-week outlook and backtest for gig workers with irregular income"
+readme = "README.md"
+license = "MIT"
 requires-python = ">=3.10"
 dependencies = []
 
