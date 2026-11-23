@@ -30,3 +30,9 @@ supabase/.branches/
 # Build cache
 frontend/tsconfig.tsbuildinfo
 
+
+# Android release signing: keys and their passwords must never be committed
+*.jks
+*.keystore
+keystore.properties
+key.properties
