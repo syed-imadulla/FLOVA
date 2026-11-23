@@ -113,3 +113,33 @@ Plans:
 Plans:
 
 - [x] 16-01: Repair vision models on Groq, implement 20MB client image optimizer, add line items and arithmetic verification, update CatchScreen progress UI, and add unit tests. (Completed 2026-11-21)
+
+### Phase 17: AI4Bharat IndicConformer Primary STT Migration
+
+**Goal:** Establish AI4Bharat IndicConformer as FLOVA's primary speech-to-text engine while maintaining Groq Whisper as robust secondary fallback, preserving financial intent extraction and review flow.
+**Status:** Completed (2026-11-21)
+**Plans:** 1 plan
+
+Plans:
+
+- [x] 17-01: AI4Bharat IndicConformer primary STT migration with Groq Whisper fallback. (Completed 2026-11-21)
+
+### Phase 18: Final Project Consolidation, Documentation & Main Branch Release
+
+**Goal:** Author comprehensive documentation suite in docs/, audit security/database configurations, verify automated tests and builds, merge dev into main, and push release.
+**Status:** Completed (2026-11-21)
+**Plans:** 1 plan
+
+Plans:
+
+- [x] 18-01: Final project consolidation, 10 technical guides in docs/, automated testing verification, and main branch release. (Completed 2026-11-21)
+
+### Phase 19: App Icon and Favicon Integration
+
+**Goal:** Transform master FLOVA brand asset into complete suite of web favicons, touch icons, and PWA application icons, integrating them across HTML, Web App Manifest, Service Worker, and verifying production builds.
+**Status:** Completed (2026-11-23)
+**Plans:** 1 plan
+
+Plans:
+
+- [x] 19-01: FLOVA App Icon and Favicon generation, HTML/Manifest/SW integration, and production build verification. (Completed 2026-11-23)

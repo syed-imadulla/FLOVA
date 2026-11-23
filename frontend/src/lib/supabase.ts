@@ -3,8 +3,11 @@
 // NEVER put the service-role key or the Gemini key in any VITE_ variable.
 import { createClient } from "@supabase/supabase-js";
 
-const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-const publishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined;
+const url = (import.meta.env.VITE_SUPABASE_URL as string | undefined) || "https://msjzkylvafuwlkkujxpv.supabase.co";
+const publishableKey =
+  (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined) ||
+  (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined) ||
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1zanpreWx2YWZ1d2xra3VqeHB2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTUxNzY4MzksImV4cCI6MjExMDc1MjgzOX0.lvfYiD8jlW5ix0BVDqrbfeD37-XjUy_wNqP9_diRcoE";
 
 if (!url || !publishableKey) {
   throw new Error("Missing VITE_SUPABASE_URL or VITE_SUPABASE_PUBLISHABLE_KEY. Copy .env.example to .env.local and fill them in.");
