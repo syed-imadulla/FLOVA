@@ -57,6 +57,13 @@ FLOVA replaces rigid monthly budgets with real-time **cash runway intelligence**
 - **Custodial Cash Isolation:** Third-party collections (Cash on Delivery) are segregated from personal spendable income.
 - **Adaptive Safety Buffer:** Maintain an emergency reserve dynamically sized to the worker's income volatility profile.
 
+### 📱 Native Android Experience
+- **Capacitor 8.6.2 Native Wrapper:** Full native Android runtime with package ID `in.flova.app`, targeting Android 15/16 (`compileSdk 36`, `targetSdk 36`, `minSdk 24`).
+- **Native Google Sign-In:** Integrated Android Credential Manager (`androidx.credentials`) via `@capgo/capacitor-social-login` with cryptographic SHA-256 raw nonce replay protection and Supabase `signInWithIdToken`.
+- **Strict Portrait Orientation Lock:** Enforces vertical layout (`android:screenOrientation="portrait"`), preventing layout shifting during active phone rotation.
+- **Hardware Back Navigation:** Managed back-stack handling with confirmation modals on exit.
+- **Direct APK Distribution:** Production web landing page hosts verified, direct Android APK downloads (`/download/flova-latest.apk`) alongside PWA installation.
+
 ---
 
 ## Key Features
@@ -292,6 +299,11 @@ FLOVA/
 For in-depth technical specifications, consult the dedicated guides in the [`docs/`](docs/) directory:
 
 - 🏛️ [System Architecture](docs/ARCHITECTURE.md) — System boundaries, components, and philosophy
+- 📱 [Android Implementation Report](docs/android-implementation-report.md) — Native Capacitor packaging, SDK configuration, and device verification
+- 📋 [Phase 1 Final Completion Report](docs/PHASE_1_FINAL_COMPLETION_REPORT.md) — Production infrastructure, remote Supabase lockdown, and Whisper STT
+- 📋 [Phase 2 Final Completion Report](docs/PHASE_2_FINAL_COMPLETION_REPORT.md) — Android build stability, portrait lock, and Redmi 12 5G QA sign-off
+- 📋 [Phase 2 Final QA Report](docs/PHASE_2_FINAL_QA_REPORT.md) — Reconciled test metrics, zero secret scan verification, and device test logs
+- 📋 [Phase 3.1 Google Play Launch Audit](docs/PHASE_3_1_GOOGLE_PLAY_AUDIT.md) — Launch readiness audit, legal prerequisites, and Data Safety declaration
 - 🎙️ [Speech-to-Text Pipeline](docs/VOICE-STT.md) — IndicConformer checkpoints, audio normalization, and failover
 - 📸 [Smart Capture & OCR](docs/SMART-CAPTURE.md) — Receipt line-item extraction and UPI reference handling
 - 🧾 [Invoice Intelligence](docs/INVOICE-INTELLIGENCE.md) — Receivables, payables, and settlement reconciliation

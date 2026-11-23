@@ -64,6 +64,10 @@ test("Android targets API 36 (Google Play requirement)", () => {
   assert(/targetSdkVersion = 36\b/.test(vars), "targetSdkVersion must be 36");
 });
 
+test("activity is strictly locked to portrait orientation", () => {
+  assert(manifest.includes('android:screenOrientation="portrait"'), "screenOrientation must be portrait");
+});
+
 test("keyboard is detected by a large height drop, not a toolbar collapse", () => {
   assert(isKeyboardOpen(800, 450), "350 px drop is the keyboard");
   assert(!isKeyboardOpen(800, 740), "60 px drop (browser toolbar) is not the keyboard");
