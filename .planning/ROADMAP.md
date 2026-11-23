@@ -143,3 +143,13 @@ Plans:
 Plans:
 
 - [x] 19-01: FLOVA App Icon and Favicon generation, HTML/Manifest/SW integration, and production build verification. (Completed 2026-11-23)
+
+### Phase 20: Documentation Recovery and Open-Source Polish
+
+**Goal:** Author a professional, technically accurate open-source README.md, standard MIT LICENSE, and verify consistency across the documentation suite.
+**Status:** Completed (2026-11-23)
+**Plans:** 1 plan
+
+Plans:
+
+- [x] 20-01: Professional README.md rewrite, root MIT LICENSE, package metadata updates, and documentation audit. (Completed 2026-11-23)
