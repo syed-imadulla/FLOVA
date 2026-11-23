@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">FLOVA</string>
+    <string name="title_activity_main">FLOVA</string>
+    <string name="package_name">in.flova.app</string>
+    <string name="custom_url_scheme">in.flova.app</string>
+</resources>
