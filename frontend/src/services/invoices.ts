@@ -181,8 +181,8 @@ export async function addInvoiceSettlement(
       user_id: userId,
       amount: amountStr,
       settled_at: input.settledAt || todayLocalISO(),
-      notes: input.notes || null,
-      payment_reference: input.paymentReference || null,
+      // invoice_settlements has no payment_reference column; keep the reference in notes.
+      notes: [input.notes, input.paymentReference].filter(Boolean).join(" · ") || null,
       transaction_id: input.transactionId || null,
       payout_id: input.payoutId || null,
     })

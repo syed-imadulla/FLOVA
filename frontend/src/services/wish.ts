@@ -16,7 +16,6 @@ export interface CreateWishGoalInput {
   targetAmountPaise?: Paise;
   targetDate?: string | null;
   category?: string | null;
-  rewardNote?: string | null;
   icon?: string | null;
 }
 
@@ -75,7 +74,6 @@ export async function createWishGoal(input: CreateWishGoalInput): Promise<WishGo
       status: "active",
       target_date: input.targetDate || null,
       category: input.category || null,
-      reward_note: input.rewardNote || null,
       icon: input.icon || null,
     })
     .select()

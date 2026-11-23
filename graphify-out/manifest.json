@@ -1662,8 +1662,8 @@
     "semantic_hash": ""
   },
   "frontend/src/services/__tests__/invoiceIntelligence.test.ts": {
-    "mtime": 1795431043.5838327,
-    "seen": 1795431422.957415,
+    "mtime": 1795431431.8439832,
+    "seen": 1795431686.071271,
     "ast_hash": "9572771d3664e3dc21d0eb12ab24be3b",
     "semantic_hash": ""
   },
@@ -1674,21 +1674,21 @@
     "semantic_hash": ""
   },
   "frontend/src/services/__tests__/wishPersistence.test.ts": {
-    "mtime": 1795244485.4276197,
-    "seen": 1795417321.4041598,
-    "ast_hash": "618f262965c2bc0157f354f6db7f3815",
+    "mtime": 1795431634.2900655,
+    "seen": 1795431686.0716934,
+    "ast_hash": "76a382f2398bcc13fe2c47c1706b5d6c",
     "semantic_hash": ""
   },
   "frontend/src/services/invoices.ts": {
-    "mtime": 1795431044.3897464,
-    "seen": 1795431422.9577572,
-    "ast_hash": "69b89814b33705197ab662e8878fcce1",
+    "mtime": 1795431624.9052196,
+    "seen": 1795431686.071815,
+    "ast_hash": "d969ef02c02bc9866a02a3590f075542",
     "semantic_hash": ""
   },
   "frontend/src/services/wish.ts": {
-    "mtime": 1795244485.4307244,
-    "seen": 1795417321.4041936,
-    "ast_hash": "a6ce4fbff638d34ed6102aef55cc3836",
+    "mtime": 1795431634.2865727,
+    "seen": 1795431686.0718892,
+    "ast_hash": "8423cc95ec557399de5eba288ae613bf",
     "semantic_hash": ""
   },
   ".planning/phases/15-conversational-adaptive-financial-intelligence/15-01-PLAN.md": {
@@ -2172,9 +2172,9 @@
     "semantic_hash": ""
   },
   "docs/phase-1-production-delivery-report.md": {
-    "mtime": 1795431380.9270833,
-    "seen": 1795431422.9616473,
-    "ast_hash": "dabd0d6f0c7d4e1e852acfdc607021f4",
+    "mtime": 1795431654.422833,
+    "seen": 1795431686.07661,
+    "ast_hash": "58fb0d7dffe4677659250e4a8be47807",
     "semantic_hash": ""
   },
   "docs/production-readiness-audit.md": {
@@ -2199,6 +2199,12 @@
     "mtime": 1795428742.7259758,
     "seen": 1795431422.9616528,
     "ast_hash": "b332a308ecf58463cd4ade4ab3127d58",
+    "semantic_hash": ""
+  },
+  "frontend/src/services/__tests__/schemaConformance.test.ts": {
+    "mtime": 1795431580.811797,
+    "seen": 1795431686.071558,
+    "ast_hash": "9022f906b80c83242e96b11e96c40a71",
     "semantic_hash": ""
   }
 }
