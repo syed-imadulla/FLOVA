@@ -8,6 +8,10 @@
 @tailwind utilities;
 
 :root {
+  /* Safe areas: Capacitor 8 injects --safe-area-inset-* in the Android app (edge-to-edge);
+     browsers fall back to env(), which is 0 on most desktops and set on notched phones. */
+  --sat: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
+  --sab: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
   --bg: #f6f7f4;
   --card: #ffffff;
   --text: #1c2321;
@@ -180,3 +184,17 @@ code { background: var(--accent-soft); padding: 1px 5px; border-radius: 4px; }
 .no-scrollbar { scrollbar-width: none; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
 html { scrollbar-gutter: stable; }
+
+/* Keep content out from under the status bar when the app draws edge-to-edge. */
+body {
+  padding-top: var(--sat);
+}
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: var(--sat);
+  background: #f6f7f4;
+  z-index: 60;
+  pointer-events: none;
+}

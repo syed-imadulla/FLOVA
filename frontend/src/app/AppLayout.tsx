@@ -20,13 +20,13 @@ export function AppLayout() {
   return (
     <div className="flova-app min-h-dvh bg-[#E9ECE6] text-ink antialiased">
       <div className="relative mx-auto flex min-h-dvh w-full max-w-[480px] flex-col bg-canvas md:shadow-[0_0_0_1px_#E1E4DE,0_10px_40px_rgba(0,0,0,0.06)]">
-        <main className="flex-1 pb-[calc(84px+env(safe-area-inset-bottom))]">
+        <main className="flex-1 pb-[calc(84px+var(--sab))]">
           <Outlet />
         </main>
 
         <nav
           aria-label="Main"
-          className="fixed bottom-0 left-1/2 z-40 w-full max-w-[480px] -translate-x-1/2 border-t border-line bg-white/95 backdrop-blur shadow-nav pb-[env(safe-area-inset-bottom)]"
+          className="fixed bottom-0 left-1/2 z-40 w-full max-w-[480px] -translate-x-1/2 border-t border-line bg-white/95 backdrop-blur shadow-nav pb-[var(--sab)]"
         >
           <div className="grid h-[68px] grid-cols-5 items-end px-1">
             <Tab to="/app" label="Home" icon={<IconHome />} />

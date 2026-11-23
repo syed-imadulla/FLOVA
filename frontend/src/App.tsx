@@ -23,10 +23,12 @@ import { CommitmentsScreen } from "./screens/CommitmentsScreen";
 import { WishScreen } from "./screens/WishScreen";
 import { InvoicesScreen } from "./screens/InvoicesScreen";
 import { ProfileScreen } from "./screens/ProfileScreen";
+import { AndroidBackButton } from "./native/AndroidBackButton";
 
 export default function App() {
   return (
     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <AndroidBackButton />
       <AuthProvider>
         <ProfileProvider>
           <DataVersionProvider>

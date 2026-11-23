@@ -30,7 +30,7 @@ export function Screen({ title, subtitle, back, right, children, header }: Scree
   return (
     <div className="min-h-full">
       {header ?? (
-        <header className="sticky top-0 z-30 bg-canvas/95 backdrop-blur supports-[backdrop-filter]:bg-canvas/80">
+        <header className="sticky top-[var(--sat)] z-30 bg-canvas/95 backdrop-blur supports-[backdrop-filter]:bg-canvas/80">
           <div className="h-14 px-4 flex items-center gap-2">
             {back ? (
               <button
@@ -332,7 +332,7 @@ export function Sheet({ open, onClose, title, children }: { open: boolean; onClo
   return (
     <div className="fixed inset-0 z-[60] flex items-end justify-center" role="dialog" aria-modal="true">
       <button type="button" aria-label="Close" className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative w-full max-w-[480px] max-h-[88dvh] overflow-y-auto rounded-t-3xl bg-white px-4 pt-3 pb-[calc(16px+env(safe-area-inset-bottom))] animate-fadeUp">
+      <div className="relative w-full max-w-[480px] max-h-[88dvh] overflow-y-auto rounded-t-3xl bg-white px-4 pt-3 pb-[calc(16px+var(--sab))] animate-fadeUp">
         <div className="mx-auto mb-2 h-1 w-10 rounded-full bg-black/10" />
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-[17px] font-bold text-ink">{title}</h2>

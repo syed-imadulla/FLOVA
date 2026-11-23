@@ -38,7 +38,7 @@ export const FlovaNavbar: React.FC = () => {
 
   return (
     <header
-      className={`sticky top-0 z-50 w-full transition-[background-color,box-shadow,border-color] duration-200 border-b ${
+      className={`sticky top-[var(--sat)] z-50 w-full transition-[background-color,box-shadow,border-color] duration-200 border-b ${
         scrolled || open ? "bg-white/90 backdrop-blur-md border-[#E7E4DD] shadow-[0_1px_12px_rgba(22,24,29,0.06)]" : "bg-[#FAF7F2]/80 backdrop-blur-sm border-transparent"
       }`}
     >
