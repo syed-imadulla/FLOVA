@@ -7,7 +7,7 @@
 
 import { supabase } from "../lib/supabase";
 import { todayLocalISO } from "../data/dates";
-import { toPaise } from "../lib/money";
+import { toPaiseStrict } from "../lib/money";
 import type { WishGoal, WishContribution, RupeeString, Paise } from "../types/contracts";
 
 export interface CreateWishGoalInput {
@@ -48,7 +48,7 @@ export async function listWishGoals(): Promise<WishGoal[]> {
  * Creates a new persistent savings goal.
  */
 export async function createWishGoal(input: CreateWishGoalInput): Promise<WishGoal> {
-  const targetPaise = input.targetAmountPaise ?? (input.targetAmountRupees ? toPaise(input.targetAmountRupees) : 0);
+  const targetPaise = input.targetAmountPaise ?? (input.targetAmountRupees ? toPaiseStrict(input.targetAmountRupees) : 0);
   if (targetPaise <= 0) {
     throw new Error("Goal target amount must be greater than zero.");
   }
@@ -102,7 +102,7 @@ export async function addWishContribution(
   const goalId = input.goalId;
   if (!goalId) throw new Error("Goal ID is required");
 
-  const amountPaise = input.amountPaise ?? (input.amountRupees ? toPaise(input.amountRupees) : 0);
+  const amountPaise = input.amountPaise ?? (input.amountRupees ? toPaiseStrict(input.amountRupees) : 0);
   if (amountPaise <= 0) {
     throw new Error("Contribution amount must be greater than zero.");
   }

@@ -7,6 +7,7 @@
 import { useEffect, useState } from "react";
 import { formatINR, toPaise } from "../lib/money";
 import { todayLocalISO } from "../data/dates";
+import { parseRequiredRupees } from "../profile/parseRupees";
 import {
   listInvoices,
   createInvoice,
@@ -82,8 +83,9 @@ export function InvoicesScreen() {
 
   async function handleCreateInvoice(e: React.FormEvent) {
     e.preventDefault();
-    if (!amountInput) {
-      setError("Please enter a total amount.");
+    const total = parseRequiredRupees(amountInput);
+    if (!total.ok) {
+      setError(total.message);
       return;
     }
 
@@ -95,13 +97,13 @@ export function InvoicesScreen() {
         customerName: direction === "receivable" ? partyName : undefined,
         supplierName: direction === "payable" ? partyName : undefined,
         invoiceNumber: invoiceNumber || undefined,
-        totalAmountRupees: amountInput,
+        totalAmountPaise: total.paise,
         dueDate: dueDate || undefined,
         notes: notes || undefined,
       };
 
       await createInvoice(input);
-      setFlash(`Invoice created: ${formatINR(toPaise(amountInput))}`);
+      setFlash(`Invoice created: ${formatINR(total.paise)}`);
       setIsNewOpen(false);
       resetNewForm();
       await loadData();
@@ -122,18 +124,28 @@ export function InvoicesScreen() {
 
   async function handleRecordSettlement(e: React.FormEvent) {
     e.preventDefault();
-    if (!settleInvoice || !settleAmount) return;
+    if (!settleInvoice) return;
+    const amount = parseRequiredRupees(settleAmount);
+    if (!amount.ok) {
+      setError(amount.message);
+      return;
+    }
+    const outstandingPaise = toPaise(settleInvoice.total_amount) - toPaise(settleInvoice.paid_amount);
+    if (amount.paise > outstandingPaise) {
+      setError(`Payment is more than the ${formatINR(outstandingPaise)} still outstanding.`);
+      return;
+    }
 
     setSettling(true);
     setError(null);
     try {
       await addInvoiceSettlement({
         invoiceId: settleInvoice.id,
-        amountRupees: settleAmount,
+        amountPaise: amount.paise,
         notes: settleNotes || undefined,
       });
 
-      setFlash(`Recorded payment of ${formatINR(toPaise(settleAmount))} for ${settleInvoice.customer_name || settleInvoice.supplier_name || "invoice"}.`);
+      setFlash(`Recorded payment of ${formatINR(amount.paise)} for ${settleInvoice.customer_name || settleInvoice.supplier_name || "invoice"}.`);
       setSettleInvoice(null);
       setSettleAmount("");
       setSettleNotes("");

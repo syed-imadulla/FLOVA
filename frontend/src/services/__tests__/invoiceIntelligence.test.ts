@@ -183,6 +183,21 @@ async function run() {
     }
   });
 
+  await test("9. settlement rejects amounts with more than 2 decimals instead of truncating", async () => {
+    // Production QA: typing 1500 into a field pre-filled with "5000.00" produced "5000.001500",
+    // which the lenient parser recorded as a full ₹5,000 payment.
+    const inv = await createInvoice({ direction: "receivable", customerName: "Decimal Check", totalAmountPaise: 500000 });
+    let threw = false;
+    try {
+      await addInvoiceSettlement({ invoiceId: inv.id, amountRupees: "5000.001500" });
+    } catch {
+      threw = true;
+    }
+    assertTrue(threw, "5000.001500 must be rejected, not recorded as 5000.00");
+    const ok = await addInvoiceSettlement({ invoiceId: inv.id, amountRupees: "1500.50" });
+    assertEqual(toPaise(ok.amount), 150050, "2-decimal amounts still accepted");
+  });
+
   console.log("=====================================================================");
   console.log(`Results: ${passed} passed, ${failed} failed, ${passed + failed} total`);
   console.log("=====================================================================");

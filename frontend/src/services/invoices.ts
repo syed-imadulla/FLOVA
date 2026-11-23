@@ -7,7 +7,7 @@
 
 import { supabase } from "../lib/supabase";
 import { todayLocalISO } from "../data/dates";
-import { toPaise } from "../lib/money";
+import { toPaise, toPaiseStrict } from "../lib/money";
 import type {
   Invoice,
   InvoiceDirection,
@@ -90,7 +90,7 @@ export async function getInvoice(id: string): Promise<Invoice | null> {
  * Creates a new invoice record with optional line items.
  */
 export async function createInvoice(input: CreateInvoiceInput): Promise<Invoice> {
-  const totalAmountPaise = input.totalAmountPaise ?? (input.totalAmountRupees ? toPaise(input.totalAmountRupees) : 0);
+  const totalAmountPaise = input.totalAmountPaise ?? (input.totalAmountRupees ? toPaiseStrict(input.totalAmountRupees) : 0);
   if (totalAmountPaise <= 0) {
     throw new Error("Total invoice amount must be greater than zero.");
   }
@@ -161,7 +161,7 @@ export async function addInvoiceSettlement(
   const invoiceId = input.invoiceId;
   if (!invoiceId) throw new Error("Invoice ID is required");
 
-  const amountPaise = input.amountPaise ?? (input.amountRupees ? toPaise(input.amountRupees) : 0);
+  const amountPaise = input.amountPaise ?? (input.amountRupees ? toPaiseStrict(input.amountRupees) : 0);
   if (amountPaise <= 0) {
     throw new Error("Settlement amount must be greater than zero.");
   }
