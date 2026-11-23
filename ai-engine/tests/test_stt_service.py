@@ -12,6 +12,14 @@ from stt_service.conformer_engine import IndicConformerEngine
 
 client = TestClient(app)
 
+TEST_KEY = "test-only-stt-key"
+
+
+@pytest.fixture(autouse=True)
+def _stt_key(monkeypatch):
+    """The service has no default key any more; tests configure one explicitly."""
+    monkeypatch.setattr(settings, "FLOVA_STT_INTERNAL_KEY", TEST_KEY)
+
 def create_synthetic_wav(duration_seconds: float = 1.0, sample_rate: int = 16000) -> bytes:
     """Generates a synthetic 16-bit PCM mono sine wave as WAV bytes."""
     t = np.linspace(0, duration_seconds, int(sample_rate * duration_seconds), endpoint=False)
@@ -41,7 +49,7 @@ def test_models_endpoint_auth_required():
     assert res_no_auth.status_code == 401
     
     # With valid header
-    res_auth = client.get("/models", headers={"X-FLOVA-STT-KEY": settings.FLOVA_STT_INTERNAL_KEY})
+    res_auth = client.get("/models", headers={"X-FLOVA-STT-KEY": TEST_KEY})
     assert res_auth.status_code == 200
     data = res_auth.json()
     assert "kn" in data["primary_languages"]
@@ -56,7 +64,7 @@ def test_transcribe_missing_model_returns_503(monkeypatch):
 
     response = client.post(
         "/transcribe",
-        headers={"X-FLOVA-STT-KEY": settings.FLOVA_STT_INTERNAL_KEY},
+        headers={"X-FLOVA-STT-KEY": TEST_KEY},
         json={
             "audioBase64": audio_b64,
             "mimeType": "audio/wav",
@@ -80,7 +88,7 @@ def test_transcribe_audio_kannada(monkeypatch):
 
     response = client.post(
         "/transcribe",
-        headers={"X-FLOVA-STT-KEY": settings.FLOVA_STT_INTERNAL_KEY},
+        headers={"X-FLOVA-STT-KEY": TEST_KEY},
         json={
             "audioBase64": audio_b64,
             "mimeType": "audio/wav",
@@ -102,7 +110,7 @@ def test_transcribe_audio_hindi(monkeypatch):
 
     response = client.post(
         "/transcribe",
-        headers={"X-FLOVA-STT-KEY": settings.FLOVA_STT_INTERNAL_KEY},
+        headers={"X-FLOVA-STT-KEY": TEST_KEY},
         json={
             "audioBase64": audio_b64,
             "mimeType": "audio/wav",
@@ -123,7 +131,7 @@ def test_transcribe_audio_telugu(monkeypatch):
 
     response = client.post(
         "/transcribe",
-        headers={"X-FLOVA-STT-KEY": settings.FLOVA_STT_INTERNAL_KEY},
+        headers={"X-FLOVA-STT-KEY": TEST_KEY},
         json={
             "audioBase64": audio_b64,
             "mimeType": "audio/wav",
@@ -140,7 +148,7 @@ def test_transcribe_audio_telugu(monkeypatch):
 def test_transcribe_missing_payload():
     response = client.post(
         "/transcribe",
-        headers={"X-FLOVA-STT-KEY": settings.FLOVA_STT_INTERNAL_KEY},
+        headers={"X-FLOVA-STT-KEY": TEST_KEY},
         json={}
     )
     assert response.status_code == 400
@@ -152,3 +160,46 @@ def test_audio_preprocessing_pipeline():
     assert sr == 16000
     assert len(audio_arr) == 16000
     assert np.max(np.abs(audio_arr)) > 0
+
+
+def test_unconfigured_key_fails_closed(monkeypatch):
+    """Without FLOVA_STT_INTERNAL_KEY the service must refuse work, never accept unauthenticated audio."""
+    monkeypatch.setattr(settings, "FLOVA_STT_INTERNAL_KEY", "")
+    assert client.get("/models").status_code == 503
+    assert client.post("/transcribe", json={"audioBase64": "x" * 200}).status_code == 503
+    # Health stays available so the platform can still probe the process.
+    assert client.get("/health").status_code == 200
+
+
+def test_wrong_key_rejected():
+    assert client.get("/models", headers={"X-FLOVA-STT-KEY": "wrong"}).status_code == 401
+    assert client.get("/models", headers={"Authorization": "Bearer wrong"}).status_code == 401
+    assert client.get("/models", headers={"Authorization": f"Bearer {TEST_KEY}"}).status_code == 200
+
+
+def test_no_hardcoded_default_key():
+    import importlib
+    import stt_service.config as cfg
+    import os
+    old = os.environ.pop("FLOVA_STT_INTERNAL_KEY", None)
+    try:
+        assert importlib.reload(cfg).Settings.FLOVA_STT_INTERNAL_KEY == ""
+    finally:
+        if old is not None:
+            os.environ["FLOVA_STT_INTERNAL_KEY"] = old
+        importlib.reload(cfg)
+
+
+def test_model_file_present_never_returns_fake_transcript(monkeypatch):
+    """A loaded ONNX session must not produce a canned sentence while real decoding is unimplemented."""
+    monkeypatch.setattr(settings, "ALLOW_MOCK_FALLBACK", False)
+    engine = IndicConformerEngine()
+    monkeypatch.setitem(engine.sessions, "kn", {"model_id": "test", "session": object(), "loaded_at": 0, "status": "ready"})
+    wav_bytes = create_synthetic_wav(1.0, 16000)
+    response = client.post(
+        "/transcribe",
+        headers={"X-FLOVA-STT-KEY": TEST_KEY},
+        json={"audioBase64": base64.b64encode(wav_bytes).decode(), "mimeType": "audio/wav", "language": "kn"},
+    )
+    assert response.status_code == 503
+    assert "ಪೆಟ್ರೋಲ್" not in response.text

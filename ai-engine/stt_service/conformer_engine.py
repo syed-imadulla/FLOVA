@@ -108,6 +108,8 @@ class IndicConformerEngine:
                     "confidence": 0.94,
                     "provider": "indicconformer"
                 }
+            except NotImplementedError as e:
+                raise RuntimeError(f"IndicConformer inference for '{target_lang}' is not installed: {e}") from e
             except Exception as e:
                 logger.error(f"ONNX inference failed: {e}.")
 
@@ -133,8 +135,14 @@ class IndicConformerEngine:
         }
 
     def _decode_ctc_onnx(self, session: Any, audio: np.ndarray, lang: str) -> str:
-        """Run CTC greedy decoding on ONNX session output."""
-        return "ಇವತ್ತು ಪೆಟ್ರೋಲ್ಗೆ 300 ರೂಪಾಯಿ ಖರ್ಚು ಮಾಡಿದೆ"
+        """Run CTC greedy decoding on ONNX session output.
+
+        Not implemented yet (no featurizer, encoder call or vocabulary). It previously returned a
+        fixed Kannada sentence for every input, which would have turned any recording into a fake
+        "₹300 petrol" transcript. It must fail until real inference exists; the Edge Function then
+        falls back to Groq Whisper. See docs/indicconformer-production-plan.md.
+        """
+        raise NotImplementedError("IndicConformer ONNX decoding is not implemented yet.")
 
     def _decode_indic_features(self, audio: np.ndarray, lang: str) -> str:
         """

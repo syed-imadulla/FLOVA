@@ -1,4 +1,6 @@
 {
+  "mock_data": true,
+  "note": "Generated with the mock decoder (fixed sentences, no model loaded). Not real IndicConformer performance. See docs/indicconformer-production-plan.md.",
   "timestamp": 1795241854.408127,
   "service": "FLOVA IndicConformer vs Whisper",
   "memory_rss_mb": 38.44,
