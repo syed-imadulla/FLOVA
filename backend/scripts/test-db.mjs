@@ -192,5 +192,28 @@ await as(A, `insert into public.wish_contributions (goal_id, user_id, amount) va
 const wishFull = (await as(A, `select saved_amount, status from public.wish_goals where id = '${wishId}'`)).rows[0];
 ok(Number(wishFull.saved_amount) === 50000 && wishFull.status === "completed", "wish goal completes when saved >= target");
 
+// --- 20261123150000_harden_anon_and_triggers ---
+// Reproduce Supabase's default privileges (anon full table access, PUBLIC/anon EXECUTE),
+// then re-apply the hardening migration and check what remains.
+await db.exec(`reset role;
+  grant all on public.invoices, public.invoice_items, public.invoice_settlements, public.wish_goals, public.wish_contributions to anon;
+  grant execute on function public.check_daily_transaction_limit(), public.sync_invoice_settlement(), public.sync_wish_contribution(), public.handle_new_user() to public, anon, authenticated;`);
+await db.exec(fs.readFileSync(new URL("../supabase/migrations/20261123150000_harden_anon_and_triggers.sql", import.meta.url), "utf8"));
+const phase16 = ["invoices", "invoice_items", "invoice_settlements", "wish_goals", "wish_contributions"];
+const anonGrants = await db.query(`select count(*)::int c from information_schema.role_table_grants where grantee = 'anon' and table_schema = 'public' and table_name = any($1)`, [phase16]);
+ok(anonGrants.rows[0].c === 0, "hardening: anon holds no grants on Phase 16 tables");
+const anonExec = await db.query(`select count(*)::int c from unnest(array['public.check_daily_transaction_limit()','public.sync_invoice_settlement()','public.sync_wish_contribution()','public.handle_new_user()']) f where has_function_privilege('anon', f, 'EXECUTE')`);
+ok(anonExec.rows[0].c === 0, "hardening: anon cannot EXECUTE trigger functions");
+ok(!(await db.query(`select has_function_privilege('authenticated', 'public.handle_new_user()', 'EXECUTE') x`)).rows[0].x, "hardening: authenticated cannot EXECUTE handle_new_user");
+const authGrants = await db.query(`select count(distinct table_name)::int c from information_schema.role_table_grants where grantee = 'authenticated' and privilege_type = 'INSERT' and table_schema = 'public' and table_name = any($1)`, [phase16]);
+ok(authGrants.rows[0].c === phase16.length, "hardening: authenticated keeps table grants on Phase 16 tables");
+
+// Triggers must still fire for authenticated even with no EXECUTE on the trigger function at all.
+await db.exec(`revoke execute on function public.check_daily_transaction_limit(), public.sync_wish_contribution() from public, anon, authenticated;`);
+const wish2 = (await as(A, `insert into public.wish_goals (user_id, title, target_amount) values ('${A}', 'Phone', 10000.00) returning id`)).rows[0].id;
+await as(A, `insert into public.wish_contributions (goal_id, user_id, amount) values ('${wish2}', '${A}', 4000.00)`);
+ok(Number((await as(A, `select saved_amount from public.wish_goals where id = '${wish2}'`)).rows[0].saved_amount) === 4000, "hardening: SECURITY DEFINER trigger fires without EXECUTE grant");
+await expectError(`insert into public.transactions (type, amount, category) values ('income', 1000000, 'earnings')`, "hardening: daily limit trigger still enforced without EXECUTE grant");
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
