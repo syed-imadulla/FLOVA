@@ -7,6 +7,7 @@ import { FlovaIndiaContext } from "./FlovaIndiaContext";
 import { FlovaClarityShowcase } from "./FlovaClarityShowcase";
 import { FlovaUserStories } from "./FlovaUserStories";
 import { FlovaBottomCTA } from "./FlovaBottomCTA";
+import { FlovaInstallApp } from "./FlovaInstallApp";
 import { FlovaFooter } from "./FlovaFooter";
 
 export const FlovaLandingPage: React.FC = () => {
@@ -34,7 +35,10 @@ export const FlovaLandingPage: React.FC = () => {
         {/* 7. User Stories / Testimonials Band */}
         <FlovaUserStories />
 
-        {/* 8. Bottom CTA Banner */}
+        {/* 8. Install the app (PWA install / Google Play) */}
+        <FlovaInstallApp />
+
+        {/* 9. Bottom CTA Banner */}
         <FlovaBottomCTA />
       </main>
 

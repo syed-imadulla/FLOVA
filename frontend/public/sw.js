@@ -1,5 +1,5 @@
 // FLOVA Service Worker (Cloud-Connected Only — No Offline Mutating or Queuing Claims)
-const CACHE_NAME = "flova-shell-v3";
+const CACHE_NAME = "flova-shell-v4";
 const SHARED_CACHE_NAME = "flova-shared-cache";
 const SHELL_ASSETS = [
   "/",
@@ -12,6 +12,8 @@ const SHELL_ASSETS = [
   "/apple-touch-icon.png",
   "/icon-192.png",
   "/icon-512.png",
+  "/icon-maskable-192.png",
+  "/icon-maskable-512.png",
   "/manifest.webmanifest"
 ];
 

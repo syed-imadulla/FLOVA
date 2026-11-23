@@ -24,6 +24,7 @@ import { WishScreen } from "./screens/WishScreen";
 import { InvoicesScreen } from "./screens/InvoicesScreen";
 import { ProfileScreen } from "./screens/ProfileScreen";
 import { AndroidBackButton } from "./native/AndroidBackButton";
+import { APP_START_PATH, IS_NATIVE_APP } from "./native/platform";
 
 export default function App() {
   return (
@@ -34,7 +35,8 @@ export default function App() {
           <DataVersionProvider>
             <Routes>
               {/* Public */}
-              <Route path="/" element={<FlovaLandingPage />} />
+              {/* The landing page is website-only; the Android app starts at login (→ /app if signed in). */}
+              <Route path="/" element={IS_NATIVE_APP ? <Navigate to={APP_START_PATH} replace /> : <FlovaLandingPage />} />
               <Route path="/login" element={<RedirectIfAuthed><LoginPage /></RedirectIfAuthed>} />
               <Route path="/signup" element={<RedirectIfAuthed><SignupPage /></RedirectIfAuthed>} />
 

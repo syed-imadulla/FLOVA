@@ -7,6 +7,7 @@ const LINKS = [
   { id: "how-it-works", label: "How it works" },
   { id: "clarity", label: "Clarity" },
   { id: "stories", label: "Stories" },
+  { id: "install", label: "Install app" },
 ];
 
 export const FlovaNavbar: React.FC = () => {
@@ -53,13 +54,13 @@ export const FlovaNavbar: React.FC = () => {
         </Link>
 
         {/* Desktop links */}
-        <nav aria-label="Sections" className="hidden items-center gap-1 rounded-full border border-[#E7E4DD] bg-white/70 p-1 md:flex">
+        <nav aria-label="Sections" className="hidden items-center gap-1 rounded-full border border-[#E7E4DD] bg-white/70 p-1 lg:flex">
           {LINKS.map((l) => (
             <button
               key={l.id}
               type="button"
               onClick={() => scrollTo(l.id)}
-              className="rounded-full px-4 py-1.5 text-[13.5px] font-semibold text-[#4A524C] transition-colors hover:bg-[#0F5C4C]/[0.08] hover:text-[#0F5C4C]"
+              className="whitespace-nowrap rounded-full px-4 py-1.5 text-[13.5px] font-semibold text-[#4A524C] transition-colors hover:bg-[#0F5C4C]/[0.08] hover:text-[#0F5C4C]"
             >
               {l.label}
             </button>
@@ -85,7 +86,7 @@ export const FlovaNavbar: React.FC = () => {
             onClick={() => setOpen((v) => !v)}
             aria-label={open ? "Close menu" : "Open menu"}
             aria-expanded={open}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-xl text-[#16181D] transition-colors hover:bg-black/[0.05] md:hidden"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-xl text-[#16181D] transition-colors hover:bg-black/[0.05] lg:hidden"
           >
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               {open ? <path d="M6 6l12 12M18 6 6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
@@ -96,7 +97,7 @@ export const FlovaNavbar: React.FC = () => {
 
       {/* Mobile menu */}
       {open ? (
-        <div className="border-t border-[#E7E4DD] bg-white md:hidden">
+        <div className="border-t border-[#E7E4DD] bg-white lg:hidden">
           <div className="mx-auto max-w-6xl space-y-1 px-4 py-3">
             {LINKS.map((l) => (
               <button

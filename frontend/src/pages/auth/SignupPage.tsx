@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { getSession, signUp } from "../../services/auth";
+import { IS_NATIVE_APP } from "../../native/platform";
 
 export function SignupPage() {
   const [email, setEmail] = useState("");
@@ -148,11 +149,13 @@ export function SignupPage() {
           </div>
         </div>
 
-        <div className="text-center mt-6">
-          <Link to="/" className="text-xs text-[#7A7468] hover:text-[#0F5C4C]">
-            ← Return to FLOVA Home
-          </Link>
-        </div>
+        {!IS_NATIVE_APP && (
+          <div className="text-center mt-6">
+            <Link to="/" className="text-xs text-[#7A7468] hover:text-[#0F5C4C]">
+              ← Return to FLOVA Home
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   );
