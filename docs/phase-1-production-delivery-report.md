@@ -19,7 +19,7 @@ Every result below was observed in this session unless marked *previous agent cl
 | 1.3 CP3 Edge Function deploy | **Deployed and verified 2026-11-23** | `process-voice` v8, `extract-receipt` v12 (§7) |
 | 1.4 Vercel | **Deployed and verified 2026-11-23** | https://myflova.vercel.app from `main` (§8); Supabase Auth URLs updated (§8.3) |
 | 1.5 STT service | Decision pending | Remote has no IndicConformer URL/key; voice uses Groq Whisper |
-| 1.6 Production E2E QA | **Mostly passed 2026-11-23; 1 bug fixed locally, awaiting deploy** | §9 |
+| 1.6 Production E2E QA | **Mostly passed 2026-11-23; invoice create fix deployed; settlement + WISH fix awaiting deploy** | §9 |
 
 ## 2. Repository state
 
@@ -238,7 +238,15 @@ Environment: https://myflova.vercel.app (build from `main` 1bcf45c), Claude desk
 - Not caused by CP2 (a permission error would be `42501`).
 - Fix: insert `status: "unpaid"` (DB default, starting state for the settlement trigger). Tests updated; new test 8 reads the allowed statuses from the migration SQL and fails on the old code (`status "draft" must be one of …`). All 17 frontend service suites pass; `tsc` clean.
 - Other hard-coded enum values (`scheduled`, `bill`, `upcoming`, `active`) checked against the DB: all valid.
-- **Status: fixed locally, not yet deployed.** Re-test invoice create + partial settlement after deploy.
+- **Status: deployed** (`main` d6079cc, bundle `index-COubbUhj.js`). Production re-test: "Invoice created: ₹5,000", outstanding ₹5,000. PASS.
+
+### 9.2b Bugs found during the re-test: columns that do not exist
+- Recording an invoice payment failed in production: "Could not find the 'payment_reference' column of 'invoice_settlements'". Nothing was saved.
+- A new schema-conformance test (`frontend/src/services/__tests__/schemaConformance.test.ts`) parses every table/column from the migrations and every `.insert/.update/.upsert` in the frontend, and found one more: `wish_goals.reward_note` (WISH goal creation; the WISH service is not yet wired to any screen, so no user impact today).
+- Both columns confirmed absent on the live database (read-only `information_schema` query).
+- Fix (frontend only, no DB change): settlement references are stored in `notes` (`notes · reference`); `reward_note` removed from the WISH insert and input type.
+- All frontend service suites (18, including the new conformance test) and engine suites pass; `tsc` clean.
+- **Status: fixed locally, not yet deployed.** Re-test invoice partial payment after deploy.
 
 ### 9.3 Not covered yet
 - Real microphone audio → Groq Whisper (needs a human voice; text path through the same LLM passed).
