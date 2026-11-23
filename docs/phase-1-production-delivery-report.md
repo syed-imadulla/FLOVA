@@ -280,3 +280,13 @@ QA-001 keeps the accidental ₹5,000 settlement from the bug as fictional test d
 - New guard: `schemaConformance.test.ts` checks every frontend write against the migrations, closing the mock-database blind spot that hid three of the four.
 - All core money flows (check-in, income, expense, not-mine, payouts, partial settlement, bills/runway, AI text/SMS/receipt with confirm and discard, ₹10 lakh limit, isolation, mobile, logout) pass on production.
 
+
+## 10. IndicConformer Step 0 (2026-11-23)
+
+Plan: `docs/indicconformer-production-plan.md`. Finding: the STT service had no real inference (the ONNX decode returned a fixed Kannada "₹300 petrol" sentence for any audio), model weights were never present, the Phase 17 benchmark was mock output, and the service fell back to a public hard-coded key and accepted any caller when no key was set.
+
+Fixes (`main` 80e0f59): decoder raises → service returns 503 (Groq Whisper fallback); no default `FLOVA_STT_INTERNAL_KEY`, unset key → 503, constant-time key compare; `process-voice` calls IndicConformer only when both `INDICCONFORMER_URL` and `INDICCONFORMER_KEY` are set; CLAUDE.md, VOICE-STT.md, ENVIRONMENT.md, DEPLOYMENT.md corrected; benchmark file labelled mock. 4 new Python tests (28 total pass); the fake-transcript test fails on the old code. `make test` passes.
+
+Redeploy (user-approved): live `process-voice` v8 backed up first (identical to `1bcf45c`), deployed **v9** (`verify_jwt=true`). Live source equals the repo; old key string absent. Probes: no auth 401, anon key 401 (function check), forged JWT 401 (gateway). Authenticated smoke test (user run, sign-in 11:26:14 UTC, after v9 deployed at 11:23:47 UTC): `PASS process-voice: HTTP 200 candidates=2`, `PASS extract-receipt: HTTP 200`. Voice continues on Groq Whisper (IndicConformer not configured).
+
+Rollback: redeploy `process-voice` from `1bcf45c` in a temporary worktree (§7.6).
