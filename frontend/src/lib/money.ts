@@ -14,6 +14,16 @@ export function toPaise(value: RupeeString | number | null | undefined): Paise {
   return sign ? -paise : paise;
 }
 
+/**
+ * Strict variant for amounts that came from a person: rejects more than 2 decimal places
+ * instead of silently truncating them ("5000.001500" must not become ₹5,000).
+ */
+export function toPaiseStrict(value: RupeeString): Paise {
+  const text = String(value).trim();
+  if (!/^\d+(\.\d{1,2})?$/.test(text)) throw new Error(`Invalid amount: ${value}. Use at most 2 decimal places.`);
+  return toPaise(text);
+}
+
 /** Nullable variant: keeps "not provided" as null instead of 0. */
 export function toPaiseOrNull(value: RupeeString | number | null | undefined): Paise | null {
   return value === null || value === undefined || value === "" ? null : toPaise(value);

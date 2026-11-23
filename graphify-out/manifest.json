@@ -138,9 +138,9 @@
     "semantic_hash": ""
   },
   "frontend/src/lib/money.ts": {
-    "mtime": 1795180988.2198465,
-    "seen": 1795218668.7372153,
-    "ast_hash": "8d2ba29ce7229b50430f0906ec80d615",
+    "mtime": 1795431900.935846,
+    "seen": 1795432037.5969229,
+    "ast_hash": "adfd9a430363738ab3d2607a0a4a417f",
     "semantic_hash": ""
   },
   "frontend/src/lib/supabase.ts": {
@@ -1650,9 +1650,9 @@
     "semantic_hash": ""
   },
   "frontend/src/screens/InvoicesScreen.tsx": {
-    "mtime": 1795244485.4069996,
-    "seen": 1795417321.403775,
-    "ast_hash": "f431b0b512438501af5b27708f27ed19",
+    "mtime": 1795431858.6531582,
+    "seen": 1795432037.5974715,
+    "ast_hash": "694471cc2c31d48b995f8f8a3e9d20d7",
     "semantic_hash": ""
   },
   "frontend/src/services/__tests__/financialIntelligence.test.ts": {
@@ -1662,9 +1662,9 @@
     "semantic_hash": ""
   },
   "frontend/src/services/__tests__/invoiceIntelligence.test.ts": {
-    "mtime": 1795431431.8439832,
-    "seen": 1795431686.071271,
-    "ast_hash": "9572771d3664e3dc21d0eb12ab24be3b",
+    "mtime": 1795431924.099301,
+    "seen": 1795432037.5978868,
+    "ast_hash": "024a2ae91d817916deebf698c4f7ec78",
     "semantic_hash": ""
   },
   "frontend/src/services/__tests__/multiTransactionVoice.test.ts": {
@@ -1674,21 +1674,21 @@
     "semantic_hash": ""
   },
   "frontend/src/services/__tests__/wishPersistence.test.ts": {
-    "mtime": 1795431634.2900655,
-    "seen": 1795431686.0716934,
+    "mtime": 1795431686.4992504,
+    "seen": 1795432037.5981524,
     "ast_hash": "76a382f2398bcc13fe2c47c1706b5d6c",
     "semantic_hash": ""
   },
   "frontend/src/services/invoices.ts": {
-    "mtime": 1795431624.9052196,
-    "seen": 1795431686.071815,
-    "ast_hash": "d969ef02c02bc9866a02a3590f075542",
+    "mtime": 1795431943.8088121,
+    "seen": 1795432037.5982337,
+    "ast_hash": "e9bb825999d7c4b809b70e5eb728de9b",
     "semantic_hash": ""
   },
   "frontend/src/services/wish.ts": {
-    "mtime": 1795431634.2865727,
-    "seen": 1795431686.0718892,
-    "ast_hash": "8423cc95ec557399de5eba288ae613bf",
+    "mtime": 1795431900.921844,
+    "seen": 1795432037.5982878,
+    "ast_hash": "13c4294eea5ad56f95e09fb3f1802fa0",
     "semantic_hash": ""
   },
   ".planning/phases/15-conversational-adaptive-financial-intelligence/15-01-PLAN.md": {
@@ -2172,9 +2172,9 @@
     "semantic_hash": ""
   },
   "docs/phase-1-production-delivery-report.md": {
-    "mtime": 1795431654.422833,
-    "seen": 1795431686.07661,
-    "ast_hash": "58fb0d7dffe4677659250e4a8be47807",
+    "mtime": 1795431956.9004812,
+    "seen": 1795432037.602262,
+    "ast_hash": "bc7b03c7255ce092d9d1c0e4e41f1993",
     "semantic_hash": ""
   },
   "docs/production-readiness-audit.md": {
@@ -2202,8 +2202,8 @@
     "semantic_hash": ""
   },
   "frontend/src/services/__tests__/schemaConformance.test.ts": {
-    "mtime": 1795431580.811797,
-    "seen": 1795431686.071558,
+    "mtime": 1795431686.4990294,
+    "seen": 1795432037.5980613,
     "ast_hash": "9022f906b80c83242e96b11e96c40a71",
     "semantic_hash": ""
   }
