@@ -83,10 +83,20 @@ function groqModelUnavailable(status: number, text: string): boolean {
   return status === 404 || status === 403 || status === 429 || (status === 400 && /model_not_found|decommission|does not exist|not supported|not have access|model_permission/i.test(text));
 }
 
+/** Today's date in India (IST, UTC+05:30) in YYYY-MM-DD format. */
+function todayIndiaISO(): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Kolkata",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+}
+
 /** Today's date in India, so relative words ("today", "yesterday", "Friday") resolve to real dates. */
 function todayContext(): string {
   const now = new Date();
-  const iso = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata", year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
+  const iso = todayIndiaISO();
   const weekday = new Intl.DateTimeFormat("en-IN", { timeZone: "Asia/Kolkata", weekday: "long" }).format(now);
   return `Today's date in India is ${iso} (${weekday}). Resolve relative dates such as "today", "yesterday", "tomorrow" or a weekday name to YYYY-MM-DD using this date (a weekday name for an expected payout means the next such day; for a past transaction it means the most recent one). If no date is mentioned, leave the date null.`;
 }
@@ -123,7 +133,7 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    // 2. Authentication check: Validate user JWT
+    // 2. Authentication check: Validate user JWT (Strictly fail-closed)
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(JSON.stringify({ error: "Missing Authorization header." }), {
@@ -132,19 +142,34 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    const token = authHeader.replace(/^Bearer\s+/i, "");
+    const token = authHeader.replace(/^Bearer\s+/i, "").trim();
+    if (!token) {
+      return new Response(JSON.stringify({ error: "Missing bearer token in Authorization header." }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
 
-    if (supabaseUrl && supabaseAnonKey) {
-      const supabase = createClient(supabaseUrl, supabaseAnonKey);
-      const { data: { user }, error: authErr } = await supabase.auth.getUser(token);
-      if (authErr || !user) {
-        return new Response(JSON.stringify({ error: "Unauthorized. Invalid user token." }), {
-          status: 401,
+    if (!supabaseUrl || !supabaseAnonKey) {
+      return new Response(
+        JSON.stringify({ error: "Server configuration error: SUPABASE_URL or SUPABASE_ANON_KEY is not configured." }),
+        {
+          status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
+        }
+      );
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    const { data: { user }, error: authErr } = await supabase.auth.getUser(token);
+    if (authErr || !user) {
+      return new Response(JSON.stringify({ error: "Unauthorized. Invalid or expired user token." }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     // 3. API Key check
@@ -157,7 +182,16 @@ Deno.serve(async (req: Request) => {
     }
 
     // 4. Validate input payload & enforce limits
-    const body = (await req.json()) as ProcessVoiceRequest;
+    let body: ProcessVoiceRequest;
+    try {
+      body = (await req.json()) as ProcessVoiceRequest;
+    } catch {
+      return new Response(
+        JSON.stringify({ error: "Invalid JSON in request body." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const hasAudio = typeof body.audioBase64 === "string" && body.audioBase64.length > 50;
     const hasText = typeof body.text === "string" && body.text.trim().length > 0;
 
@@ -181,7 +215,9 @@ Deno.serve(async (req: Request) => {
 
     // 5. Audio Transcription: AI4Bharat IndicConformer (PRIMARY) with Groq Whisper (SECONDARY FALLBACK)
     if (hasAudio) {
-      const rawBase64 = body.audioBase64!.replace(/^data:audio\/[a-zA-Z0-9.-]+;base64,/, "");
+      const rawBase64 = body.audioBase64!.includes(",")
+        ? body.audioBase64!.split(",")[1]
+        : body.audioBase64!;
       const binaryString = atob(rawBase64);
       const bytes = new Uint8Array(binaryString.length);
       for (let i = 0; i < binaryString.length; i++) {
@@ -201,10 +237,15 @@ Deno.serve(async (req: Request) => {
 
       if (indicUrl) {
         try {
+          const cleanIndicUrl = indicUrl.replace(/\/+$/, "");
+          const transcribeUrl = cleanIndicUrl.endsWith("/transcribe")
+            ? cleanIndicUrl
+            : `${cleanIndicUrl}/transcribe`;
+
           const abortController = new AbortController();
           const timer = setTimeout(() => abortController.abort(), 7000); // 7s timeout
 
-          const indicRes = await fetch(indicUrl, {
+          const indicRes = await fetch(transcribeUrl, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -256,8 +297,9 @@ Deno.serve(async (req: Request) => {
 
         if (!whisperRes.ok) {
           const errText = await whisperRes.text();
+          console.error(`[STT Provider Error] Groq Whisper failed (${whisperRes.status}):`, errText);
           return new Response(
-            JSON.stringify({ error: `Groq Whisper transcription failed (${whisperRes.status}): ${errText}` }),
+            JSON.stringify({ error: `Groq Whisper transcription failed (${whisperRes.status}). Please try speaking again.` }),
             { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
         }
@@ -386,22 +428,37 @@ Follow these strict rules:
 
     if (!groqRes.ok) {
       const errText = await groqRes.text();
+      console.error(`[AI Intent Extraction Error] Groq API returned status ${groqRes.status}:`, errText);
       return new Response(
-        JSON.stringify({ error: `Groq intent extraction failed (${groqRes.status}): ${errText}` }),
+        JSON.stringify({ error: `Groq intent extraction failed (${groqRes.status}). Please try again.` }),
         { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     const groqData = await groqRes.json();
     const rawContent = groqData.choices?.[0]?.message?.content;
-    if (!rawContent) {
+    if (!rawContent || !rawContent.trim()) {
       return new Response(
         JSON.stringify({ error: "Empty response received from Groq extraction engine." }),
         { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const extraction = JSON.parse(rawContent);
+    let extraction: any;
+    try {
+      let cleaned = rawContent.trim();
+      if (cleaned.startsWith("```")) {
+        cleaned = cleaned.replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "").trim();
+      }
+      extraction = JSON.parse(cleaned);
+    } catch (parseErr: any) {
+      console.error("[JSON Parse Error] Failed to parse Groq intent output:", parseErr.message, rawContent);
+      return new Response(
+        JSON.stringify({ error: "Unable to parse structured intent response from AI engine." }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     extraction.metadata = extraction.metadata || {
       certainty: 0.7,
       clarification_required: false,
@@ -451,7 +508,7 @@ Follow these strict rules:
           amountPaise,
           category: tx.category || (tx.type === "income" ? "earnings" : "other"),
           expenseType: tx.type === "expense" && (tx.expense_type === "living" || tx.expense_type === "work") ? tx.expense_type : null,
-          date: tx.date || new Date().toISOString().slice(0, 10),
+          date: tx.date || todayIndiaISO(),
           ownership: tx.ownership === "not_mine" ? "not_mine" : "mine",
           confidence: typeof extraction.metadata.certainty === "number" ? extraction.metadata.certainty : 0.8,
           needsReview,

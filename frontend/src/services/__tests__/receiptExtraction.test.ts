@@ -321,6 +321,106 @@ async function runTests() {
     assertTrue(thrown, "API failure throws user-readable error");
   });
 
+  // -----------------------------------------------------------------
+  // 9. Unauthenticated Session Rejection (Security Enforcement)
+  // -----------------------------------------------------------------
+  await it("Scenario 9: Unauthenticated call (HTTP 401) is rejected and surfaced truthfully", async () => {
+    resetMockState();
+
+    mockState.functionsInvokeHandler = async (fnName) => {
+      assertStrictEqual(fnName, "extract-receipt", "Must invoke extract-receipt Edge Function");
+      return {
+        data: null,
+        error: { message: "Unauthorized. Invalid user token.", status: 401 },
+      };
+    };
+
+    let thrown = false;
+    try {
+      await extractReceipt({ text: "Petrol 300" });
+    } catch (err: any) {
+      thrown = true;
+      assertTrue(err.message.includes("Unauthorized") || err.message.includes("Invalid user token"), "Surfaces 401 Unauthorized clearly");
+    }
+    assertTrue(thrown, "Unauthenticated request throws unauthorized error");
+  });
+
+  // -----------------------------------------------------------------
+  // 10. Authenticated Session Success
+  // -----------------------------------------------------------------
+  await it("Scenario 10: Authenticated user session successfully extracts candidate", async () => {
+    resetMockState();
+
+    mockState.functionsInvokeHandler = async (fnName) => {
+      assertStrictEqual(fnName, "extract-receipt", "Must invoke extract-receipt Edge Function");
+      const candidate: ExtractedReceiptCandidate = {
+        id: "auth-cand-1",
+        merchant: "Swiggy Mart",
+        amountPaise: 45000,
+        category: "groceries",
+        expenseType: "living",
+        date: "2026-11-23",
+        confidence: 0.95,
+        needsReview: false,
+        missingFields: [],
+      };
+      return { data: { candidate }, error: null };
+    };
+
+    const res = await extractReceipt({ text: "Swiggy Mart Rs 450 on 2026-11-23" });
+    assertStrictEqual(res.merchant, "Swiggy Mart");
+    assertStrictEqual(res.amountPaise, 45000);
+    assertStrictEqual(res.expenseType, "living");
+  });
+
+  // -----------------------------------------------------------------
+  // 11. Fail-Closed Server Configuration Failure (HTTP 500)
+  // -----------------------------------------------------------------
+  await it("Scenario 11: Fail-closed verification: Server config error (missing SUPABASE_URL / ANON_KEY) returns HTTP 500", async () => {
+    resetMockState();
+
+    mockState.functionsInvokeHandler = async (fnName) => {
+      assertStrictEqual(fnName, "extract-receipt", "Must invoke extract-receipt Edge Function");
+      return {
+        data: null,
+        error: { message: "Server configuration error: SUPABASE_URL or SUPABASE_ANON_KEY is not configured.", status: 500 },
+      };
+    };
+
+    let thrown = false;
+    try {
+      await extractReceipt({ text: "Petrol 200" });
+    } catch (err: any) {
+      thrown = true;
+      assertTrue(err.message.includes("Server configuration error"), "Surfaces server config failure without falling through to AI");
+    }
+    assertTrue(thrown, "Server configuration failure rejects processing");
+  });
+
+  // -----------------------------------------------------------------
+  // 12. Expired or Invalid User JWT Token (HTTP 401)
+  // -----------------------------------------------------------------
+  await it("Scenario 12: Expired or revoked user JWT returns HTTP 401 Unauthorized", async () => {
+    resetMockState();
+
+    mockState.functionsInvokeHandler = async (fnName) => {
+      assertStrictEqual(fnName, "extract-receipt", "Must invoke extract-receipt Edge Function");
+      return {
+        data: null,
+        error: { message: "Unauthorized. Invalid or expired user token.", status: 401 },
+      };
+    };
+
+    let thrown = false;
+    try {
+      await extractReceipt({ text: "Coffee 40" });
+    } catch (err: any) {
+      thrown = true;
+      assertTrue(err.message.includes("Unauthorized") || err.message.includes("Invalid or expired user token"), "Surfaces 401 for expired token");
+    }
+    assertTrue(thrown, "Expired/invalid token rejects processing");
+  });
+
   console.log("\n=================================================");
   console.log(`Results: ${passCount} passed, ${failCount} failed, ${passCount + failCount} total`);
   console.log("=================================================\n");

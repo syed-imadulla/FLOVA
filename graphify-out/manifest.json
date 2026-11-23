@@ -72,9 +72,9 @@
     "semantic_hash": ""
   },
   "backend/package.json": {
-    "mtime": 1795413358.7482316,
-    "seen": 1795417321.4018996,
-    "ast_hash": "4d2423960d6d653a9e666d550ae955d4",
+    "mtime": 1795428511.2966063,
+    "seen": 1795428707.0989854,
+    "ast_hash": "6580cb8b4b2316a5f80680f5b6e6b495",
     "semantic_hash": ""
   },
   "backend/scripts/rls-live-check.mjs": {
@@ -84,9 +84,9 @@
     "semantic_hash": ""
   },
   "backend/scripts/test-db.mjs": {
-    "mtime": 1795244485.3759713,
-    "seen": 1795417321.4019775,
-    "ast_hash": "4a6269c2164de41e6b40217cb2cef835",
+    "mtime": 1795428176.607578,
+    "seen": 1795428707.0990667,
+    "ast_hash": "8e0ebac38bd45d0ac94062ae768d46b0",
     "semantic_hash": ""
   },
   "backend/supabase/migrations/20261120000100_init_schema.sql": {
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "frontend/vite.config.ts": {
-    "mtime": 1795218659.7229748,
-    "seen": 1795218668.737281,
-    "ast_hash": "7d5418a5fe5dc4825f9095aa7c92889c",
+    "mtime": 1795423996.271229,
+    "seen": 1795428707.102944,
+    "ast_hash": "8adaf79f016b76de0e6c41b65eb95bbb",
     "semantic_hash": ""
   },
   ".hackathon/ASSUMPTIONS.md": {
@@ -318,9 +318,9 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1795416845.3697653,
-    "seen": 1795417321.4068203,
-    "ast_hash": "3a62ec206affb1d3900872e9c06cc0a9",
+    "mtime": 1795418148.595306,
+    "seen": 1795428707.1061156,
+    "ast_hash": "2ecfac759d45bbdf6c9924c4318b9f88",
     "semantic_hash": ""
   },
   "ai-engine/README.md": {
@@ -348,9 +348,9 @@
     "semantic_hash": ""
   },
   "frontend/index.html": {
-    "mtime": 1795407589.163624,
-    "seen": 1795417321.4069645,
-    "ast_hash": "29a55e6efb72d75ef20be6c17d03c2ca",
+    "mtime": 1795424290.9324238,
+    "seen": 1795428707.106491,
+    "ast_hash": "df7498d1d3d2afff356a6dfa83699306",
     "semantic_hash": ""
   },
   ".hackathon/court/pick-r3-token-tax/case.md": {
@@ -912,15 +912,15 @@
     "semantic_hash": ""
   },
   "backend/supabase/functions/extract-receipt/index.ts": {
-    "mtime": 1795244485.3768976,
-    "seen": 1795417321.4020035,
-    "ast_hash": "09cece5359a00824a3f0da54d15db754",
+    "mtime": 1795425220.837428,
+    "seen": 1795428707.099094,
+    "ast_hash": "2f80d6119e64860e2a1f32e610c1bb5f",
     "semantic_hash": ""
   },
   "backend/supabase/functions/process-voice/index.ts": {
-    "mtime": 1795244485.3784502,
-    "seen": 1795417321.4020052,
-    "ast_hash": "e630affd395fada7b1b167ae3030726d",
+    "mtime": 1795425221.0559685,
+    "seen": 1795428707.0990953,
+    "ast_hash": "33ebfdeea7ee1239e8d92beb46f4109e",
     "semantic_hash": ""
   },
   "frontend/postcss.config.js": {
@@ -996,9 +996,9 @@
     "semantic_hash": ""
   },
   "frontend/src/services/__tests__/receiptExtraction.test.ts": {
-    "mtime": 1795218659.7207913,
-    "seen": 1795218668.7372582,
-    "ast_hash": "fa7fa5ec62d881b043e4933185c9fbb4",
+    "mtime": 1795424557.1779857,
+    "seen": 1795428707.1022062,
+    "ast_hash": "64bfeaaddb642d0531c7973c0dbf328a",
     "semantic_hash": ""
   },
   "frontend/src/services/__tests__/voiceIntent.test.ts": {
@@ -1440,9 +1440,9 @@
     "semantic_hash": ""
   },
   "frontend/src/screens/CatchScreen.tsx": {
-    "mtime": 1795244485.4049404,
-    "seen": 1795417321.403693,
-    "ast_hash": "940619bb0eb0dcb0dbf2752bac4bb075",
+    "mtime": 1795418148.6020951,
+    "seen": 1795428707.1015186,
+    "ast_hash": "ddc43966fff5715803f47c4eed6ce979",
     "semantic_hash": ""
   },
   "frontend/src/screens/CheckinScreen.tsx": {
@@ -1764,27 +1764,27 @@
     "semantic_hash": ""
   },
   "ai-engine/stt_service/config.py": {
-    "mtime": 1795244485.3731222,
-    "seen": 1795417321.4017162,
-    "ast_hash": "b4839a465c2b45d934ae51ebeddd2b52",
+    "mtime": 1795424060.8153956,
+    "seen": 1795428707.0988069,
+    "ast_hash": "32e262572b96f76547488cd86523e866",
     "semantic_hash": ""
   },
   "ai-engine/stt_service/conformer_engine.py": {
-    "mtime": 1795244485.3734283,
-    "seen": 1795417321.401718,
-    "ast_hash": "1e23402ab18417cc4f1b499661d55b76",
+    "mtime": 1795424288.3909857,
+    "seen": 1795428707.098809,
+    "ast_hash": "c9f84fb75f53a0d18ad67f402652fae5",
     "semantic_hash": ""
   },
   "ai-engine/stt_service/main.py": {
-    "mtime": 1795244485.3737607,
-    "seen": 1795417321.4017196,
-    "ast_hash": "8bdfecd36b292991651222079a762689",
+    "mtime": 1795424113.206719,
+    "seen": 1795428707.0988111,
+    "ast_hash": "6164c033279c46dd57ee3ce0a74d102a",
     "semantic_hash": ""
   },
   "ai-engine/tests/test_stt_service.py": {
-    "mtime": 1795244485.374988,
-    "seen": 1795417321.401748,
-    "ast_hash": "919b1056957d35638087df3a19e42109",
+    "mtime": 1795424288.9367123,
+    "seen": 1795428707.0988395,
+    "ast_hash": "7676379ab8f74e6f88b8291c13ddbdfe",
     "semantic_hash": ""
   },
   "frontend/src/services/__tests__/sttProviderMigration.test.ts": {
@@ -1872,9 +1872,9 @@
     "semantic_hash": ""
   },
   "docs/SMART-CAPTURE.md": {
-    "mtime": 1795244485.3797247,
-    "seen": 1795417321.406939,
-    "ast_hash": "d167fff72a5a1e68aeb0d47870f85d86",
+    "mtime": 1795418148.595306,
+    "seen": 1795428707.106417,
+    "ast_hash": "3f6bbd2048987c7da2c7d854abe11128",
     "semantic_hash": ""
   },
   "docs/TESTING.md": {
@@ -1890,152 +1890,152 @@
     "semantic_hash": ""
   },
   "frontend/src/components/pulse/FlovaAppShowcase.tsx": {
-    "mtime": 1795417246.1923523,
-    "seen": 1795417321.4027336,
+    "mtime": 1795418148.5990496,
+    "seen": 1795428707.1000395,
     "ast_hash": "af9ce174e163cb2eed684cca1b072b89",
     "semantic_hash": ""
   },
   "frontend/src/components/pulse/FlovaBillsAndUtilities.tsx": {
-    "mtime": 1795417246.1892045,
-    "seen": 1795417321.402735,
+    "mtime": 1795418148.599453,
+    "seen": 1795428707.1000412,
     "ast_hash": "e97fa670e862cdb31e0ef335bcc67aa4",
     "semantic_hash": ""
   },
   "frontend/src/components/pulse/FlovaBrandOrbitalFooter.tsx": {
-    "mtime": 1795417246.1901011,
-    "seen": 1795417321.402737,
+    "mtime": 1795418148.599453,
+    "seen": 1795428707.100043,
     "ast_hash": "3a6a121d27ab6c1d23fafa06649fcd75",
     "semantic_hash": ""
   },
   "frontend/src/components/pulse/FlovaConcentricShowcase.tsx": {
-    "mtime": 1795417246.1904156,
-    "seen": 1795417321.4027379,
+    "mtime": 1795418148.599453,
+    "seen": 1795428707.1000443,
     "ast_hash": "d8599ca9cc342b9dff0722bd4d33298e",
     "semantic_hash": ""
   },
   "frontend/src/components/pulse/FlovaDeviceGrid.tsx": {
-    "mtime": 1795417246.1920788,
-    "seen": 1795417321.4027393,
+    "mtime": 1795418148.599453,
+    "seen": 1795428707.100046,
     "ast_hash": "18c832774be900b94af61e0f8d8b4d62",
     "semantic_hash": ""
   },
   "frontend/src/components/pulse/FlovaFeaturePillars.tsx": {
-    "mtime": 1795417246.187875,
-    "seen": 1795417321.4027402,
+    "mtime": 1795418148.599847,
+    "seen": 1795428707.100047,
     "ast_hash": "46527297e8777f4028d6c026f9488c4c",
     "semantic_hash": ""
   },
   "frontend/src/components/pulse/FlovaHeroSlider.tsx": {
-    "mtime": 1795417246.1886172,
-    "seen": 1795417321.4027412,
+    "mtime": 1795418148.5999713,
+    "seen": 1795428707.1000483,
     "ast_hash": "f1f9026dce1db1d95e09d8dcdbd05540",
     "semantic_hash": ""
   },
   "frontend/src/components/pulse/FlovaPanIndiaBanner.tsx": {
-    "mtime": 1795417246.191704,
-    "seen": 1795417321.4027424,
+    "mtime": 1795418148.5999713,
+    "seen": 1795428707.1000497,
     "ast_hash": "e287a303fd0c9615f4fe88f331002b27",
     "semantic_hash": ""
   },
   "frontend/src/components/pulse/FlovaPulseLandingPage.tsx": {
-    "mtime": 1795417246.190727,
-    "seen": 1795417321.4027433,
+    "mtime": 1795418148.5999713,
+    "seen": 1795428707.1000512,
     "ast_hash": "9342f7b9c2b33574be56284cd641a82b",
     "semantic_hash": ""
   },
   "frontend/src/components/pulse/FlovaPulseNavbar.tsx": {
-    "mtime": 1795417403.2940757,
-    "seen": 1795417706.8141217,
+    "mtime": 1795418148.5999713,
+    "seen": 1795428707.1000526,
     "ast_hash": "d6a4b6979eec853a7d0d1b752bebe293",
     "semantic_hash": ""
   },
   "frontend/src/components/pulse/FlovaQuickTrustCarousel.tsx": {
-    "mtime": 1795417246.1910508,
-    "seen": 1795417321.4027455,
+    "mtime": 1795418148.5999713,
+    "seen": 1795428707.1000538,
     "ast_hash": "7a80a05462c4a4c0deca287b8831230b",
     "semantic_hash": ""
   },
   "frontend/src/components/pulse/FlovaSavingsGrowSection.tsx": {
-    "mtime": 1795417246.189492,
-    "seen": 1795417321.4027467,
+    "mtime": 1795418148.600306,
+    "seen": 1795428707.1000555,
     "ast_hash": "0c2b83f29b5e32d1e08d7fcf64dff003",
     "semantic_hash": ""
   },
   "frontend/src/components/pulse/FlovaTransitSection.tsx": {
-    "mtime": 1795417246.191342,
-    "seen": 1795417321.4027476,
+    "mtime": 1795418148.600306,
+    "seen": 1795428707.100057,
     "ast_hash": "dcbd544fda8be5aa118c23275a80cd7a",
     "semantic_hash": ""
   },
   "frontend/src/components/tactile/FloatingElements.tsx": {
-    "mtime": 1795218659.7127907,
-    "seen": 1795417321.4027486,
+    "mtime": 1795418148.600306,
+    "seen": 1795428707.1000578,
     "ast_hash": "25e0116e0c7fd335685b5d41959172ca",
     "semantic_hash": ""
   },
   "frontend/src/components/tactile/FlovaAuditSection.tsx": {
-    "mtime": 1795417403.4452662,
-    "seen": 1795417706.8142412,
+    "mtime": 1795418148.6007404,
+    "seen": 1795428707.100059,
     "ast_hash": "d70cc9681ee4fb44273dd380a370eb57",
     "semantic_hash": ""
   },
   "frontend/src/components/tactile/FlovaCapabilitiesSection.tsx": {
-    "mtime": 1795417403.749262,
-    "seen": 1795417706.814243,
+    "mtime": 1795418148.6007404,
+    "seen": 1795428707.1000605,
     "ast_hash": "f3e181becc90ea099c7a952b1fc81eda",
     "semantic_hash": ""
   },
   "frontend/src/components/tactile/FlovaFinalCTA.tsx": {
-    "mtime": 1795417403.9279792,
-    "seen": 1795417706.8142443,
+    "mtime": 1795418148.6007404,
+    "seen": 1795428707.100062,
     "ast_hash": "e4de13642650331de6f76b0920893057",
     "semantic_hash": ""
   },
   "frontend/src/components/tactile/FlovaLedgerSection.tsx": {
-    "mtime": 1795417404.131294,
-    "seen": 1795417706.814246,
+    "mtime": 1795418148.60109,
+    "seen": 1795428707.1000636,
     "ast_hash": "31a0ff0e92d5cd72b987cd3ce0f80ec2",
     "semantic_hash": ""
   },
   "frontend/src/components/tactile/FlovaPrimaryNavbar.tsx": {
-    "mtime": 1795417404.355254,
-    "seen": 1795417706.8142474,
+    "mtime": 1795418148.60109,
+    "seen": 1795428707.1000648,
     "ast_hash": "1b68bf0226a10732b008ead064e65b56",
     "semantic_hash": ""
   },
   "frontend/src/components/tactile/FlovaResilienceSection.tsx": {
-    "mtime": 1795417404.6582499,
-    "seen": 1795417706.8142486,
+    "mtime": 1795418148.60109,
+    "seen": 1795428707.100066,
     "ast_hash": "7ad8147d4e8d9e0fff630990444cb49c",
     "semantic_hash": ""
   },
   "frontend/src/components/tactile/FlovaTactileFooter.tsx": {
-    "mtime": 1795417404.8669806,
-    "seen": 1795417706.81425,
+    "mtime": 1795418148.6013343,
+    "seen": 1795428707.1000674,
     "ast_hash": "43c7a450a902cd0228f2cfbbb67e31f5",
     "semantic_hash": ""
   },
   "frontend/src/components/tactile/FlovaTactileHero.tsx": {
-    "mtime": 1795417405.0527399,
-    "seen": 1795417706.8142514,
+    "mtime": 1795418148.6013343,
+    "seen": 1795428707.1000686,
     "ast_hash": "f11c337c7817c53db663c3eabf551dce",
     "semantic_hash": ""
   },
   "frontend/src/components/tactile/FlovaTactileHowItWorks.tsx": {
-    "mtime": 1795417405.1972675,
-    "seen": 1795417706.8142533,
+    "mtime": 1795418148.6013343,
+    "seen": 1795428707.10007,
     "ast_hash": "11e68535e896b37105ae02781b2d6e42",
     "semantic_hash": ""
   },
   "frontend/src/components/tactile/FlovaTactileLandingPage.tsx": {
-    "mtime": 1795417405.5111609,
-    "seen": 1795417706.8142545,
+    "mtime": 1795418148.6013343,
+    "seen": 1795428707.1000714,
     "ast_hash": "fe5f682577e5e854de59a180539d7f16",
     "semantic_hash": ""
   },
   "frontend/src/components/tactile/SectionHeading.tsx": {
-    "mtime": 1795218659.7131813,
-    "seen": 1795417321.40276,
+    "mtime": 1795418148.6013343,
+    "seen": 1795428707.100074,
     "ast_hash": "8b8a964fc85e909249d6a1bb013e2165",
     "semantic_hash": ""
   },
@@ -2088,14 +2088,14 @@
     "semantic_hash": ""
   },
   "docs/assets/flova-icon.png": {
-    "mtime": 1795416446.1871264,
-    "seen": 1795417321.4071207,
+    "mtime": 1795418148.596306,
+    "seen": 1795428707.1066558,
     "ast_hash": "704c7cf606ff0f1c64941be5e95bcfcf",
     "semantic_hash": ""
   },
   "docs/assets/flova-logo.svg": {
-    "mtime": 1795416446.1902468,
-    "seen": 1795417321.407122,
+    "mtime": 1795418148.5990496,
+    "seen": 1795428707.1066575,
     "ast_hash": "3694a8b3d17c91e54a61c409bbbab3bf",
     "semantic_hash": ""
   },
@@ -2142,9 +2142,63 @@
     "semantic_hash": ""
   },
   "frontend/src/components/tactile/Icons.tsx": {
-    "mtime": 1795218659.7130194,
-    "seen": 1795417706.8142562,
+    "mtime": 1795418148.6013343,
+    "seen": 1795428707.1000726,
     "ast_hash": "24c7ecc7b18cd26e4588eba805b109fd",
+    "semantic_hash": ""
+  },
+  "backend/scripts/edge-smoke.mjs": {
+    "mtime": 1795428511.0946093,
+    "seen": 1795428707.0989873,
+    "ast_hash": "66deab84bf6c739e495b887bf1dc6036",
+    "semantic_hash": ""
+  },
+  "backend/supabase/functions/deno.d.ts": {
+    "mtime": 1795424395.4230745,
+    "seen": 1795428707.099092,
+    "ast_hash": "53ea4905fe96cdc43d292933e4568042",
+    "semantic_hash": ""
+  },
+  "backend/supabase/functions/tsconfig.json": {
+    "mtime": 1795425136.577514,
+    "seen": 1795428707.0990963,
+    "ast_hash": "78959868681ec7b0ff4196766871a93d",
+    "semantic_hash": ""
+  },
+  "frontend/vercel.json": {
+    "mtime": 1795423899.7614753,
+    "seen": 1795428707.1029415,
+    "ast_hash": "61bd31a2b0ac08f10f13c932b32d6ca1",
+    "semantic_hash": ""
+  },
+  "docs/phase-1-production-delivery-report.md": {
+    "mtime": 1795428637.8648229,
+    "seen": 1795428707.106462,
+    "ast_hash": "c80f2ff1e33072190103d95d35a87c4c",
+    "semantic_hash": ""
+  },
+  "docs/production-readiness-audit.md": {
+    "mtime": 1795423342.0286868,
+    "seen": 1795428707.1064634,
+    "ast_hash": "3dc99e6342f06ff931b4e3624bea6ce5",
+    "semantic_hash": ""
+  },
+  "docs/production-readiness-fix-log.md": {
+    "mtime": 1795425199.194707,
+    "seen": 1795428707.1064646,
+    "ast_hash": "1e7309f848f283c0d7f0375c8f6613e9",
+    "semantic_hash": ""
+  },
+  "docs/remote-remediation-plan.md": {
+    "mtime": 1795428238.068665,
+    "seen": 1795428707.1064658,
+    "ast_hash": "587356079999501b00180b517b534707",
+    "semantic_hash": ""
+  },
+  "docs/remote-supabase-verification.md": {
+    "mtime": 1795425518.737589,
+    "seen": 1795428707.106467,
+    "ast_hash": "b332a308ecf58463cd4ade4ab3127d58",
     "semantic_hash": ""
   }
 }

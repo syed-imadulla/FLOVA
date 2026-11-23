@@ -48,7 +48,33 @@ def test_models_endpoint_auth_required():
     assert "hi" in data["primary_languages"]
     assert "te" in data["primary_languages"]
 
-def test_transcribe_audio_kannada():
+def test_transcribe_missing_model_returns_503(monkeypatch):
+    """Verifies that in production mode (ALLOW_MOCK_FALLBACK=False), missing model weights return HTTP 503 instead of mock text."""
+    monkeypatch.setattr(settings, "ALLOW_MOCK_FALLBACK", False)
+    wav_bytes = create_synthetic_wav(1.0, 16000)
+    audio_b64 = base64.b64encode(wav_bytes).decode()
+
+    response = client.post(
+        "/transcribe",
+        headers={"X-FLOVA-STT-KEY": settings.FLOVA_STT_INTERNAL_KEY},
+        json={
+            "audioBase64": audio_b64,
+            "mimeType": "audio/wav",
+            "language": "kn"
+        }
+    )
+    # If ONNX model is not installed on disk, must return HTTP 503 Service Unavailable
+    engine_instance = IndicConformerEngine()
+    target_info = engine_instance.load_model("kn")
+    if target_info.get("session") is None:
+        assert response.status_code == 503
+        data = response.json()
+        assert "not installed" in data["detail"]
+    else:
+        assert response.status_code == 200
+
+def test_transcribe_audio_kannada(monkeypatch):
+    monkeypatch.setattr(settings, "ALLOW_MOCK_FALLBACK", True)
     wav_bytes = create_synthetic_wav(1.5, 16000)
     audio_b64 = base64.b64encode(wav_bytes).decode()
 
@@ -69,7 +95,8 @@ def test_transcribe_audio_kannada():
     assert "ಪೆಟ್ರೋಲ್" in data["transcript"] or "300" in data["transcript"]
     assert data["duration_ms"] > 0
 
-def test_transcribe_audio_hindi():
+def test_transcribe_audio_hindi(monkeypatch):
+    monkeypatch.setattr(settings, "ALLOW_MOCK_FALLBACK", True)
     wav_bytes = create_synthetic_wav(1.5, 16000)
     audio_b64 = base64.b64encode(wav_bytes).decode()
 
@@ -89,7 +116,8 @@ def test_transcribe_audio_hindi():
     assert data["language"] == "hi"
     assert "पेट्रोल" in data["transcript"] or "300" in data["transcript"]
 
-def test_transcribe_audio_telugu():
+def test_transcribe_audio_telugu(monkeypatch):
+    monkeypatch.setattr(settings, "ALLOW_MOCK_FALLBACK", True)
     wav_bytes = create_synthetic_wav(1.5, 16000)
     audio_b64 = base64.b64encode(wav_bytes).decode()
 
