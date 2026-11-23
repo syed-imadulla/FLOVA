@@ -30,8 +30,9 @@ FLOVA (*"Every rupee has a story. FLOVA remembers."*) is a voice-first financial
 
 ## 3. Speech-to-Text & AI Architecture
 
-- **Primary STT:** AI4Bharat IndicConformer microservice in `ai-engine/stt_service/` (port 8001), prioritizing language checkpoints for `kn`, `hi`, `te`, `ta`, `ml`, `en`.
-- **Secondary Fallback:** Groq Whisper (`whisper-large-v3-turbo` / `whisper-large-v3`) automatically invoked if the primary STT service times out (>7s) or fails.
+- **Primary STT (designed):** AI4Bharat IndicConformer microservice in `ai-engine/stt_service/` (port 8001), for `kn`, `hi`, `te`, `ta`, `ml`, `en`. **Real inference is not implemented yet**: the service returns 503 (no fake transcripts) and is not hosted. Production currently transcribes with Groq Whisper only. Roadmap: `docs/indicconformer-production-plan.md`.
+- **Secondary Fallback:** Groq Whisper (`whisper-large-v3-turbo` / `whisper-large-v3`), used when IndicConformer is not configured (`INDICCONFORMER_URL` + `INDICCONFORMER_KEY`), times out (>7s) or fails.
+- **STT key:** `FLOVA_STT_INTERNAL_KEY` has no default; without it `/transcribe` and `/models` return 503.
 - **Intent Extraction:** Groq Llama 3.3 Versatile (`llama-3.3-70b-versatile`) via Supabase Edge Function `process-voice`.
 - **Receipt Vision OCR:** Groq Qwen 2.5 27B Vision (`qwen/qwen3.8-27b`) via Supabase Edge Function `extract-receipt`.
 - **Client Image Downscaling:** `frontend/src/services/imageOptimizer.ts` scales photos up to 20 MB down to 1920px max dimension at 0.85 JPEG compression prior to upload.

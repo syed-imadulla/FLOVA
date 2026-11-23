@@ -1,4 +1,5 @@
 import base64
+import hmac
 import time
 from typing import Optional
 from fastapi import FastAPI, HTTPException, Header, Request, Depends, status
@@ -62,7 +63,11 @@ def verify_stt_auth(
     """
     expected_key = settings.FLOVA_STT_INTERNAL_KEY
     if not expected_key:
-        return True  # If no key is set, allow internal communication
+        # Fail closed: an unconfigured service must never accept unauthenticated audio.
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="STT service is not configured: FLOVA_STT_INTERNAL_KEY is not set."
+        )
 
     provided_key = None
     if x_flova_stt_key:
@@ -70,7 +75,7 @@ def verify_stt_auth(
     elif authorization and authorization.startswith("Bearer "):
         provided_key = authorization.split("Bearer ", 1)[1].strip()
 
-    if provided_key != expected_key:
+    if provided_key is None or not hmac.compare_digest(provided_key, expected_key):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or missing X-FLOVA-STT-KEY authentication header."

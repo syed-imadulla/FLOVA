@@ -232,10 +232,11 @@ Deno.serve(async (req: Request) => {
 
       // 5A. PRIMARY: AI4Bharat IndicConformer STT Service
       const indicUrl = Deno.env.get("INDICCONFORMER_URL");
-      const indicKey = Deno.env.get("INDICCONFORMER_KEY") || "flova-indicconformer-secure-token-2026";
+      const indicKey = Deno.env.get("INDICCONFORMER_KEY") ?? "";
       let indicSucceeded = false;
 
-      if (indicUrl) {
+      // Use IndicConformer only when both the URL and its key are configured; otherwise Groq Whisper.
+      if (indicUrl && indicKey) {
         try {
           const cleanIndicUrl = indicUrl.replace(/\/+$/, "");
           const transcribeUrl = cleanIndicUrl.endsWith("/transcribe")

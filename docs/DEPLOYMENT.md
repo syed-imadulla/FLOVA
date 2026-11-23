@@ -75,7 +75,7 @@ ExecStart=/usr/bin/python3 -m uvicorn stt_service.main:app --host 0.0.0.0 --port
 Restart=on-failure
 RestartSec=5s
 Environment="FLOVA_STT_PORT=8001"
-Environment="FLOVA_STT_INTERNAL_KEY=flova-indicconformer-secure-token-2026"
+Environment="FLOVA_STT_INTERNAL_KEY=<random value from openssl rand -hex 32>"
 
 [Install]
 WantedBy=multi-user.target

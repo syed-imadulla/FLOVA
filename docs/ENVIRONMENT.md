@@ -42,7 +42,7 @@ Environment variables in FLOVA are divided into three strict tiers:
 |---|---|---|---|
 | `FLOVA_STT_PORT` | Listening TCP port | `8001` | No |
 | `FLOVA_STT_HOST` | Network interface binding | `0.0.0.0` | No |
-| `FLOVA_STT_INTERNAL_KEY` | Pre-shared key expected in `X-FLOVA-STT-KEY` header | `flova-indicconformer-secure-token-2026` | Yes |
+| `FLOVA_STT_INTERNAL_KEY` | Pre-shared key expected in `X-FLOVA-STT-KEY` header. Generate a long random value (e.g. `openssl rand -hex 32`); same value as Supabase secret `INDICCONFORMER_KEY` | none (service returns 503 until set) | Yes |
 | `INDICCONFORMER_CACHE_DIR` | Directory for caching ONNX / PyTorch models | `~/.cache/flova_indicconformer` | No |
 | `HF_TOKEN` | (Optional) Hugging Face user access token for gated models | `""` | Optional |
 | `DEVICE` | PyTorch execution device (`cpu` or `cuda`) | `cpu` | No |
