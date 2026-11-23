@@ -70,10 +70,12 @@ User Review in /add (No direct DB mutation)
 
 ## 5. Performance & Resource Consumption
 
-Measurements recorded during Phase 17 comparative benchmark (`ai-engine/benchmark_stt.py`):
+> **Correction (2026-11-23):** the Phase 17 numbers below came from the mock decoder, not real IndicConformer inference (no model weights were loaded; the "transcript" was a fixed sentence). They do not describe real performance. Real inference is not implemented yet; see `docs/indicconformer-production-plan.md`.
 
-- **In-Memory Singleton RAM:** ~38.4 MB RSS footprint with pre-warmed language sessions (`kn`, `hi`, `te`, `ta`).
-- **Primary STT Latency:** Under 1 ms on warm local cache.
+Mock-only figures recorded during Phase 17 (`ai-engine/benchmark_stt.py`):
+
+- **In-Memory Singleton RAM:** ~38.4 MB RSS (no model loaded).
+- **Primary STT Latency:** Under 1 ms (fixed-string mock, no inference).
 - **Secondary Whisper Latency:** 280 ms – 420 ms cloud API round-trip.
 - **Zero Loss Guarantee:** Even if the local STT service is stopped or unreachable, Groq Whisper immediately transcribes the audio, ensuring uninterrupted user experience.
 
