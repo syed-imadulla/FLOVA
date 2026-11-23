@@ -230,7 +230,10 @@ export function CatchScreen() {
           <input
             ref={cameraInputRef}
             type="file"
-            accept="image/jpeg,image/png,image/webp,image/jpg"
+            // Must be exactly "image/*": the Android app (Capacitor WebView) only opens the camera
+            // when accept contains "image/*"; a list of specific types falls back to the gallery.
+            // imageOptimizer still rejects unsupported formats.
+            accept="image/*"
             capture="environment"
             className="hidden"
             onChange={(e) => pick(e.target.files?.[0] ?? null)}

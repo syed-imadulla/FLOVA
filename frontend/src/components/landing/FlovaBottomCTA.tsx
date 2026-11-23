@@ -43,7 +43,7 @@ export const FlovaBottomCTA: React.FC = () => {
         <div className="mt-10 flex flex-wrap items-center justify-center gap-6 text-xs text-emerald-200 font-medium">
           <span>🔒 Postgres Row-Level Security Isolation</span>
           <span>⚡ No Banking Credentials or OTPs</span>
-          <span>📱 Installable as Fast PWA</span>
+          <a href="#install" className="underline underline-offset-4 hover:text-white">📱 Install the app</a>
         </div>
       </div>
     </section>

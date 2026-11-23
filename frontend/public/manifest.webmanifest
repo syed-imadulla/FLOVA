@@ -2,7 +2,7 @@
   "name": "FLOVA — Make your money move smarter",
   "short_name": "FLOVA",
   "description": "Financial runway planner and smart money manager for Indian gig delivery partners and independent workers.",
-  "start_url": "/",
+  "start_url": "/app",
   "display": "standalone",
   "background_color": "#FAF7F2",
   "theme_color": "#0F5C4C",
@@ -26,13 +26,13 @@
       "purpose": "any"
     },
     {
-      "src": "/icon-192.png",
+      "src": "/icon-maskable-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "/icon-512.png",
+      "src": "/icon-maskable-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
@@ -49,9 +49,16 @@
       "files": [
         {
           "name": "media",
-          "accept": ["image/*", "image/png", "image/jpeg", "image/webp"]
+          "accept": [
+            "image/*",
+            "image/png",
+            "image/jpeg",
+            "image/webp"
+          ]
         }
       ]
     }
-  }
+  },
+  "id": "/app",
+  "scope": "/"
 }

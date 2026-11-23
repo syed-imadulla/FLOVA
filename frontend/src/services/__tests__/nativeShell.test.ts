@@ -9,6 +9,7 @@ import path from "node:path";
 // @ts-ignore
 import { fileURLToPath } from "node:url";
 import { backAction, EXIT_PATHS } from "../../native/backAction";
+import { isKeyboardOpen, KEYBOARD_MIN_PX } from "../../native/keyboard";
 
 declare const process: any;
 
@@ -61,6 +62,31 @@ test("package ID is in.flova.app everywhere", () => {
 test("Android targets API 36 (Google Play requirement)", () => {
   const vars = read("android/variables.gradle");
   assert(/targetSdkVersion = 36\b/.test(vars), "targetSdkVersion must be 36");
+});
+
+test("keyboard is detected by a large height drop, not a toolbar collapse", () => {
+  assert(isKeyboardOpen(800, 450), "350 px drop is the keyboard");
+  assert(!isKeyboardOpen(800, 740), "60 px drop (browser toolbar) is not the keyboard");
+  assert(!isKeyboardOpen(800, 800 - KEYBOARD_MIN_PX), "exactly the threshold is not the keyboard");
+});
+
+test("receipt camera input uses accept=image/* so the Android app opens the camera", () => {
+  const catchScreen = read("src/screens/CatchScreen.tsx");
+  const cameraInput = catchScreen.match(/ref=\{cameraInputRef\}[\s\S]*?\/>/);
+  assert(!!cameraInput, "camera input not found");
+  assert(/accept="image\/\*"/.test(cameraInput![0]), "camera input must use accept=\"image/*\" (Capacitor requires it)");
+  assert(/capture="environment"/.test(cameraInput![0]), "camera input must keep capture=environment");
+});
+
+test("Android launcher icon and splash use FLOVA artwork, not Capacitor defaults", () => {
+  const styles = read("android/app/src/main/res/values/styles.xml");
+  assert(styles.includes("windowSplashScreenAnimatedIcon"), "Android 12+ splash icon not set");
+  assert(styles.includes("@color/flova_splash_background"), "splash background colour not set");
+  // FLOVA PNGs are generated from frontend/assets; the Capacitor default foreground is ~a few KB of blue.
+  for (const d of ["mdpi", "hdpi", "xhdpi", "xxhdpi", "xxxhdpi"]) {
+    assert(fs.existsSync(path.join(root, `android/app/src/main/res/mipmap-${d}/ic_launcher_foreground.png`)), `${d} foreground missing`);
+  }
+  assert(fs.existsSync(path.join(root, "assets/icon-foreground.png")), "icon source missing");
 });
 
 console.log(`Results: ${passed} passed, ${failed} failed, ${passed + failed} total`);
