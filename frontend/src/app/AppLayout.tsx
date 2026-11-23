@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { cx } from "../ui/kit";
+import { useKeyboardOpen } from "../native/keyboard";
 import { IconActivity, IconChart, IconHome, IconMic, IconMore } from "../ui/icons";
 
 const MORE_PATHS = ["/more", "/wish", "/payouts", "/commitments", "/profile"];
@@ -16,16 +17,19 @@ export function AppLayout() {
   }, [pathname]);
 
   const moreActive = MORE_PATHS.some((p) => pathname.startsWith(p));
+  // Hide the bottom bar while the on-screen keyboard is open so it does not sit on top of it.
+  const keyboardOpen = useKeyboardOpen();
 
   return (
     <div className="flova-app min-h-dvh bg-[#E9ECE6] text-ink antialiased">
       <div className="relative mx-auto flex min-h-dvh w-full max-w-[480px] flex-col bg-canvas md:shadow-[0_0_0_1px_#E1E4DE,0_10px_40px_rgba(0,0,0,0.06)]">
-        <main className="flex-1 pb-[calc(84px+var(--sab))]">
+        <main className={cx("flex-1", keyboardOpen ? "pb-4" : "pb-[calc(84px+var(--sab))]")}>
           <Outlet />
         </main>
 
         <nav
           aria-label="Main"
+          hidden={keyboardOpen}
           className="fixed bottom-0 left-1/2 z-40 w-full max-w-[480px] -translate-x-1/2 border-t border-line bg-white/95 backdrop-blur shadow-nav pb-[var(--sab)]"
         >
           <div className="grid h-[68px] grid-cols-5 items-end px-1">
