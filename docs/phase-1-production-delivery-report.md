@@ -19,7 +19,7 @@ Every result below was observed in this session unless marked *previous agent cl
 | 1.3 CP3 Edge Function deploy | **Deployed and verified 2026-11-23** | `process-voice` v8, `extract-receipt` v12 (§7) |
 | 1.4 Vercel | **Deployed and verified 2026-11-23** | https://myflova.vercel.app from `main` (§8); Supabase Auth URLs updated (§8.3) |
 | 1.5 STT service | Decision pending | Remote has no IndicConformer URL/key; voice uses Groq Whisper |
-| 1.6 Production E2E QA | **Mostly passed 2026-11-23; invoice create fix deployed; settlement + WISH fix awaiting deploy** | §9 |
+| 1.6 Production E2E QA | **Passed 2026-11-23 after 4 fixes (all deployed)**; mic audio and offline still manual | §9 |
 
 ## 2. Repository state
 
@@ -253,9 +253,30 @@ Environment: https://myflova.vercel.app (build from `main` 1bcf45c), Claude desk
 - Root cause: `toPaise` (`frontend/src/lib/money.ts`) drops digits after the 2nd decimal place by design (safe for DB values, which are numeric(12,2)). Every other money form validates typed text with `parseRequiredRupees` first ("Cannot have more than 2 decimal places"); `InvoicesScreen` did not, for either invoice totals or payments.
 - Fix: `InvoicesScreen` validates both amounts with `parseRequiredRupees` and passes exact paise; payments above the outstanding amount are refused with a clear message; new `toPaiseStrict` rejects >2 decimals in the invoice and WISH services' rupee-string paths.
 - Test 9 in `invoiceIntelligence.test.ts` fails on the previous code with exactly this symptom and passes with the fix. All frontend suites pass; `tsc` clean; build passes.
-- **Status: fixed locally, not yet deployed.**
+- **Status: deployed** (`main` 38f48a1, bundle `index-BOhggNz-.js`). Production re-test on new invoice QA-002 (₹5,000):
 
-### 9.3 Not covered yet
-- Real microphone audio → Groq Whisper (needs a human voice; text path through the same LLM passed).
-- Logout (deferred until after the invoice re-test so the QA session stays signed in).
+| Step | Result |
+|---|---|
+| Click into pre-filled field and type 1500 (field = `5000.001500`) | Refused: "Cannot have more than 2 decimal places"; nothing saved. PASS |
+| Select field, enter 1500 | "Recorded payment of ₹1,500"; outstanding ₹3,500, paid 30%. PASS |
+| Pay ₹4,000 against ₹3,500 outstanding | Refused: "Payment is more than the ₹3,500 still outstanding." PASS |
+| Available money after invoices and payments | Unchanged at ₹6,050 (invoices are not liquid money). PASS |
+
+QA-001 keeps the accidental ₹5,000 settlement from the bug as fictional test data.
+
+### 9.2d Logout
+- "Sign out" on `/more` → `/login`, Supabase session removed from storage, `/dashboard` redirects to `/login`. PASS
+
+### 9.2e WISH
+- The WISH screen persists through `src/wish/wishService.ts`, whose writes pass the schema-conformance test. `src/services/wish.ts` (fixed in §9.2b) is not used by any screen. WISH was not exercised live in this QA pass.
+
+### 9.3 Not covered yet (manual)
+- Real microphone audio → Groq Whisper. The Claude desktop browser pane blocks microphone access, so this needs one spoken sentence on `/voice` in a normal browser or phone. The typed path through the same LLM passed.
 - Offline / slow-network behaviour (the built-in browser cannot throttle).
+- WISH goal create/contribute live.
+
+### 9.4 QA summary
+- 4 production bugs found and fixed, each with a regression test that fails on the old code: invoice status `draft` (create failed), `invoice_settlements.payment_reference` (payment failed), `wish_goals.reward_note` (latent), typed invoice amount truncation (wrong amount recorded).
+- New guard: `schemaConformance.test.ts` checks every frontend write against the migrations, closing the mock-database blind spot that hid three of the four.
+- All core money flows (check-in, income, expense, not-mine, payouts, partial settlement, bills/runway, AI text/SMS/receipt with confirm and discard, ₹10 lakh limit, isolation, mobile, logout) pass on production.
+
