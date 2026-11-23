@@ -118,7 +118,7 @@ export async function createInvoice(input: CreateInvoiceInput): Promise<Invoice>
       due_date: input.dueDate || null,
       total_amount: totalAmountStr,
       paid_amount: "0.00",
-      status: "draft",
+      status: "unpaid",
       notes: input.notes || null,
       file_path: input.filePath || null,
     })

@@ -17,9 +17,9 @@ Every result below was observed in this session unless marked *previous agent cl
 | 1.3 CP1 Migration history | **Verified** | `migration list --remote` shows all 7 versions local = remote |
 | 1.3 CP2 Database permissions | **Applied and verified 2026-11-23** | User-approved `db push`; post-migration ACLs, triggers and history verified (§5.7) |
 | 1.3 CP3 Edge Function deploy | **Deployed and verified 2026-11-23** | `process-voice` v8, `extract-receipt` v12 (§7) |
-| 1.4 Vercel | Not started (needs approval + commit/push) | No `.vercel/` link, no GitHub deployments |
+| 1.4 Vercel | **Deployed and verified 2026-11-23** | https://myflova.vercel.app from `main` (§8); Supabase Auth URLs updated (§8.3) |
 | 1.5 STT service | Decision pending | Remote has no IndicConformer URL/key; voice uses Groq Whisper |
-| 1.6 Production E2E QA | Not started | Depends on CP2, CP3, 1.4 |
+| 1.6 Production E2E QA | **Mostly passed 2026-11-23; 1 bug fixed locally, awaiting deploy** | §9 |
 
 ## 2. Repository state
 
@@ -119,8 +119,8 @@ Then `npx supabase migration repair --status reverted 20261123150000 --remote=ms
 
 1. ~~CP2~~: done (§5.7).
 2. ~~CP3~~: done (§7).
-3. **Commit + push**: Vercel builds from GitHub, so the production fixes (incl. `frontend/vercel.json`) must be committed to `dev`, merged to `main` and pushed. Needs approval.
-4. **Vercel**: needs the user to create/import the project (root `frontend`, build `npm run build`, output `dist`, env `VITE_SUPABASE_URL` + `VITE_SUPABASE_PUBLISHABLE_KEY`/`VITE_SUPABASE_ANON_KEY`), and the Supabase Auth Site URL / redirect URLs updated to the Vercel domain.
+3. ~~Commit + push~~: done. `dev` cf2fbe6, `main` 1bcf45c (`--no-ff`); GitHub default branch switched to `main`.
+4. ~~Supabase Auth URLs~~: done (§8.3).
 5. **STT decision**: keep Groq-Whisper-only in production for now, or host IndicConformer (Render/Railway) and set `INDICCONFORMER_URL` + `INDICCONFORMER_KEY` secrets.
 6. **Default privileges**: decide whether to change `pg_default_acl` so future tables don't grant anon.
 7. **E2E QA** on the deployed site with a dedicated test account and fictional data.
@@ -164,3 +164,83 @@ git worktree add --detach ../flova-baseline b60b212
 cd ../flova-baseline/backend && npx supabase functions deploy extract-receipt process-voice --remote=msjzkylvafuwlkkujxpv --use-api --yes
 cd - && git worktree remove ../flova-baseline
 ```
+
+## 8. Vercel deployment (2026-11-23)
+
+### 8.1 Project
+- Vercel project `flova`, imported from `syed-imadulla/FLOVA`, branch `main`, root `frontend`, Vite preset with default build (`npm run build`), output (`dist`) and install (`npm install`). Supabase Marketplace integration intentionally not added (existing project; avoids extra server-side env vars).
+- Production domain: **https://myflova.vercel.app** (`flova.vercel.app` was taken). `flova-khaki.vercel.app` redirects with 307, path preserved.
+
+### 8.2 Verification
+
+| Check | Result |
+|---|---|
+| `http://` → `https://` | 308 permanent redirect |
+| HSTS | `max-age=63072000; includeSubDomains; preload` |
+| Direct navigation: `/`, `/login`, `/dashboard`, `/add`, `/checkin`, `/payouts`, `/invoices`, `/onboarding`, `/catch-receipt`, unknown path | All 200 with the app shell (`vercel.json` rewrite) |
+| Static files `favicon.svg`, `icon-192.png`, `manifest.webmanifest`, `sw.js` | Served as real files with correct content types |
+| Deployed JS asset names vs local build | Identical (`index-gdmFKkLQ`, `supabase-34S9942t`, `vendor-BNqLSrbZ`) |
+| Secret scan of deployed JS | Only JWT is role `anon` for `msjzkylvafuwlkkujxpv`; no service-role, Groq or IndicConformer keys |
+| Supabase host in bundle | `https://msjzkylvafuwlkkujxpv.supabase.co` only |
+| Browser: landing page | Renders; console shows only `Service Worker registered`; no errors |
+| Browser: `/dashboard` while signed out | Redirects to `/login`; no errors |
+
+Not yet verified on the deployed site: sign-up, login, data writes and voice/receipt flows. These are covered by production QA (§1.6).
+
+### 8.3 Supabase Auth URL configuration (2026-11-23, user-approved)
+Before: `site_url = "http://localhost:5173"`, `additional_redirect_urls = []`, so sign-up confirmation emails linked to localhost.
+
+Method: `supabase config pull` into a scratch workdir (repo untouched), edit only the two fields, `config diff` showed exactly 2 changes, then `config push --yes`. Push result: `auth` updated (`additional_redirect_urls`, `site_url`); api, db, storage unchanged. A fresh pull matches the intended config.
+
+After:
+```toml
+site_url = "https://myflova.vercel.app"
+additional_redirect_urls = ["https://myflova.vercel.app/**", "http://localhost:5173/**"]
+```
+Rollback: same push with the previous two values.
+
+## 9. Production end-to-end QA (2026-11-23)
+
+Environment: https://myflova.vercel.app (build from `main` 1bcf45c), Claude desktop built-in browser, dedicated QA account created by the user (password typed by the user only). All amounts fictional.
+
+### 9.1 Results
+
+| Area | Test | Expected | Result |
+|---|---|---|---|
+| Auth | Signed-out `/dashboard` | Redirect to `/login` | PASS |
+| Auth | Sign-up, sign-in, session survives reloads | Session kept | PASS (only console errors were 2× 400 from a mistyped sign-in password before QA started) |
+| Onboarding | Delivery, weekly pay, COD on, ₹200 living + ₹150 work | Saved, home loads | PASS |
+| Check-in | Cash 1,500, bank 3,000, COD 800 | Available ₹3,700; ₹800 held | PASS (preview and saved value) |
+| Budget | Daily budget | ₹350 | PASS |
+| Runway | Weekly payer, no bills | 7-day protection window (`adaptiveBuffer.ts:54`) | PASS |
+| Expense | ₹120 fuel, work | −₹120 | PASS |
+| Income | ₹650 delivery earnings | +₹650 | PASS |
+| Not-mine | ₹500 COD collection, "isn't mine" | Held ₹1,300, available unchanged, not in Earned | PASS: available ₹4,230, held ₹1,300, earned ₹650 |
+| Payout | Expected ₹3,800 on 27 Nov | Not counted in available | PASS |
+| Partial settlement | Received ₹2,000 of ₹3,800 | Available ₹6,230, ₹1,800 still expected | PASS |
+| Bill | Rent ₹4,500 due 28 Nov | Shortfall on 28 Nov (6,230 − 230 − 4×350 = 4,600 < 4,500 + 350) | PASS: "Possible shortfall in 5 days, 28 Nov" |
+| Invoice | Create receivable ₹5,000 | Saved | **FAIL → fixed locally** (§9.2) |
+| AI text (Hinglish) | "aaj khane pe 180 rupaye kharch kiye" | Review screen, nothing saved before confirm | PASS: ₹180, Food, Living, 2026-11-23 (IST); confirmed → available ₹6,050 |
+| SMS/UPI text | Fictional bank SMS ₹240, "22-11-2026" | Review screen | PASS: ₹240, Fuel, Work, 2026-11-22 |
+| AI reject | Discard the SMS suggestion | Nothing saved | PASS: available unchanged |
+| Receipt photo (vision) | Generated fictional receipt image, ₹630, 21/11/2026 | Review with items | PASS: ₹630, Groceries, Living, 2026-11-21, 3 line items |
+| Back-dated entry | Receipt dated before check-in | Counted in monthly spend, not subtracted from check-in balance | PASS: spent ₹930, available stays ₹6,050 (`data.ts:171-173` + `balance.ts:108-111`) |
+| ₹10 lakh daily limit | Income ₹9,99,000 with ₹2,950 already today | Rejected by DB trigger, nothing saved | PASS: "Daily transaction limit of ₹10,00,000 exceeded … existing ₹2950.00" (trigger works after CP2 revokes) |
+| Isolation | REST with QA session on 7 tables | Only own rows | PASS (14 users in DB; QA sees only its own) |
+| Isolation | Insert as another `user_id` | Refused | PASS: 403 `42501` |
+| Isolation | PATCH rows where `user_id <> me` | 0 rows | PASS |
+| Mobile 375 px | 11 screens | No horizontal overflow | PASS; 2 tap targets < 32 px (info icon, "See all") noted for Phase 2 |
+| Direct navigation / refresh | Every screen reloaded directly | App shell + session kept | PASS |
+
+### 9.2 Bug found: invoice creation failed in production
+- Symptom: "Failed to create invoice: new row for relation "invoices" violates check constraint "invoices_status_check"".
+- Cause: `frontend/src/services/invoices.ts` inserted `status: "draft"`; the DB allows `uploaded, unpaid, partially_paid, paid, overdue, cancelled` (and the app's own `InvoiceStatus` type has no `draft`). The unit test asserted `"draft"` against a mock with no CHECK constraint, so it never failed.
+- Not caused by CP2 (a permission error would be `42501`).
+- Fix: insert `status: "unpaid"` (DB default, starting state for the settlement trigger). Tests updated; new test 8 reads the allowed statuses from the migration SQL and fails on the old code (`status "draft" must be one of …`). All 17 frontend service suites pass; `tsc` clean.
+- Other hard-coded enum values (`scheduled`, `bill`, `upcoming`, `active`) checked against the DB: all valid.
+- **Status: fixed locally, not yet deployed.** Re-test invoice create + partial settlement after deploy.
+
+### 9.3 Not covered yet
+- Real microphone audio → Groq Whisper (needs a human voice; text path through the same LLM passed).
+- Logout (deferred until after the invoice re-test so the QA session stays signed in).
+- Offline / slow-network behaviour (the built-in browser cannot throttle).
