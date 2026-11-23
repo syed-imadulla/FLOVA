@@ -1,7 +1,19 @@
 // FLOVA Service Worker (Cloud-Connected Only — No Offline Mutating or Queuing Claims)
-const CACHE_NAME = "flova-shell-v2";
+const CACHE_NAME = "flova-shell-v3";
 const SHARED_CACHE_NAME = "flova-shared-cache";
-const SHELL_ASSETS = ["/", "/index.html", "/favicon.svg", "/manifest.webmanifest"];
+const SHELL_ASSETS = [
+  "/",
+  "/index.html",
+  "/favicon.ico",
+  "/favicon.svg",
+  "/favicon-48x48.png",
+  "/favicon-32x32.png",
+  "/favicon-16x16.png",
+  "/apple-touch-icon.png",
+  "/icon-192.png",
+  "/icon-512.png",
+  "/manifest.webmanifest"
+];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
