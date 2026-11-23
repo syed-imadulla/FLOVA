@@ -1,6 +1,6 @@
 import React from "react";
 
-export const PhonePeOrbitalFooter: React.FC = () => {
+export const FlovaBrandOrbitalFooter: React.FC = () => {
   return (
     <footer className="pt-24 pb-12 px-4 sm:px-6 lg:px-8 bg-[#fbf9fe] border-t border-[#ece4f5] relative overflow-hidden">
       <div className="max-w-7xl mx-auto">
@@ -19,7 +19,7 @@ export const PhonePeOrbitalFooter: React.FC = () => {
           {/* Interactive Concentric Orbital Rings */}
           <div className="relative w-[340px] sm:w-[500px] h-[340px] sm:h-[500px] mx-auto flex items-center justify-center">
             {/* Outer Ring 3 */}
-            <div className="absolute w-full h-full rounded-full border border-purple-200/70 animate-phonepe-orbit-slow">
+            <div className="absolute w-full h-full rounded-full border border-purple-200/70 animate-flova-orbit-slow">
               <div className="absolute top-2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-3 py-1 rounded-full text-[11px] font-bold text-[#5f259f] shadow-md border border-purple-100 flex items-center gap-1.5 whitespace-nowrap">
                 <span className="w-2 h-2 rounded-full bg-emerald-500" />
                 NPCI UPI 2.0 Rails
@@ -31,7 +31,7 @@ export const PhonePeOrbitalFooter: React.FC = () => {
             </div>
 
             {/* Middle Ring 2 */}
-            <div className="absolute w-[240px] sm:w-[360px] h-[240px] sm:h-[360px] rounded-full border border-purple-300/80 animate-phonepe-orbit-counter">
+            <div className="absolute w-[240px] sm:w-[360px] h-[240px] sm:h-[360px] rounded-full border border-purple-300/80 animate-flova-orbit-counter">
               <div className="absolute top-1/2 -right-4 -translate-y-1/2 bg-white px-3 py-1 rounded-full text-[11px] font-bold text-[#5f259f] shadow-md border border-purple-100 flex items-center gap-1.5 whitespace-nowrap">
                 <span className="w-2 h-2 rounded-full bg-amber-500" />
                 RBI Account Aggregator
@@ -39,16 +39,16 @@ export const PhonePeOrbitalFooter: React.FC = () => {
             </div>
 
             {/* Inner Ring 1 */}
-            <div className="absolute w-[160px] sm:w-[230px] h-[160px] sm:h-[230px] rounded-full border-2 border-dashed border-purple-400/80 animate-phonepe-orbit-mid">
+            <div className="absolute w-[160px] sm:w-[230px] h-[160px] sm:h-[230px] rounded-full border-2 border-dashed border-purple-400/80 animate-flova-orbit-mid">
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-white px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold text-slate-800 shadow-sm border border-slate-200 whitespace-nowrap">
                 ONDC Switch
               </div>
             </div>
 
-            {/* Central Placeholder Circular Logo */}
-            <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-[#5f259f] text-white flex flex-col items-center justify-center shadow-2xl z-10 border-4 border-white animate-phonepe-pulse-glow">
-              <span className="text-xl sm:text-2xl font-black tracking-tight leading-none">F</span>
-              <span className="text-[9px] font-mono font-bold tracking-widest text-purple-200 mt-0.5">
+            {/* Central FLOVA Circular Logo */}
+            <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-white text-white flex flex-col items-center justify-center shadow-2xl z-10 border-4 border-white animate-flova-pulse-glow overflow-hidden">
+              <img src="/favicon.svg" alt="FLOVA" className="w-12 h-12 sm:w-14 sm:h-14 object-contain" />
+              <span className="text-[9px] font-mono font-bold tracking-widest text-[#0F5C4C] mt-0.5">
                 FLOVA
               </span>
             </div>

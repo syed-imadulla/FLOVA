@@ -289,7 +289,7 @@ export function CatchScreen() {
                 </span>
                 <span className="text-[16px] font-bold text-ink">Upload Bill or Payment Screenshot</span>
                 <span className="text-xs text-ink-muted mt-1 max-w-[280px]">
-                  Supports fuel slips, grocery bills, and screenshots from Google Pay, PhonePe, Paytm, CRED & BHIM up to 20 MB.
+                  Supports printed receipts, fuel slips, and standard UPI payment confirmation screenshots (e.g., Google Pay, PhonePe, Paytm, CRED, BHIM) up to 20 MB.
                 </span>
               </div>
 

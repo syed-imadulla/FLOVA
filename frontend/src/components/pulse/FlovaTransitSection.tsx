@@ -1,10 +1,10 @@
 import React from "react";
 
-interface PhonePeTransitRowProps {
+interface FlovaTransitSectionProps {
   onExplore?: () => void;
 }
 
-export const PhonePeTransitRow: React.FC<PhonePeTransitRowProps> = ({ onExplore }) => {
+export const FlovaTransitSection: React.FC<FlovaTransitSectionProps> = ({ onExplore }) => {
   const transitCards = [
     {
       id: "flights",
@@ -37,7 +37,7 @@ export const PhonePeTransitRow: React.FC<PhonePeTransitRowProps> = ({ onExplore 
       title: "Bus",
       illustration: (
         <svg viewBox="0 0 180 120" className="w-full h-28">
-          {/* Modern Purple Bus Front-Side Profile (Matching Screenshot 7) */}
+          {/* Modern Purple Bus Front-Side Profile (FLOVA Design Specification) */}
           <path
             d="M48 38 C48 30 55 26 65 26 L160 26 C168 26 174 30 174 38 L174 94 L42 94 Z"
             fill="#c084fc"
@@ -85,7 +85,7 @@ export const PhonePeTransitRow: React.FC<PhonePeTransitRowProps> = ({ onExplore 
       title: "Stays & Hotels",
       illustration: (
         <svg viewBox="0 0 180 120" className="w-full h-28">
-          {/* Modern Indigo Hotel Tower (Matching Screenshot 7) */}
+          {/* Modern Indigo Hotel Tower (FLOVA Design Specification) */}
           <rect x="75" y="16" width="95" height="92" rx="6" fill="#818cf8" />
           {/* Grid of Hotel Room Windows */}
           <rect x="88" y="28" width="14" height="14" rx="2.5" fill="#e0e7ff" />
@@ -112,7 +112,7 @@ export const PhonePeTransitRow: React.FC<PhonePeTransitRowProps> = ({ onExplore 
   return (
     <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
       <div className="max-w-6xl mx-auto text-center">
-        {/* Headline (Matching Screenshot 7) */}
+        {/* Headline (FLOVA Design Specification) */}
         <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#23173d] tracking-tight mb-3">
           Travel, stays &amp; commute
         </h2>

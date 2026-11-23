@@ -1,10 +1,10 @@
 import React from "react";
 
-export const PhonePeConvenienceBills: React.FC = () => {
+export const FlovaBillsAndUtilities: React.FC = () => {
   return (
     <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white overflow-hidden">
       <div className="max-w-6xl mx-auto text-center">
-        {/* Top Cartoon Illustration (Matching Screenshot 3 Exactly) */}
+        {/* Top Cartoon Illustration (FLOVA Design Specification) */}
         <div className="flex justify-center mb-8">
           <svg viewBox="0 0 360 260" className="w-80 sm:w-96 h-auto drop-shadow-xs">
             {/* Hanging top paper segment from above */}
@@ -84,17 +84,17 @@ export const PhonePeConvenienceBills: React.FC = () => {
           </svg>
         </div>
 
-        {/* Section Headline (Matching Screenshot 5 Exactly) */}
+        {/* Section Headline (FLOVA Design Specification) */}
         <h2 className="text-3xl sm:text-4xl font-extrabold text-[#23173d] tracking-tight mb-12">
           Convenience at your fingertips
         </h2>
 
-        {/* Staggered 2-Row Capsule Pill Grid with PhonePe Geometric Accents (Matching Screenshot 5 Exactly) */}
+        {/* Staggered 2-Row Capsule Pill Grid with FLOVA Geometric Accents (FLOVA Design Specification) */}
         <div className="space-y-4 max-w-5xl mx-auto overflow-x-auto pb-6">
           {/* Row 1 */}
           <div className="flex items-center justify-center gap-3 sm:gap-4 flex-nowrap sm:flex-wrap">
             {/* Capsule 1: DTH */}
-            <div className="phonepe-capsule-pill">
+            <div className="flova-capsule-pill">
               <div className="w-10 h-10 rounded-full bg-[#ede7f6] text-[#5f259f] flex items-center justify-center">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M4 11a9 9 0 0 1 9 9" />
@@ -116,7 +116,7 @@ export const PhonePeConvenienceBills: React.FC = () => {
             </div>
 
             {/* Capsule 2: Cable Television */}
-            <div className="phonepe-capsule-pill">
+            <div className="flova-capsule-pill">
               <div className="w-10 h-10 rounded-full bg-[#ffe0b2] text-[#e65100] flex items-center justify-center">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <rect x="2" y="7" width="20" height="15" rx="2" ry="2" />
@@ -136,7 +136,7 @@ export const PhonePeConvenienceBills: React.FC = () => {
             </div>
 
             {/* Capsule 3: Mobile Recharge */}
-            <div className="phonepe-capsule-pill">
+            <div className="flova-capsule-pill">
               <div className="w-10 h-10 rounded-full bg-[#f5f5f5] text-[#424242] flex items-center justify-center">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
@@ -147,7 +147,7 @@ export const PhonePeConvenienceBills: React.FC = () => {
             </div>
 
             {/* Capsule 4: FASTag */}
-            <div className="phonepe-capsule-pill">
+            <div className="flova-capsule-pill">
               <div className="w-10 h-10 rounded-full bg-[#fce4ec] text-[#d81b60] flex items-center justify-center">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.5 2.8C2.1 10.8 2 11 2 11.2V16c0 .6.4 1 1 1h2" />
@@ -162,7 +162,7 @@ export const PhonePeConvenienceBills: React.FC = () => {
           {/* Row 2 */}
           <div className="flex items-center justify-center gap-3 sm:gap-4 flex-nowrap sm:flex-wrap">
             {/* Capsule 5: Book a Cylinder */}
-            <div className="phonepe-capsule-pill">
+            <div className="flova-capsule-pill">
               <div className="w-10 h-10 rounded-full bg-[#ffe0b2] text-[#e65100] flex items-center justify-center">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M8 6h8M10 2h4M9 6v14a3 3 0 0 0 6 0V6" />
@@ -172,7 +172,7 @@ export const PhonePeConvenienceBills: React.FC = () => {
             </div>
 
             {/* Capsule 6: Electricity */}
-            <div className="phonepe-capsule-pill">
+            <div className="flova-capsule-pill">
               <div className="w-10 h-10 rounded-full bg-[#fce4ec] text-[#c2185b] flex items-center justify-center">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-7 7c0 3 2 5 2 7h10c0-2 2-4 2-7a7 7 0 0 0-7-7z" />
@@ -191,7 +191,7 @@ export const PhonePeConvenienceBills: React.FC = () => {
             </div>
 
             {/* Capsule 7: Piped Gas */}
-            <div className="phonepe-capsule-pill">
+            <div className="flova-capsule-pill">
               <div className="w-10 h-10 rounded-full bg-[#e0f2f1] text-[#00695c] flex items-center justify-center">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M12 2c1.5 2 3 4 3 6a3 3 0 0 1-6 0c0-2 1.5-4 3-6z" />
@@ -202,7 +202,7 @@ export const PhonePeConvenienceBills: React.FC = () => {
             </div>
 
             {/* Capsule 8: Rent Payment */}
-            <div className="phonepe-capsule-pill">
+            <div className="flova-capsule-pill">
               <div className="w-10 h-10 rounded-full bg-[#ffe0b2] text-[#e65100] flex items-center justify-center">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
@@ -213,7 +213,7 @@ export const PhonePeConvenienceBills: React.FC = () => {
             </div>
 
             {/* Capsule 9: Water */}
-            <div className="phonepe-capsule-pill">
+            <div className="flova-capsule-pill">
               <div className="w-10 h-10 rounded-full bg-[#e1f5fe] text-[#0288d1] flex items-center justify-center">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />

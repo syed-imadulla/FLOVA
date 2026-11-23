@@ -1,113 +1,105 @@
-# FLOVA
+<p align="center">
+  <a href="https://github.com/syed-imadulla/FLOVA">
+    <img src="docs/assets/flova-icon.png" width="130" alt="FLOVA Application Icon" style="border-radius: 28px;">
+  </a>
+</p>
 
-> **Every rupee has a story. FLOVA remembers.**
+<h1 align="center">FLOVA</h1>
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue.svg)](https://www.typescriptlang.org/)
-[![React](https://img.shields.io/badge/React-18-61dafb.svg)](https://react.dev/)
-[![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
+<p align="center">
+  <strong>Every rupee has a story. FLOVA remembers.</strong>
+</p>
 
-FLOVA is a voice-first, adaptive financial management platform designed specifically for people with irregular and unpredictable earnings: gig delivery riders, cab drivers, auto drivers, tradespeople, small vendors, and freelance contractors across India.
+<p align="center">
+  A voice-first, deterministic financial companion engineered for irregular earners, gig delivery partners, and independent tradespeople across India.
+</p>
 
-Instead of imposing rigid monthly budgets that collapse when weekly earnings fluctuate, FLOVA continuously answers the single question that matters most to irregular earners: **"Will my available cash last until my next payout?"**
+<p align="center">
+  <a href="#what-is-flova">Overview</a> •
+  <a href="#key-features">Features</a> •
+  <a href="#how-flova-works">How It Works</a> •
+  <a href="#system-architecture">Architecture</a> •
+  <a href="#getting-started">Quickstart</a> •
+  <a href="#documentation-index">Documentation</a> •
+  <a href="LICENSE">License</a>
+</p>
 
----
-
-## Table of Contents
-
-- [What is FLOVA?](#what-is-flova)
-- [Core Features](#core-features)
-- [How FLOVA Works](#how-flova-works)
-- [System Architecture](#system-architecture)
-- [Technology Stack](#technology-stack)
-- [Getting Started](#getting-started)
-- [Development Workflow](#development-workflow)
-- [Service URLs & Ports](#service-urls--ports)
-- [Project Structure](#project-structure)
-- [Environment Configuration](#environment-configuration)
-- [AI & Financial Safety](#ai--financial-safety)
-- [Testing & Quality Assurance](#testing--quality-assurance)
-- [Deployment](#deployment)
-- [Roadmap](#roadmap)
-- [Contributing](#contributing)
-- [License](#license)
-- [Acknowledgements](#acknowledgements)
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-0F5C4C.svg" alt="License: MIT"></a>
+  <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/TypeScript-5.6-3178C6.svg?logo=typescript&logoColor=white" alt="TypeScript"></a>
+  <a href="https://react.dev/"><img src="https://img.shields.io/badge/React-18.3-61DAFB.svg?logo=react&logoColor=black" alt="React"></a>
+  <a href="https://vitejs.dev/"><img src="https://img.shields.io/badge/Vite-5.4-646CFF.svg?logo=vite&logoColor=white" alt="Vite"></a>
+  <a href="https://www.python.org/"><img src="https://img.shields.io/badge/Python-3.10%2B-3776AB.svg?logo=python&logoColor=white" alt="Python"></a>
+  <a href="https://fastapi.tiangolo.com/"><img src="https://img.shields.io/badge/FastAPI-0.115-009688.svg?logo=fastapi&logoColor=white" alt="FastAPI"></a>
+  <a href="https://github.com/syed-imadulla/FLOVA/stargazers"><img src="https://img.shields.io/github/stars/syed-imadulla/FLOVA?style=flat&color=0F5C4C" alt="Stars"></a>
+  <a href="https://github.com/syed-imadulla/FLOVA/network/members"><img src="https://img.shields.io/github/forks/syed-imadulla/FLOVA?style=flat&color=0F5C4C" alt="Forks"></a>
+  <a href="https://github.com/syed-imadulla/FLOVA/issues"><img src="https://img.shields.io/github/issues/syed-imadulla/FLOVA?style=flat&color=0F5C4C" alt="Issues"></a>
+  <a href="https://github.com/syed-imadulla/FLOVA/commits/main"><img src="https://img.shields.io/github/last-commit/syed-imadulla/FLOVA?style=flat&color=0F5C4C" alt="Last Commit"></a>
+</p>
 
 ---
 
 ## What is FLOVA?
 
-### The Irregular Income Challenge
-Standard personal finance software assumes a fixed monthly salary deposited on a predictable date. For tens of millions of Indian gig partners and independent workers, income arrives in irregular pulses:
-- Daily cash collections mixed with personal money.
-- Weekly gig platform payouts subject to platform deductions.
-- Fluctuating customer demand driven by weather, holidays, and seasonal cycles.
+### The Irregular Income Problem
+Traditional budgeting tools assume a predictable monthly paycheck deposited on a fixed date. For over 15 million Indian gig delivery partners, cab drivers, auto drivers, and daily wage earners, earnings arrive unpredictably:
+- Daily cash mixed with personal funds.
+- Platform payouts subject to deductions, delays, and weekly cycles.
+- Volatile demand driven by festivals, monsoon disruptions, and seasonal peaks.
 
-When earnings fluctuate between ₹2,500 one week and ₹8,000 the next, monthly budgeting apps provide false security or trigger premature panic.
+When income oscillates between ₹2,000 one week and ₹7,500 the next, monthly budgeting apps fail.
 
-### The FLOVA Approach
-FLOVA changes the financial management paradigm from monthly categorization to **available cash runway**:
-1. **Voice-First Input:** Log transactions on the go in 10 Indian languages.
-2. **Deterministic Cash Engine:** Track actual personal cash in integer paise—never floating-point approximations.
-3. **Custodial Money Isolation:** Keep third-party cash collections (e.g., Cash on Delivery) separate from personal spendable income.
-4. **Adaptive Safety Buffer:** Maintain an emergency reserve dynamically sized to the worker's income volatility profile.
-5. **Truthful Horizon Outlook:** Clearly display the exact calendar day when projected cash will drop below the safety buffer or into deficit.
+### The Cash Runway Approach
+FLOVA replaces rigid monthly budgets with real-time **cash runway intelligence**, answering the only question that truly matters: **"Will my available money last until my next payout?"**
+
+- **Voice-First Recording:** Speak naturally in 10 Indian languages to record transactions on the go.
+- **Deterministic Math:** Financial calculations run strictly in integer paise (`100 paise = ₹1.00`). No AI balance approximations.
+- **Custodial Cash Isolation:** Third-party collections (Cash on Delivery) are segregated from personal spendable income.
+- **Adaptive Safety Buffer:** Maintain an emergency reserve dynamically sized to the worker's income volatility profile.
 
 ---
 
-## Core Features
+## Key Features
 
-| Feature | Description | Status |
-|---|---|---|
-| **Multilingual Voice Capture** | Transcribe spoken earnings and expenses in 10 Indic languages with dialect adaptation. | **Implemented** |
-| **IndicConformer Primary STT** | Low-latency speech recognition running native AI4Bharat IndicConformer checkpoints. | **Implemented** |
-| **Whisper Fallback STT** | Automated cloud failover to Groq Whisper if the local speech engine times out or encounters errors. | **Implemented** |
-| **Smart Receipt OCR** | Extract line items, tax, and totals from camera photos of printed paper receipts. | **Implemented** |
-| **UPI Screenshot Extraction** | Identify payment status (`COMPLETED`, `PENDING`, `FAILED`) and 12-digit UTR numbers from GPay, PhonePe, Paytm, and CRED screenshots. | **Implemented** |
-| **Duplicate Payment Detection** | Prevent accidental double-entry using extracted UPI reference (UTR) matching. | **Implemented** |
-| **Invoice Intelligence** | Track client receivables and vendor payables with partial settlement reconciliation. | **Implemented** |
-| **Deterministic Paise Math** | Authoritative calculations run entirely in integer paise (`100 paise = ₹1.00`). No LLM arithmetic. | **Implemented** |
-| **Custodial Money Isolation** | Third-party collections (`ownership: 'not_mine'`) are excluded from personal spendable balance. | **Implemented** |
-| **Adaptive Safety Cushion** | Dynamic reserve buffer recommendations based on work profile and earnings variability. | **Implemented** |
-| **30-Day Forward Runway** | Day-by-day cash projection highlighting first buffer shortfall and first deficit dates. | **Implemented** |
-| **WISH 2.0 Micro-Goals** | Persistent goal savings that automatically absorb surplus earnings from high-revenue weeks. | **Implemented** |
-| **One-Command Dev Makefile** | Single root command (`make dev`) orchestrating frontend, STT, and public HTTPS tunnel. | **Implemented** |
-| **PWA Web Share Target** | Direct receipt and screenshot sharing from WhatsApp and gallery apps into FLOVA. | **Experimental** |
-| **On-Device IndicConformer ONNX** | In-browser client-side model execution for offline speech transcription. | **Experimental** |
-| **Bank Statement PDF Parser** | Automated statement analysis for multi-account balance reconciliation. | **Planned** |
-| **Direct UPI Payment Intent** | One-tap settlement of pending invoices through native UPI deep-linking. | **Planned** |
+### 🎙️ Voice Intelligence
+- **AI4Bharat IndicConformer (Primary STT):** High-accuracy speech recognition fine-tuned for regional Indian languages, accents, and code-switching (`kn`, `hi`, `te`, `ta`, `ml`, `en`).
+- **Groq Whisper (Fallback STT):** Automated, fail-safe failover to `whisper-large-v3-turbo` if the primary service times out (>7s) or encounters errors.
+- **Multi-Transaction Parsing:** Separates multiple financial events from a single sentence (e.g., *"Spent ₹250 on petrol and earned ₹800 from delivery"*) without amount duplication.
+
+### 📸 Smart Capture & Receipt OCR
+- **Paper Receipt Scanning:** Extracts line items, quantities, taxes, and totals with automatic arithmetic discrepancy checking.
+- **UPI Screenshot Intelligence:** Classifies payment status (`COMPLETED`, `PENDING`, `FAILED`) and extracts 12-digit UTR reference numbers from standard UPI payment screenshots (including Google Pay, PhonePe, Paytm, and CRED). All third-party names are trademarks of their respective owners and are referenced solely for technical format compatibility.
+- **Duplicate UTR Safeguard:** Prevents double-counting by rejecting duplicate transaction entries with matching reference numbers.
+- **Client Image Optimizer:** Compresses and resizes camera uploads up to 20 MB down to sub-megabyte payloads client-side before transmission.
+
+### 🧾 Invoice Intelligence
+- **Receivables & Payables:** Track contractor and client invoices with counterparties, line items, and due dates.
+- **Partial Settlements:** Record multi-part payments with automatic status lifecycle (`unpaid` → `partially_paid` → `paid` → `overdue`).
+- **No Double-Counting:** Unsettled receivables represent expected future cash flow and never inflate the confirmed bank balance.
+
+### 📐 Financial Engine & Runway
+- **Integer Paise Arithmetic:** Pure TypeScript engine (`frontend/src/engine/`) guarantees exact balance precision with zero floating-point drift.
+- **Custodial Money Segregation:** Cash on Delivery (COD) collections are tagged `ownership: 'not_mine'` and excluded from personal runway calculations.
+- **Adaptive Safety Buffer:** Dynamically calculates 3 to 21 days of reserve buffer based on work profile and earnings variability.
+- **30-Day Forward Runway:** Day-by-day cash flow simulation alerting users to buffer shortfalls before actual cash deficits occur.
+- **WISH 2.0 Micro-Goals:** Persistent savings goals that absorb surplus earnings during high-revenue weeks.
+
+> **Feature Status Overview:** Core Voice Capture, IndicConformer + Whisper, Receipt/UPI OCR, Invoices, Paise Math, Runway, and Makefile Tunneling are **Implemented**. PWA Web Share Target and in-browser ONNX inference are **Experimental**. Bank statement PDF parsing and direct UPI deep-linking are **Planned**.
 
 ---
 
 ## How FLOVA Works
 
-FLOVA adheres to a strict **"AI Suggests, User Confirms"** operating model. Automated extraction never bypasses user oversight:
+FLOVA enforces an **"AI Suggests, User Confirms"** invariant. AI models produce reviewable candidate drafts, but never commit transactions directly to the ledger without user approval.
 
-```
-[User Input] (Voice, Receipt Photo, UPI Screenshot, or Manual Entry)
-      │
-      ▼
-[AI Extraction Pipeline]
-  • Speech: IndicConformer (Primary) ──(on timeout/error)──► Whisper (Fallback)
-  • Vision: Groq Qwen 2.5 27B Vision
-  • Intent: Groq Llama 3.3 70B Versatile
-      │
-      ▼
-[Review Screen (/add)]
-  • Candidate draft presented with extracted amount, category, and date
-  • Uncertain or ambiguous attributes flagged with needsReview: true
-  • Missing values remain null — system never invents financial figures
-      │
-      ▼
-[Explicit User Confirmation]
-  • User inspects and verifies attributes
-  • Clicks "Confirm" to commit
-      │
-      ▼
-[Deterministic Engine & Database]
-  • Committed to PostgreSQL with Row Level Security (RLS)
-  • Evaluated against ₹10,00,000 calendar-day safeguard limit
-  • Available cash and 30-day runway projections update instantly
+```mermaid
+flowchart LR
+    A[User Input\nVoice / Receipt / UPI] --> B[AI Extraction\nIndicConformer / Vision / LLM]
+    B --> C[Candidate Draft\nneedsReview Flagging]
+    C --> D[User Review in /add\nInspect & Edit]
+    D -->|User Confirms| E[Deterministic Engine\nInteger Paise Math]
+    E --> F[PostgreSQL + RLS\n₹10L Daily Safeguard]
+    F --> G[Runway Outlook\nDay-by-Day Forecast]
 ```
 
 ---
@@ -117,186 +109,130 @@ FLOVA adheres to a strict **"AI Suggests, User Confirms"** operating model. Auto
 ```mermaid
 flowchart TD
     subgraph Client["Frontend Client (React 18 + Vite PWA)"]
-        UI["UI Screens & Navigation"]
-        VoiceInput["Voice Capture (10 Languages)"]
-        SmartCapture["Smart Capture (Receipt / UPI)"]
-        ReviewAdd["Review & Confirmation (/add)"]
-        Engine["Deterministic Financial Engine (Paise Math)"]
-        UI --> VoiceInput
-        UI --> SmartCapture
-        VoiceInput --> ReviewAdd
-        SmartCapture --> ReviewAdd
-        ReviewAdd --> Engine
+        UI["UI Views & Screens"]
+        VoiceComp["Voice Capture"]
+        CaptureComp["Smart Capture"]
+        ReviewComp["Review & Confirmation (/add)"]
+        Engine["Deterministic Engine (Paise Math)"]
+        UI --> VoiceComp & CaptureComp
+        VoiceComp & CaptureComp --> ReviewComp
+        ReviewComp --> Engine
     end
 
-    subgraph Edge["Supabase Serverless Edge Runtime"]
-        VoiceEdge["process-voice Edge Function"]
-        VisionEdge["extract-receipt Edge Function"]
+    subgraph Serverless["Supabase Edge Functions"]
+        VoiceFunc["process-voice"]
+        VisionFunc["extract-receipt"]
     end
 
-    subgraph AIServices["Speech & Vision AI Layer"]
-        IndicConformer["Primary STT: FastAPI IndicConformer (:8001)"]
+    subgraph AI["Speech & Vision Layer"]
+        STT["Primary STT: IndicConformer (:8001)"]
         Whisper["Fallback STT: Groq Whisper Large v3"]
-        QwenVision["Vision OCR: Groq Qwen 2.5 27B"]
-        LlamaIntent["Intent Parser: Groq Llama 3.3 70B"]
+        Vision["Vision OCR: Groq Qwen 2.5 27B"]
+        LLM["Intent Parser: Groq Llama 3.3 70B"]
     end
 
-    subgraph Storage["PostgreSQL 15 (Supabase Hosted)"]
-        DB[(Transactions, Invoices, Profiles, WISH)]
+    subgraph DB["PostgreSQL 15 (Supabase)"]
+        Tables[(Transactions, Invoices, Profiles, WISH)]
         RLS["Row Level Security Policies"]
-        Triggers["₹10L Daily Limit & Payout Sync Triggers"]
-        DB --- RLS
-        DB --- Triggers
+        Triggers["₹10L Calendar-Day Limit Triggers"]
+        Tables --- RLS & Triggers
     end
 
-    VoiceInput -- Audio Blob --> VoiceEdge
-    VoiceEdge -- 1. Primary Request --> IndicConformer
-    VoiceEdge -. 2. Failover on Error .-> Whisper
-    VoiceEdge -- Transcript --> LlamaIntent
-    LlamaIntent -- Candidate DTO --> ReviewAdd
+    VoiceComp -- Audio Blob --> VoiceFunc
+    VoiceFunc -- 1. Primary --> STT
+    VoiceFunc -. 2. Fallback .-> Whisper
+    VoiceFunc -- Transcript --> LLM
+    LLM -- Candidate DTO --> ReviewComp
 
-    SmartCapture -- Image Payload --> VisionEdge
-    VisionEdge -- Image Stream --> QwenVision
-    QwenVision -- Parsed Receipt DTO --> ReviewAdd
+    CaptureComp -- Image Stream --> VisionFunc
+    VisionFunc --> Vision
+    Vision -- Receipt DTO --> ReviewComp
 
-    Engine -- Confirmed Transactions (JWT Auth) --> DB
+    Engine -- Confirmed Transactions (JWT) --> DB
 ```
+
+*For in-depth architectural contracts and system boundaries, see [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).*
 
 ---
 
 ## Technology Stack
 
-| Layer | Technologies | Purpose |
+| Layer | Technologies | Description |
 |---|---|---|
-| **Frontend PWA** | React 18, Vite 5.4, TypeScript 5.6, Tailwind CSS 3.4 | Mobile-first user interface with client-side routing and PWA support |
-| **Financial Engine** | Pure TypeScript (`frontend/src/engine/`) | Integer paise arithmetic, balance calculations, runway simulations |
-| **Edge Functions** | Deno, TypeScript, Supabase CLI | Serverless ingestion, CORS validation, model discovery |
-| **Primary Speech** | AI4Bharat IndicConformer, FastAPI, ONNX Runtime, PyTorch | Native speech-to-text inference for Indian languages (`kn`, `hi`, `te`, `ta`, `ml`, `en`) |
-| **Fallback Speech** | Groq Whisper Large v3 Turbo | High-speed cloud transcription fallback |
-| **Vision & Intent** | Groq Qwen 2.5 27B Vision, Groq Llama 3.3 70B Versatile | Receipt line-item OCR and conversational intent extraction |
-| **Database & Auth** | PostgreSQL 15, Supabase Auth, Row Level Security | Multi-tenant isolated storage, row locks, schema triggers |
-| **Dev & Process Ops**| GNU Make, Python 3 dev-runner, Cloudflare Tunnel | One-command process orchestration with public HTTPS tunneling |
-| **Testing** | Node.js Test Runner, Pytest, PGlite (WASM Postgres) | Unit, contract, isolation, and end-to-end test suites |
+| **Frontend PWA** | React 18, Vite 5.4, TypeScript 5.6, Tailwind CSS 3.4 | Mobile-first progressive web app with responsive layout |
+| **Financial Engine** | Pure TypeScript (`frontend/src/engine/`) | Integer paise math, runway simulation, adaptive buffer |
+| **Edge Functions** | Deno, TypeScript, Supabase CLI | Serverless ingestion, CORS headers, model failover |
+| **Primary Speech** | AI4Bharat IndicConformer, FastAPI, ONNX Runtime | High-speed local inference for Indic languages |
+| **Fallback Speech** | Groq Whisper Large v3 Turbo | Cloud transcription fallback on timeout or error |
+| **Vision & Intent** | Groq Qwen 2.5 27B Vision, Groq Llama 3.3 70B | Structured line-item OCR and financial intent extraction |
+| **Database & Auth** | PostgreSQL 15, Supabase Auth, Row Level Security | Multi-tenant tenant isolation and row-level locks |
+| **Process Runner** | GNU Make, Python 3 dev-runner, Cloudflare Tunnel | One-command orchestration with public HTTPS tunneling |
 
 ---
 
 ## Getting Started
 
 ### Prerequisites
-- **GNU Make:** Pre-installed on Linux/macOS. (Ubuntu/Debian: `sudo apt install make`, macOS: `brew install make`)
-- **Node.js:** Version 20 or higher with npm (`node --version`)
-- **Python:** Version 3.10 or higher with `python3-venv` (`python3 --version`)
+- **GNU Make:** `make` (Available on Linux/macOS. Ubuntu: `sudo apt install make`, macOS: `brew install make`)
+- **Node.js:** Node.js 20+ with npm (`node --version`)
+- **Python:** Python 3.10+ with `python3-venv` (`python3 --version`)
 - **FFmpeg:** Required for audio transcoding (`sudo apt install ffmpeg` or `brew install ffmpeg`)
 
-### 1. Clone the Repository
+### 1. Clone & Install
 ```bash
+# Clone the repository
 git clone https://github.com/syed-imadulla/FLOVA.git
 cd FLOVA
-```
 
-### 2. Install All Dependencies
-Install dependencies across Frontend, Backend, and the AI STT microservice in one step:
-```bash
+# Install all dependencies across Frontend, Backend, and STT
 make install
 ```
-This target:
-- Installs frontend npm packages (`frontend/node_modules`).
-- Initializes an isolated Python virtual environment at `ai-engine/.venv`.
-- Installs STT requirements (`fastapi`, `uvicorn`, `onnxruntime`, `numpy`, `scipy`).
-- Installs backend database test dependencies.
 
-### 3. Configure Environment Variables
-Create your local frontend environment file:
+### 2. Configure Environment
 ```bash
+# Copy frontend environment template
 cp frontend/.env.example frontend/.env.local
 ```
-Add your Supabase project credentials to `frontend/.env.local`:
-```bash
-VITE_SUPABASE_URL=https://your-project-id.supabase.co
+Add your Supabase project credentials in `frontend/.env.local`:
+```env
+VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
 ```
 
-### 4. Start Development Services
-Start all development services with a single command:
+### 3. Start Development Server
 ```bash
+# Start Frontend, STT Microservice, and Public Tunnel concurrently
 make dev
 ```
-`make dev` concurrently launches:
-- **Frontend (Vite):** `http://localhost:5173`
-- **STT Microservice (FastAPI):** `http://localhost:8001`
-- **Public HTTPS Tunnel:** Secure live URL (e.g., `https://<random>.trycloudflare.com`) for direct mobile PWA installation and remote testing.
+`make dev` automatically starts:
+- **Frontend:** [http://localhost:5173](http://localhost:5173)
+- **STT Service:** [http://localhost:8001](http://localhost:8001) (Health: `/health`)
+- **Live Public Tunnel:** Generates a secure HTTPS link (e.g. `https://<name>.trycloudflare.com`) for direct mobile PWA testing.
 
-To run locally without opening an external tunnel:
-```bash
-make dev TUNNEL=0
-```
-
-To stop all running services cleanly, press **Ctrl+C**.
+*(To run locally without an external tunnel, use `make dev TUNNEL=0`).*
 
 ---
 
 ## Development Workflow
 
-The root `Makefile` provides verified targets for common development, testing, and maintenance tasks:
+The root `Makefile` provides verified commands for development, testing, and builds:
 
-```bash
-# Display interactive command summary
-make help
-
-# Start all development services with public HTTPS tunnel
-make dev
-
-# Start only the public HTTPS tunnel for the frontend
-make tunnel
-
-# Start only the React + Vite frontend server
-make frontend
-
-# Start only the IndicConformer STT FastAPI microservice
-make stt
-
-# Inspect status, active ports, and health of local services
-make dev-status
-
-# Stop any running processes currently occupying dev ports (5173 / 8001)
-make stop
-
-# Run database migration and Row Level Security validation tests
-make backend
-
-# Run ALL automated test suites (Frontend + Backend + AI)
-make test
-
-# Run only frontend services and financial engine tests
-make test-frontend
-
-# Run only database schema, triggers, and demo seeding tests
-make test-backend
-
-# Run only Python STT and udaan engine unit tests
-make test-stt
-
-# Run TypeScript type checking across the frontend
-make lint
-
-# Compile the production frontend bundle (tsc -b && vite build)
-make build
-
-# Remove temporary build artifacts and test caches
-make clean
-```
-
----
-
-## Service URLs & Ports
-
-| Service | Port | Local URL | Health Endpoint | Notes |
-|---|---|---|---|---|
-| **Frontend PWA** | `5173` | [http://localhost:5173](http://localhost:5173) | — | Vite HMR server |
-| **STT Microservice** | `8001` | [http://localhost:8001](http://localhost:8001) | [http://localhost:8001/health](http://localhost:8001/health) | IndicConformer inference |
-| **Public HTTPS Tunnel** | Dynamic | `https://*.trycloudflare.com` | — | Cloudflare / localtunnel link |
-| **Backend / Supabase**| Hosted | Hosted API Gateway | — | Hosted PostgreSQL + RLS |
-| **Local Supabase** | `54321`| [http://localhost:54321](http://localhost:54321) | — | Optional local database |
+| Command | Description |
+|---|---|
+| `make dev` | Start Frontend, STT, and Public HTTPS Tunnel concurrently |
+| `make tunnel` | Start only the public HTTPS tunnel for the Vite frontend |
+| `make frontend` | Start only the React + Vite frontend server (:5173) |
+| `make stt` | Start only the IndicConformer FastAPI STT service (:8001) |
+| `make dev-status` | Inspect status, active ports, and health of local services |
+| `make stop` | Terminate any running processes on dev ports (5173 / 8001) |
+| `make test` | Run ALL automated test suites (Frontend + Backend + AI) |
+| `make test-frontend` | Run frontend services and financial engine tests |
+| `make test-backend` | Run database schema RLS and demo seeding tests |
+| `make test-stt` | Run Python IndicConformer STT and engine unit tests |
+| `make lint` | Run TypeScript type checks across the frontend (`tsc -b`) |
+| `make build` | Compile production frontend bundle (`tsc -b && vite build`) |
+| `make clean` | Remove temporary build files and caches |
+| `make help` | Display interactive Makefile command guide |
 
 ---
 
@@ -310,7 +246,8 @@ FLOVA/
 ├── CLAUDE.md                    # Engineering invariants and coding guidelines
 ├── scripts/
 │   └── dev-runner.py            # Process supervisor with port checks & tunneling
-├── docs/                        # In-depth architectural and technical guides
+├── docs/                        # Detailed architectural and technical guides
+│   ├── assets/                  # Brand assets and application icons
 │   ├── ARCHITECTURE.md          # System philosophy and design contracts
 │   ├── VOICE-STT.md             # IndicConformer and Whisper audio pipeline
 │   ├── SMART-CAPTURE.md         # Receipt OCR and UPI screenshot parsing
@@ -321,165 +258,68 @@ FLOVA/
 │   ├── DEPLOYMENT.md            # Production deployment instructions
 │   ├── ENVIRONMENT.md           # Environment variables and secrets reference
 │   └── TESTING.md               # Automated testing strategies
-├── frontend/                    # Client PWA application
-│   ├── public/                  # Static assets, PWA manifest, and icons
+├── frontend/                    # Client React 18 + Vite PWA
 │   ├── src/
 │   │   ├── engine/              # Deterministic financial calculations (paise)
 │   │   ├── services/            # Client data services (voice, receipt, data)
 │   │   ├── screens/             # UI screen components
-│   │   ├── components/          # Shared interface components
 │   │   └── lib/                 # Utilities (money formatting, Supabase client)
-│   ├── package.json             # Frontend dependencies
-│   └── vite.config.ts           # Vite build configuration
+│   └── package.json             # Frontend dependencies
 ├── backend/                     # Database migrations and serverless functions
-│   ├── supabase/
-│   │   ├── functions/           # Deno Edge Functions (process-voice, extract-receipt)
-│   │   └── migrations/          # Idempotent PostgreSQL schema migrations
-│   └── scripts/                 # Demo seeding and isolation tests
-└── ai-engine/                   # Python AI services
+│   └── supabase/
+│       ├── functions/           # Deno Edge Functions (process-voice, extract-receipt)
+│       └── migrations/          # Idempotent PostgreSQL schema migrations
+└── ai-engine/                   # Python STT microservice & reference engine
     ├── stt_service/             # FastAPI IndicConformer microservice
-    ├── udaan_engine/            # Backtesting and self-salary reference engine
-    ├── tests/                   # Pytest test suites
-    └── pyproject.toml           # Python package metadata
+    └── tests/                   # Pytest test suites
 ```
 
 ---
 
-## Environment Configuration
+## Security & Financial Principles
 
-Configuration variables are organized into three distinct tiers:
-
-### 1. Frontend Client Configuration (`frontend/.env.local`)
-| Variable | Description | Required | Example Placeholder |
-|---|---|---|---|
-| `VITE_SUPABASE_URL` | Supabase API gateway URL | **Yes** | `https://your-project.supabase.co` |
-| `VITE_SUPABASE_ANON_KEY` | Public client key protected by Row Level Security | **Yes** | `eyJhbGciOi...` |
-
-*Security Rule: Never place private API keys or database service-role tokens in frontend `.env` files.*
-
-### 2. Edge Function Secrets (Supabase Vault)
-| Secret | Description | Required By | Example Placeholder |
-|---|---|---|---|
-| `GROQ_API_KEY` | API key for Whisper fallback, Qwen vision, and Llama 3.3 | `process-voice`, `extract-receipt` | `gsk_...` |
-| `INDICCONFORMER_URL` | URL for the IndicConformer FastAPI `/transcribe` endpoint | `process-voice` | `http://localhost:8001/transcribe` |
-| `INDICCONFORMER_KEY` | Pre-shared bearer token for internal STT authentication | `process-voice` | `your-secure-internal-token` |
-
-### 3. IndicConformer Python Microservice (`ai-engine/.env`)
-| Variable | Description | Required | Default |
-|---|---|---|---|
-| `FLOVA_STT_PORT` | Listening port for the STT service | No | `8001` |
-| `FLOVA_STT_HOST` | Network interface binding | No | `0.0.0.0` |
-| `FLOVA_STT_INTERNAL_KEY` | Expected pre-shared token in `X-FLOVA-STT-KEY` header | **Yes** | `flova-indicconformer-secure-token-2026` |
-| `DEVICE` | Computation device (`cpu` or `cuda`) | No | `cpu` |
+1. **Deterministic Financial Math:** Authoritative balances and runway projections are computed entirely in integer paise (`100 paise = ₹1.00`) by pure TypeScript logic. LLMs are strictly forbidden from performing arithmetic.
+2. **AI Suggests, User Confirms:** Every voice transcript and receipt scan produces an unconfirmed candidate. No transaction is written to the database without explicit user confirmation.
+3. **Custodial Money Segregation:** Third-party cash collections (e.g. Cash on Delivery) are tagged `ownership: 'not_mine'` and never counted toward personal spendable runway.
+4. **Receivable Segregation:** Expected gig payouts and unpaid invoices represent future receivables; they are excluded from the available cash balance until confirmed as received.
+5. **₹10 Lakh Safeguard Limits:** Maximum single transaction (₹10,00,000) and calendar-day aggregate (₹10,00,000) limits are enforced in PostgreSQL triggers with profile row-level locks.
+6. **Zero Client Secrets:** The frontend bundle contains only public publishable variables (`VITE_*`). All private tokens remain securely in server-side vaults.
 
 ---
 
-## AI & Financial Safety
+## Documentation Index
 
-FLOVA incorporates strict safeguards to ensure financial truthfulness and tenant security:
+For in-depth technical specifications, consult the dedicated guides in the [`docs/`](docs/) directory:
 
-1. **Deterministic Calculations:** All financial balances, runway horizons, and daily limits are computed by deterministic TypeScript logic in integer paise (`100 paise = ₹1.00`). LLMs are strictly forbidden from performing financial arithmetic.
-2. **AI Suggests, User Confirms:** Speech and vision models produce draft candidates. No transaction is committed to the database without explicit user confirmation in the `/add` screen.
-3. **Truthful Uncertainty:** Ambiguous amounts or unclassified expenses remain `null` and trigger `needsReview: true`. The system never invents numbers.
-4. **Custodial Money Segregation:** Cash on Delivery (COD) collections and third-party cash (`ownership: 'not_mine'`) are tracked in isolated buckets and never added to the user's spendable balance.
-5. **Pending Income Segregation:** Expected gig platform payouts and unpaid invoices represent future receivables. They are never counted as available cash until confirmed as received.
-6. **₹10 Lakh Safeguard Limits:** Maximum individual transaction (₹10,00,000) and calendar-day aggregate (₹10,00,000) limits are enforced by PostgreSQL triggers with profile row-level locks.
-7. **Database Row Level Security:** Every table enforces tenant isolation via PostgreSQL RLS policies keyed to `auth.uid()`.
-
----
-
-## Testing & Quality Assurance
-
-FLOVA maintains comprehensive multi-tier test coverage:
-
-```bash
-# Run all test suites across the stack
-make test
-```
-
-### Individual Test Suites
-- **Frontend Services & Financial Engine:**
-  ```bash
-  make test-frontend
-  ```
-  Validates balance calculations, runway projections, safe buffer formulations, WISH persistence, and candidate stability.
-- **Backend Schema, Triggers & RLS:**
-  ```bash
-  make test-backend
-  ```
-  Runs migrations against an embedded PostgreSQL instance (PGlite) and tests tenant isolation, payout synchronization, and ₹10 Lakh boundary constraints.
-- **Python STT & Engine:**
-  ```bash
-  make test-stt
-  ```
-  Executes Pytest suites covering IndicConformer inference, audio normalization, and self-salary rule logic.
-
-### Adding New Tests
-- **Frontend / Engine Tests:** Add files matching `src/**/__tests__/*.test.ts` using the Node.js test runner.
-- **Database Tests:** Add schema and isolation tests in `backend/scripts/`.
-- **Python Tests:** Add test cases in `ai-engine/tests/` using Pytest.
-
----
-
-## Deployment
-
-FLOVA is structured for standard cloud and serverless hosting:
-
-1. **Frontend PWA:** Static SPA deployed to Vercel, Netlify, or Cloudflare Pages.
-   - Build command: `cd frontend && npm install && npm run build`
-   - Output directory: `frontend/dist/`
-   - Client routing: All paths rewrite to `/index.html` (configured in `frontend/vercel.json`).
-2. **Serverless Edge Functions:** Deployed to Supabase Edge Runtime:
-   ```bash
-   npx supabase functions deploy process-voice --workdir backend
-   npx supabase functions deploy extract-receipt --workdir backend
-   ```
-3. **IndicConformer STT Service:** Deployed via systemd service or container on a GPU/CPU host.
-   - Example systemd service configuration is documented in [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
-
-For comprehensive operational and production deployment instructions, see [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
-
----
-
-## Roadmap
-
-### Completed Milestones
-- [x] Multilingual voice transaction capture across 10 Indic languages.
-- [x] AI4Bharat IndicConformer primary STT with automated Groq Whisper fallback.
-- [x] Smart Capture for receipts and UPI screenshots with duplicate UTR protection.
-- [x] Invoices, receivables, payables, and partial settlement tracking.
-- [x] Deterministic integer paise financial engine with Ravi delivery benchmark validation.
-- [x] Adaptive safety cushion and 30-day buffer shortfall detection.
-- [x] WISH 2.0 persistent goal savings.
-- [x] Unified root Makefile with process supervisor and live HTTPS tunneling.
-- [x] Complete brand identity, favicon, and PWA icon integration.
-
-### Planned Enhancements
-- [ ] Bank statement PDF extraction and automated multi-account reconciliation.
-- [ ] Direct UPI deep-linking for one-tap client invoice settlements.
-- [ ] Multi-party expense splitting for shared commercial vehicle rentals.
-- [ ] Offline-first local data synchronization with background queueing.
-- [ ] Extended regional language model checkpoints for additional dialects.
+- 🏛️ [System Architecture](docs/ARCHITECTURE.md) — System boundaries, components, and philosophy
+- 🎙️ [Speech-to-Text Pipeline](docs/VOICE-STT.md) — IndicConformer checkpoints, audio normalization, and failover
+- 📸 [Smart Capture & OCR](docs/SMART-CAPTURE.md) — Receipt line-item extraction and UPI reference handling
+- 🧾 [Invoice Intelligence](docs/INVOICE-INTELLIGENCE.md) — Receivables, payables, and settlement reconciliation
+- 📐 [Deterministic Financial Engine](docs/FINANCIAL-ENGINE.md) — Integer paise math and balance formulas
+- 🛡️ [Adaptive Safety Buffer](docs/ADAPTIVE-BUFFER.md) — Volatility-based reserves and runway calculations
+- 🔒 [Security & Row Level Security](docs/SECURITY.md) — Tenant isolation and database protection
+- 🚀 [Deployment Guide](docs/DEPLOYMENT.md) — Vercel, Supabase, and systemd deployment
+- ⚙️ [Environment Variables Reference](docs/ENVIRONMENT.md) — Full configuration and secrets guide
+- 🧪 [Testing & Verification](docs/TESTING.md) — Multi-tier test suite execution and test authoring
 
 ---
 
 ## Contributing
 
-Contributions to FLOVA are welcome. To contribute:
+Contributions are welcome! Please follow these steps:
 
-1. **Fork the Repository:** Create a personal fork on GitHub.
+1. **Fork the Repository:** Create your own fork of `syed-imadulla/FLOVA`.
 2. **Create a Feature Branch:**
    ```bash
    git checkout -b feature/your-feature-name
    ```
-3. **Make Your Changes:** Follow existing conventions (TypeScript strict mode, integer paise math, conventional commits).
-4. **Verify Tests & Builds:**
+3. **Verify Code Quality:**
    ```bash
    make lint
    make test
    make build
    ```
-5. **Submit a Pull Request:** Open a pull request against the `dev` branch with a clear description of your changes and test verification results.
+4. **Submit a Pull Request:** Open a PR against the `dev` branch with a clear description of your changes and test verification results.
 
 ---
 
@@ -489,15 +329,13 @@ This project is open-source software licensed under the [MIT License](LICENSE).
 
 Copyright (c) 2026 Syed Imadulla
 
-AI4Bharat IndicConformer models are developed by the AI4Bharat research team at IIT Madras and are governed by their respective research and open-source licenses.
+*AI4Bharat IndicConformer models are developed by the AI4Bharat research team at IIT Madras and are governed by their respective research and open-source licenses.*
 
 ---
 
 ## Acknowledgements
 
-FLOVA is built using open-source tools, models, and platforms:
-- **[AI4Bharat](https://ai4bharat.iitm.ac.in/):** Open-source speech technology and IndicConformer model checkpoints for Indian languages.
+- **[AI4Bharat](https://ai4bharat.iitm.ac.in/):** Open-source speech technology and IndicConformer checkpoints for Indian languages.
 - **[Groq](https://groq.com/):** Low-latency Llama 3.3, Qwen 2.5 Vision, and Whisper inference.
-- **[Supabase](https://supabase.com/):** PostgreSQL, Row Level Security, Auth, and Edge Functions.
+- **[Supabase](https://supabase.com/):** PostgreSQL database, Row Level Security, Auth, and Edge Functions.
 - **[Vite](https://vitejs.dev/) & [React](https://react.dev/):** Frontend build tooling and component architecture.
-- **[Tailwind CSS](https://tailwindcss.com/):** Utility-first responsive design.

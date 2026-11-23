@@ -1,9 +1,9 @@
 import React from "react";
 
-export const PhonePeDotWaveDevices: React.FC = () => {
+export const FlovaDeviceGrid: React.FC = () => {
   return (
     <section className="py-24 px-4 sm:px-6 lg:px-8 bg-white relative overflow-hidden">
-      {/* Curved Dot Wave Arch Illustration (PhonePe Signature Wave) */}
+      {/* Curved Dot Wave Arch Illustration (FLOVA Dot Wave Pattern) */}
       <div className="absolute inset-0 pointer-events-none flex justify-center items-center opacity-30">
         <svg viewBox="0 0 1200 400" className="w-full h-auto">
           {/* Parabolic dotted curves in rainbow pastel tones */}

@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 
-interface PhonePeNavbarProps {
+interface FlovaPulseNavbarProps {
   onLaunchStage: () => void;
 }
 
-export const PhonePeNavbar: React.FC<PhonePeNavbarProps> = ({ onLaunchStage }) => {
+export const FlovaPulseNavbar: React.FC<FlovaPulseNavbarProps> = ({ onLaunchStage }) => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -33,16 +33,14 @@ export const PhonePeNavbar: React.FC<PhonePeNavbarProps> = ({ onLaunchStage }) =
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
-          {/* Logo Mark: Purple Circular Emblem + FLOVA text (Matching Screenshot 2) */}
+          {/* Logo Mark: Purple Circular Emblem + FLOVA text (FLOVA Design Specification) */}
           <a
             href="#"
             className="flex items-center gap-3 group focus:outline-none"
             aria-label="FLOVA Home"
           >
-            {/* Placeholder Logo — replace with final FLOVA mark */}
-            <div className="w-11 h-11 rounded-full bg-[#5f259f] flex items-center justify-center text-white shadow-xs group-hover:scale-105 transition-transform duration-200">
-              <span className="text-lg font-black tracking-tight leading-none select-none">F</span>
-            </div>
+            {/* FLOVA Master Logo Mark */}
+            <img src="/favicon.svg" alt="FLOVA" className="w-11 h-11 rounded-xl object-contain shadow-xs group-hover:scale-105 transition-transform duration-200" />
             <div className="flex items-center gap-2">
               <span className="text-2xl font-black tracking-tight text-[#5f259f]">
                 FLOVA
@@ -53,7 +51,7 @@ export const PhonePeNavbar: React.FC<PhonePeNavbarProps> = ({ onLaunchStage }) =
             </div>
           </a>
 
-          {/* Desktop Navigation Links (Uppercase Tracked Sans, Matching Screenshot 2) */}
+          {/* Desktop Navigation Links (Uppercase Tracked Sans) */}
           <nav className="hidden lg:flex items-center gap-8 text-[12px] font-bold tracking-[0.08em] text-[#333333]">
             {navLinks.map((link) => (
               <a

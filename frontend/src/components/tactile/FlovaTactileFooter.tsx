@@ -6,7 +6,7 @@ interface FooterProps {
   onLaunchStage: () => void;
 }
 
-export const AbyssFooter: React.FC<FooterProps> = ({ onLaunchStage }) => {
+export const FlovaTactileFooter: React.FC<FooterProps> = ({ onLaunchStage }) => {
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };

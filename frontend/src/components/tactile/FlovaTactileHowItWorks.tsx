@@ -3,7 +3,7 @@ import { Check, Copy } from "./Icons";
 import { SectionHeading } from "./SectionHeading";
 import { RubberStamp } from "./FloatingElements";
 
-export const AbyssHowItWorks: React.FC = () => {
+export const FlovaTactileHowItWorks: React.FC = () => {
   const [cashPaise, setCashPaise] = useState(1500);
   const [bankPaise, setBankPaise] = useState(3200);
   const [notMinePaise, setNotMinePaise] = useState(900);

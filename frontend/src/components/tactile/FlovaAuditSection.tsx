@@ -6,7 +6,7 @@ import {
 import { SectionHeading } from "./SectionHeading";
 import { RubberStamp } from "./FloatingElements";
 
-export const AbyssAuditSection: React.FC = () => {
+export const FlovaAuditSection: React.FC = () => {
   const [codHeld, setCodHeld] = useState<number>(3500);
   const [pendingPayout, setPendingPayout] = useState<number>(4200);
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 
-interface PhonePeHeroSliderProps {
+interface FlovaHeroSliderProps {
   onExplore?: () => void;
   onLaunchStage: () => void;
 }
@@ -22,7 +22,7 @@ interface SlideData {
   };
 }
 
-export const PhonePeHeroSlider: React.FC<PhonePeHeroSliderProps> = ({
+export const FlovaHeroSlider: React.FC<FlovaHeroSliderProps> = ({
   onExplore,
   onLaunchStage,
 }) => {
@@ -233,7 +233,7 @@ export const PhonePeHeroSlider: React.FC<PhonePeHeroSliderProps> = ({
       />
 
       <div className="max-w-5xl mx-auto relative z-10 text-center">
-        {/* Main Slide Headline (Matching Reference Screenshot) */}
+        {/* Main Slide Headline (FLOVA Design Specification) */}
         <h1
           className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight mb-4 transition-colors duration-500 leading-tight"
           style={{ color: slide.themeColor }}
@@ -275,7 +275,7 @@ export const PhonePeHeroSlider: React.FC<PhonePeHeroSliderProps> = ({
           {/* Floating Pill Badge 1: Top-Left (Matching Reference) */}
           <div
             key={`badge-top-${currentSlide}`}
-            className="absolute top-12 -left-4 sm:-left-14 z-20 flex items-center gap-2 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full text-white shadow-xl animate-phonepe-float border border-white/20 transition-all duration-500"
+            className="absolute top-12 -left-4 sm:-left-14 z-20 flex items-center gap-2 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full text-white shadow-xl animate-flova-float border border-white/20 transition-all duration-500"
             style={{ backgroundColor: slide.badges.topLeft.bg }}
           >
             {slide.badges.topLeft.icon}
@@ -287,7 +287,7 @@ export const PhonePeHeroSlider: React.FC<PhonePeHeroSliderProps> = ({
           {/* Floating Pill Badge 2: Bottom-Left (Matching Reference) */}
           <div
             key={`badge-bottom-${currentSlide}`}
-            className="absolute bottom-24 -left-6 sm:-left-16 z-20 flex items-center gap-2 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full text-white shadow-xl animate-phonepe-float border border-white/20 transition-all duration-500"
+            className="absolute bottom-24 -left-6 sm:-left-16 z-20 flex items-center gap-2 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full text-white shadow-xl animate-flova-float border border-white/20 transition-all duration-500"
             style={{ backgroundColor: slide.badges.bottomLeft.bg, animationDelay: "1.2s" }}
           >
             {slide.badges.bottomLeft.icon}
@@ -299,7 +299,7 @@ export const PhonePeHeroSlider: React.FC<PhonePeHeroSliderProps> = ({
           {/* Floating Pill Badge 3: Right (Matching Reference) */}
           <div
             key={`badge-right-${currentSlide}`}
-            className="absolute top-36 -right-6 sm:-right-14 z-20 flex items-center gap-2 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full text-white shadow-xl animate-phonepe-float border border-white/20 transition-all duration-500"
+            className="absolute top-36 -right-6 sm:-right-14 z-20 flex items-center gap-2 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full text-white shadow-xl animate-flova-float border border-white/20 transition-all duration-500"
             style={{ backgroundColor: slide.badges.right.bg, animationDelay: "0.7s" }}
           >
             <span className="text-[11px] sm:text-xs font-black tracking-wider uppercase">
@@ -324,7 +324,7 @@ export const PhonePeHeroSlider: React.FC<PhonePeHeroSliderProps> = ({
                   {slide.phoneHeader}
                 </span>
 
-                {/* Circular Brand Placeholder Emblem with 'F' (NO PhonePe logo) */}
+                {/* Circular Brand Placeholder Emblem with 'F' (FLOVA Brand Mark) */}
                 <div
                   className="w-20 h-20 mx-auto rounded-full text-white flex items-center justify-center shadow-lg mb-4 transition-transform duration-300 hover:scale-105"
                   style={{ backgroundColor: slide.badgeBg }}

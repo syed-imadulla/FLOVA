@@ -1,22 +1,22 @@
 import React from "react";
 
-export const PhonePeConcentricSection: React.FC = () => {
+export const FlovaConcentricShowcase: React.FC = () => {
   return (
     <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white">
       <div className="max-w-6xl mx-auto">
-        {/* Large Rounded Dark-Navy Card Container (Matching Screenshot 4 Exactly) */}
-        <div className="phonepe-concentric-container pt-16 pb-28 px-6 sm:px-12 text-center text-white relative rounded-[36px] overflow-hidden">
+        {/* Large Rounded Dark-Navy Card Container (FLOVA Design Specification) */}
+        <div className="flova-concentric-container pt-16 pb-28 px-6 sm:px-12 text-center text-white relative rounded-[36px] overflow-hidden">
           {/* Concentric Arc Circles */}
           <div
-            className="phonepe-arc-line w-[480px] h-[480px] top-28 left-1/2 -translate-x-1/2"
+            className="flova-arc-line w-[480px] h-[480px] top-28 left-1/2 -translate-x-1/2"
             style={{ borderColor: "rgba(255, 255, 255, 0.08)" }}
           />
           <div
-            className="phonepe-arc-line w-[780px] h-[780px] top-16 left-1/2 -translate-x-1/2"
+            className="flova-arc-line w-[780px] h-[780px] top-16 left-1/2 -translate-x-1/2"
             style={{ borderColor: "rgba(255, 255, 255, 0.06)" }}
           />
           <div
-            className="phonepe-arc-line w-[1080px] h-[1080px] top-4 left-1/2 -translate-x-1/2"
+            className="flova-arc-line w-[1080px] h-[1080px] top-4 left-1/2 -translate-x-1/2"
             style={{ borderColor: "rgba(255, 255, 255, 0.04)" }}
           />
 

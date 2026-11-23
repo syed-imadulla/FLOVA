@@ -12,7 +12,7 @@ interface FinalCTAProps {
   onLaunch: () => void;
 }
 
-export const AbyssFinalCTA: React.FC<FinalCTAProps> = ({ onLaunch }) => {
+export const FlovaFinalCTA: React.FC<FinalCTAProps> = ({ onLaunch }) => {
   return (
     <section className="relative py-32 px-4 sm:px-6 lg:px-8 cutting-mat-grid text-white overflow-hidden">
       {/* Decorative Metric Ruler Marks on the cutting mat top/bottom edges */}
