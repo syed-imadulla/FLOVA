@@ -51,7 +51,6 @@ async function run() {
       targetAmountPaise: 1500000, // ₹15,000
       targetDate: "2026-12-31",
       category: "tools",
-      rewardNote: "Better GPS and battery life for all-day delivery shifts",
     });
 
     assertTrue(!!goal.id, "Goal id must exist");
