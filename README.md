@@ -57,81 +57,129 @@ Detailed architectural documentation is available in [`docs/ARCHITECTURE.md`](do
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Development Workflow (One-Command Setup)
 
-### Prerequisites
-- Node.js 20+ and npm
-- Python 3.10+
-- FFmpeg (`sudo apt install ffmpeg`)
-- Supabase account (or local PGlite for testing)
+FLOVA provides a unified, reliable development workflow using GNU Make. Rather than opening separate terminals and manually launching frontend, backend, and speech services, you can manage the entire stack directly from the project root.
 
-### 1. Clone & Install
+### 1. Prerequisites
+- **GNU Make:** `make` (Installed by default on Linux/macOS. Ubuntu/Debian: `sudo apt install make`, macOS: `brew install make`)
+- **Node.js:** Node.js 20+ and npm (`node --version`)
+- **Python:** Python 3.10+ with `python3-venv` (`python3 --version`)
+- **FFmpeg:** Audio transcoding for STT (`sudo apt install ffmpeg`)
+
+### 2. Initial Installation
+Install all dependencies across Frontend, Backend, and AI STT with a single command:
 ```bash
-git clone https://github.com/syed-imadulla/FLOVA.git
-cd FLOVA
-
-# Install frontend dependencies
-cd frontend && npm install && cd ..
-
-# Install backend testing dependencies
-cd backend && npm install && cd ..
-
-# Install Python STT service dependencies
-cd ai-engine && pip install -r stt_service/requirements.txt && cd ..
+make install
 ```
+This automatically:
+- Installs frontend packages (`frontend/node_modules`)
+- Sets up an isolated Python virtual environment at `ai-engine/.venv`
+- Installs all IndicConformer STT requirements (`fastapi`, `uvicorn`, `onnxruntime`, `numpy`, `scipy`)
+- Installs backend database test dependencies
 
-### 2. Configure Environment
+### 3. One-Command Development Server (with Live Public Tunnel)
+Start all required local development services concurrently:
 ```bash
-# Frontend configuration
-cp frontend/.env.example frontend/.env.local
-# Edit frontend/.env.local with your Supabase URL and Anon Key
+make dev
 ```
+This launches:
+- **Frontend (React + Vite)** on `http://localhost:5173`
+- **STT Microservice (FastAPI + IndicConformer)** on `http://localhost:8001`
+- **Public HTTPS Tunnel Link** (e.g. `https://<unique-id>.trycloudflare.com`) for direct mobile PWA testing, external reviewers, or remote testing without port forwarding.
+- **Database & Auth**: Connects to hosted Supabase automatically.
 
-### 3. Run Development Servers
+**Key Features of `make dev`:**
+- **Instant Public Tunneling:** Automatically detects `cloudflared` (or `localtunnel`), connects a secure HTTPS tunnel to Vite, and displays the public link right in your terminal. (To run offline without a tunnel, use `make dev TUNNEL=0`).
+- **Concurrent Logging:** Displays color-coded prefixes (`[frontend]`, `[stt]`, `[tunnel]`) for real-time log streaming.
+- **Port Conflict Prevention:** Detects if port 5173 or 8001 is already held by another process before starting.
+- **Clean Ctrl+C Shutdown:** Intercepts `SIGINT`/`SIGTERM` and terminates all child process groups cleanly, guaranteeing zero orphaned background processes or stuck ports.
+
+To stop all services at any time, simply press **Ctrl+C** in the terminal.
+
+---
+
+### 4. Service Ports & URLs
+
+| Service | Port | Local URL | Health Endpoint | Description |
+|---|---|---|---|---|
+| **Frontend PWA** | `5173` | [http://localhost:5173](http://localhost:5173) | — | React 18, Vite HMR development server |
+| **STT Microservice** | `8001` | [http://localhost:8001](http://localhost:8001) | [http://localhost:8001/health](http://localhost:8001/health) | AI4Bharat IndicConformer inference API |
+| **Public Tunnel** | Dynamic | `https://*.trycloudflare.com` | — | Cloudflare / localtunnel HTTPS public link |
+| **Backend / Supabase**| Hosted | [Gateway URL](https://msjzkylvafuwlkkujxpv.supabase.co) | — | Hosted PostgreSQL + RLS + Edge Functions |
+| **Local Supabase** | `54321`| [http://localhost:54321](http://localhost:54321) | — | Optional local database (if Supabase CLI configured) |
+
+---
+
+### 5. Individual Service & Utility Commands
+
+If you need to control services independently:
+
 ```bash
-# Start frontend application (http://localhost:5173)
-cd frontend && npm run dev
+# Start only the public HTTPS tunnel for the frontend
+make tunnel
 
-# Start IndicConformer STT microservice (http://localhost:8001)
-cd ai-engine && python3 -m uvicorn stt_service.main:app --port 8001
+# Start only the React + Vite frontend
+make frontend
+
+# Start only the IndicConformer STT microservice
+make stt
+
+# Inspect status, active ports, and health of local services
+make dev-status
+
+# Stop any running processes currently occupying dev ports (5173/8001)
+make stop
+
+# Inspect backend status and run database schema RLS validation
+make backend
+
+# Start local Supabase instance (if local Supabase CLI is configured)
+make supabase
 ```
 
 ---
 
-## 🧪 Testing & Verification
+### 6. Testing, Linting & Building
 
-FLOVA includes exhaustive multi-tier automated test coverage:
+Run the complete test suite or individual tiers:
 
 ```bash
-# 1. Frontend Service, UI & Voice Tests (21 suites, 100+ tests)
-cd frontend
-node --loader ./src/services/__tests__/mockLoader.mjs --test "src/services/__tests__/*.test.ts"
+# Run ALL automated tests (Frontend + Backend + STT)
+make test
 
-# 2. Deterministic Financial Engine & Runway Tests (9 suites)
-cd frontend
-node --loader ./src/services/__tests__/mockLoader.mjs --test \
-  "src/engine/__tests__/*.test.ts" \
-  "src/runway/__tests__/*.test.ts" \
-  "src/wish/__tests__/*.test.ts" \
-  "src/profile/__tests__/*.test.ts" \
-  "src/data/__tests__/*.test.ts"
+# Run only frontend services & financial engine tests
+make test-frontend
 
-# 3. Database Schema, Triggers & Row Level Security (54 tests)
-cd backend
-npm run test:db
+# Run only database schema, triggers & RLS tests
+make test-backend
 
-# 4. Demo Seeding & Isolation Verification (17 tests)
-cd backend
-npm run test:seed
+# Run only Python STT microservice & udaan engine tests
+make test-stt
 
-# 5. Python STT Service & Engine Tests (23 tests)
-cd ai-engine
-python3 -m pytest
+# Compile the production frontend bundle (tsc -b && vite build)
+make build
 
-# 6. Production Build Check
-cd frontend
-npm run build
+# Run TypeScript type verification
+make lint
+
+# Clean temporary build and cache files (preserves weights & envs)
+make clean
+
+# Display interactive command help
+make help
 ```
+
+---
+
+### 7. Troubleshooting
+
+- **Port 5173 or 8001 Already in Use:**
+  Run `make stop` to cleanly terminate any orphaned Vite or Uvicorn processes holding the ports. Alternatively, check status with `make dev-status`.
+- **Python Virtual Environment Missing:**
+  Run `make install-stt` to recreate `ai-engine/.venv` and reinstall requirements.
+- **FFmpeg Missing on Linux:**
+  Audio conversion for voice transactions requires `ffmpeg`. Install via `sudo apt install ffmpeg` on Ubuntu/Debian or `brew install ffmpeg` on macOS.
 
 ---
 

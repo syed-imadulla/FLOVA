@@ -427,7 +427,7 @@ export function relativeDayLabel(iso: string, today: string): string {
 export function Splash() {
   return (
     <div className="flova-app min-h-dvh bg-canvas flex flex-col items-center justify-center gap-4" role="status" aria-label="Loading">
-      <div className="w-16 h-16 rounded-2xl bg-brand-700 text-white flex items-center justify-center text-3xl font-black shadow-fab">F</div>
+      <img src="/favicon.svg" alt="FLOVA" className="w-16 h-16 rounded-2xl object-contain shadow-fab" />
       <Spinner className="text-brand-700" />
     </div>
   );

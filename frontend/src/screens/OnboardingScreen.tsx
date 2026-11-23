@@ -79,7 +79,7 @@ export function OnboardingScreen() {
     <div className="flova-app min-h-dvh bg-[#E9ECE6] text-ink antialiased">
       <div className="mx-auto min-h-dvh w-full max-w-[480px] bg-canvas px-4 pt-8 pb-10 space-y-5">
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-2xl bg-brand-700 text-white flex items-center justify-center text-xl font-black">F</div>
+          <img src="/favicon.svg" alt="FLOVA" className="w-11 h-11 rounded-2xl object-contain shadow-xs" />
           <span className="text-xl font-black text-brand-800">FLOVA</span>
         </div>
         <div>

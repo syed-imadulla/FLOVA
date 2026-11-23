@@ -9,9 +9,7 @@ export const FlovaFooter: React.FC = () => {
           {/* Brand Info */}
           <div className="md:col-span-2 space-y-3">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full bg-[#0F5C4C] text-white flex items-center justify-center font-extrabold text-base">
-                F
-              </div>
+              <img src="/favicon.svg" alt="FLOVA" className="w-8 h-8 rounded-lg object-contain shadow-xs" />
               <span className="text-xl font-black text-[#16181D] tracking-tight">FLOVA</span>
             </div>
             <p className="text-xs text-[#5A635B] max-w-sm leading-relaxed">
