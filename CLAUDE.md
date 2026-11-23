@@ -47,9 +47,28 @@ FLOVA (*"Every rupee has a story. FLOVA remembers."*) is a voice-first financial
 
 ---
 
-## 5. Testing Commands
+## 5. Development & Testing Commands
 
-Always run and verify these tests before committing:
+### Development Server:
+```bash
+make dev
+```
+Starts Frontend (`:5173`), STT Service (`:8001`), and **Public HTTPS Tunnel** concurrently. Share the generated public link for live mobile/remote testing. (Use `make dev TUNNEL=0` to run offline without a tunnel).
+Use `make tunnel` to start only the public tunnel.
+Use `make dev-status` to inspect service health, and `make stop` to kill all dev processes.
+
+### Automated Testing:
+Always run and verify tests before committing. You can execute all tests with a single command from the project root:
+```bash
+make test
+```
+Or run individual suites using Make:
+- `make test-frontend` — Frontend services, UI, voice intent, and financial engine tests.
+- `make test-backend` — Supabase database schema, triggers, and demo seeding tests.
+- `make test-stt` — Python IndicConformer STT and udaan engine tests.
+- `make build` — Production frontend build verification.
+
+Alternatively, you can run them directly:
 
 ```bash
 # 1. Frontend Service, UI & Voice Tests (21 suites, 100+ tests)

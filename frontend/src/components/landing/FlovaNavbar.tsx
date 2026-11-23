@@ -45,7 +45,7 @@ export const FlovaNavbar: React.FC = () => {
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         {/* Brand */}
         <Link to="/" onClick={() => setOpen(false)} className="flex min-w-0 shrink-0 items-center gap-2.5" aria-label="FLOVA home">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#0F5C4C] text-lg font-black text-white shadow-sm">F</span>
+          <img src="/favicon.svg" alt="FLOVA" className="h-9 w-9 shrink-0 rounded-xl object-contain shadow-xs" />
           <span className="flex flex-col leading-none">
             <span className="text-[19px] font-black tracking-tight text-[#16181D]">FLOVA</span>
             <span className="mt-0.5 hidden text-[10.5px] font-medium text-[#6B6F68] sm:block">Every rupee has a story</span>

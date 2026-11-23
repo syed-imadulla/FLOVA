@@ -45,9 +45,7 @@ export function SignupPage() {
     <div className="min-h-screen bg-[#FAF7F2] text-[#16181D] flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center mb-8">
         <Link to="/" className="inline-flex items-center gap-2.5 mb-4 group focus:outline-none">
-          <div className="w-11 h-11 rounded-full bg-[#0F5C4C] text-white flex items-center justify-center font-black text-xl shadow-xs group-hover:scale-105 transition-transform">
-            F
-          </div>
+          <img src="/favicon.svg" alt="FLOVA" className="w-11 h-11 rounded-xl object-contain shadow-xs group-hover:scale-105 transition-transform" />
           <span className="text-2xl font-black tracking-tight text-[#0F5C4C]">FLOVA</span>
         </Link>
         <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#16181D]">
