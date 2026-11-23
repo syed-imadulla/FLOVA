@@ -20,8 +20,8 @@ export async function signIn(email: string, password: string): Promise<Session> 
 }
 
 export async function signOut(): Promise<void> {
-  const { error } = await supabase.auth.signOut();
-  if (error) throw new Error(`Logout failed: ${error.message}`);
+  const { signOutAll } = await import("./socialAuth");
+  await signOutAll();
 }
 
 export async function getSession(): Promise<Session | null> {

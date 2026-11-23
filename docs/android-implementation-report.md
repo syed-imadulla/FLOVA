@@ -109,3 +109,25 @@ Observation: the app starts on the marketing landing page (the site's `/`). Cand
 **PWA manifest.** `start_url` and `id` → `/app` (installed web app opens the app, not the landing page); `scope` `/`; new full-bleed `icon-maskable-192/512.png` replace the rounded-tile maskable icons. Service worker cache bumped to `flova-shell-v4` and precaches the new icons, so existing visitors get the new manifest.
 
 Tests: new `appEntryInstall.test.ts` (5): install state logic, iOS detection, native `/` redirect and hidden home links, manifest `start_url`/maskable icons/share target, landing install section and startup capture. `tsc` clean, `make test-frontend` passes, local preview shows the section and a one-line navbar at 1280 px and the menu at 760 px with no console errors. APK rebuilt and installed.
+
+## 9. Portrait-Only Orientation Lock (2026-11-23)
+
+- **Requirement:** Enforce strict vertical (portrait) orientation across the entire application, ignoring system auto-rotate on the device.
+- **Manifest Configuration:** Added `android:screenOrientation="portrait"` to `.MainActivity` in `frontend/android/app/src/main/AndroidManifest.xml`.
+- **Capacitor Interaction:** `MainActivity.java` extends `BridgeActivity` without calling `setRequestedOrientation()`. The Android OS Activity Manager locks the activity to portrait before view creation.
+- **Automated Test:** Added test 11 to `frontend/src/services/__tests__/nativeShell.test.ts` verifying that `android:screenOrientation="portrait"` is declared in the manifest. All 11 tests pass.
+- **Binary Verification:** Rebuilt debug APK (`./gradlew assembleDebug`). Binary manifest inspected via `aapt2 dump badging` (confirms `android.hardware.screen.portrait`) and `aapt2 dump xmltree` (confirms `android:screenOrientation(0x0101001e)=1`).
+- **Platform Limitations:** On all smartphones (including Redmi 12 5G), portrait lock is strictly enforced. On large-screen tablets or foldables (Android 12L+), system-level letterboxing may apply if the OS allows users to override app-requested orientation.
+- **Device Update:** Installed on Redmi 12 5G via `adb install -r` on 2026-11-23 21:16:24 IST. App launched in portrait mode.
+
+## 10. Physical Hardware Device Verification (2026-11-23)
+
+All five physical hardware tests were executed by the user on the Xiaomi Redmi 12 5G (`23076RN4BI`, Android 15, System WebView 157) and confirmed passing:
+
+| Test Case | Interaction on Redmi 12 5G | Result |
+|---|---|---|
+| **1. Portrait Orientation Lock** | Enabled system auto-rotate in quick settings; rotated phone 90° and 180° into landscape. | **USER-CONFIRMED PASS** (App remained strictly in vertical portrait orientation; zero UI glitch or restart). |
+| **2. Voice Recording & Groq Whisper** | Tapped microphone button; spoke phrase in Hinglish; verified audio encoding and upload. | **USER-CONFIRMED PASS** (Microphone permission granted; Groq Whisper generated candidate review card). |
+| **3. Native Camera Receipt Capture** | Tapped "Take photo" on Catch screen. | **USER-CONFIRMED PASS** (System camera intent opened directly via FileProvider; photo captured; OCR extracted items). |
+| **4. Virtual Keyboard Avoidance** | Tapped into rupee/text amount inputs on transaction screens. | **USER-CONFIRMED PASS** (Bottom navigation bar hidden cleanly while keyboard was open; no overlap). |
+| **5. Android Hardware Back Button** | Triggered gesture/button back from inner screens (Invoices, Catch, Runway). | **USER-CONFIRMED PASS** (Navigated back through screen history; exited app cleanly only from top-level screens). |
