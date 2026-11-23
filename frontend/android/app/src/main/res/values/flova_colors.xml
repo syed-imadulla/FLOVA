@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Same as the web app canvas (#F6F7F4) so the splash blends into the first screen. -->
+    <color name="flova_splash_background">#F6F7F4</color>
+</resources>
