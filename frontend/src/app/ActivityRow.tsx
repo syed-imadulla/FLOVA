@@ -34,8 +34,9 @@ export function ActivityRow({ item, onClick }: { item: ActivityItem; onClick?: (
   }
   const income = item.type === "income";
   const notMine = item.ownership === "not_mine";
+  const txType = item.type === "income" || item.type === "expense" ? item.type : undefined;
   const sub = [
-    categoryLabel(item.category),
+    categoryLabel(item.category, txType),
     notMine ? "Not your money" : item.expenseType ? (item.expenseType === "work" ? "Work" : "Living") : null,
   ]
     .filter(Boolean)
@@ -44,7 +45,7 @@ export function ActivityRow({ item, onClick }: { item: ActivityItem; onClick?: (
     <ListRow
       icon={income ? <IconArrowUp size={18} /> : <IconArrowDown size={18} />}
       iconTone={notMine ? "neutral" : income ? "income" : "expense"}
-      title={!item.title || item.title === item.category ? categoryLabel(item.category) : item.title}
+      title={!item.title || item.title === item.category ? categoryLabel(item.category, txType) : item.title}
       subtitle={sub}
       value={item.amountPaise !== undefined ? `${income ? "+" : "−"}${formatINR(item.amountPaise).replace("−", "")}` : undefined}
       valueTone={notMine ? "muted" : income ? "income" : "expense"}

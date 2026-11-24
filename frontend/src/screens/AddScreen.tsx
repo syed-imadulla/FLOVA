@@ -130,7 +130,7 @@ export function AddScreen() {
       });
     }
     bump();
-    const what = v.type === "income" ? "income" : `${categoryLabel(v.category).toLowerCase()} expense`;
+    const what = v.type === "income" ? "income" : `${categoryLabel(v.category, v.type).toLowerCase()} expense`;
 
     // Sequential review of remaining candidates in a multi-transaction capture
     if (review?.remainingCandidates && review.remainingCandidates.length > 0) {

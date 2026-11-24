@@ -69,9 +69,17 @@ export function categoriesFor(type: TransactionType, workProfile?: WorkProfile |
   return [...prioritized, ...remaining];
 }
 
-export function categoryLabel(value: string | null | undefined): string {
-  if (!value) return "Other";
-  const hit = [...INCOME_CATEGORIES, ...EXPENSE_CATEGORIES].find((c) => c.value === value);
+export function categoryLabel(value: string | null | undefined, type?: TransactionType): string {
+  if (!value) return type === "income" ? "Other income" : type === "expense" ? "Other expense" : "Other";
+  if (type === "expense") {
+    const hit = EXPENSE_CATEGORIES.find((c) => c.value === value);
+    if (hit) return hit.label;
+  } else if (type === "income") {
+    const hit = INCOME_CATEGORIES.find((c) => c.value === value);
+    if (hit) return hit.label;
+  }
+  if (value === "other") return "Other";
+  const hit = [...EXPENSE_CATEGORIES, ...INCOME_CATEGORIES].find((c) => c.value === value);
   if (hit) return hit.label;
   return value.charAt(0).toUpperCase() + value.slice(1).replace(/_/g, " ");
 }

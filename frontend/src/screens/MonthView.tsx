@@ -143,7 +143,7 @@ export function MonthView() {
               {summary.byCategory.slice(0, 6).map((c) => (
                 <div key={c.category} className="space-y-1">
                   <div className="flex justify-between text-[13px]">
-                    <span className="text-ink-soft">{categoryLabel(c.category)}</span>
+                    <span className="text-ink-soft">{categoryLabel(c.category, "expense")}</span>
                     <span className="font-semibold tabular-nums text-ink">{formatINR(c.amount)}</span>
                   </div>
                   <div className="h-1.5 rounded-full bg-black/[0.06]">
