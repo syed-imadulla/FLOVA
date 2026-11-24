@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
+    "test": "node --loader ./src/services/__tests__/mockLoader.mjs --test \"src/services/__tests__/*.test.ts\" \"src/engine/__tests__/*.test.ts\" \"src/runway/__tests__/*.test.ts\" \"src/wish/__tests__/*.test.ts\" \"src/profile/__tests__/*.test.ts\" \"src/data/__tests__/*.test.ts\"",
     "android:sync": "npm run build && npx cap sync android"
   },
   "dependencies": {
@@ -17,7 +18,7 @@
     "@supabase/supabase-js": "^2.119.2",
     "react": "18.3.1",
     "react-dom": "18.3.1",
-    "react-router-dom": "^6.30.6"
+    "react-router-dom": "^7.18.6"
   },
   "devDependencies": {
     "@capacitor/cli": "8.6.2",
@@ -28,7 +29,10 @@
     "postcss": "^8.5.33",
     "tailwindcss": "^3.4.19",
     "typescript": "5.6.3",
-    "vite": "5.4.11"
+    "vite": "^6.4.6"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "overrides": {
+    "esbuild": "^0.25.0"
+  }
 }

@@ -228,10 +228,10 @@ export interface NewTransaction {
   type: TransactionType;
   amount: Paise;
   category?: string;
-  description?: string;
-  expenseType?: ExpenseType;
+  description?: string | null;
+  expenseType?: ExpenseType | null;
   ownership?: MoneyOwnership;
-  payoutId?: string;
+  payoutId?: string | null;
   date?: ISODate;
   source?: EntrySource;
 }

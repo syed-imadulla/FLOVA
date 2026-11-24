@@ -7,10 +7,17 @@
 // =====================================================================
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
+import {
+  readBoundedJsonBody,
+  validateAudioPayload,
+  MAX_TEXT_LENGTH,
+  type ValidatedAudioResult,
+} from "../_shared/payload-validator.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Expose-Headers": "Retry-After",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
@@ -163,7 +170,10 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    // 2. Authentication check: Validate user JWT explicitly via incoming bearer token
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: `Bearer ${token}` } },
+    });
     const { data: { user }, error: authErr } = await supabase.auth.getUser(token);
     if (authErr || !user) {
       return new Response(JSON.stringify({ error: "Unauthorized. Invalid or expired user token." }), {
@@ -172,27 +182,20 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    // 3. API Key check
-    const groqApiKey = Deno.env.get("GROQ_API_KEY");
-    if (!groqApiKey) {
+    // 3. Bounded stream reading & safe JSON parsing (SEC-04: Enforce max 10MB HTTP body before full parse)
+    const bodyResult = await readBoundedJsonBody<ProcessVoiceRequest>(req);
+    if (!bodyResult.ok || !bodyResult.data) {
       return new Response(
-        JSON.stringify({ error: "GROQ_API_KEY is not configured in Edge Function secrets." }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: bodyResult.error || "Invalid request body." }),
+        {
+          status: bodyResult.status || 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
       );
     }
+    const body = bodyResult.data;
 
-    // 4. Validate input payload & enforce limits
-    let body: ProcessVoiceRequest;
-    try {
-      body = (await req.json()) as ProcessVoiceRequest;
-    } catch {
-      return new Response(
-        JSON.stringify({ error: "Invalid JSON in request body." }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    const hasAudio = typeof body.audioBase64 === "string" && body.audioBase64.length > 50;
+    const hasAudio = typeof body.audioBase64 === "string" && body.audioBase64.trim().length > 0;
     const hasText = typeof body.text === "string" && body.text.trim().length > 0;
 
     if (!hasAudio && !hasText) {
@@ -202,11 +205,80 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // 10MB base64 payload limit check (~7.5MB raw audio)
-    if (hasAudio && body.audioBase64!.length > 10 * 1024 * 1024) {
+    let validatedAudio: ValidatedAudioResult | null = null;
+    if (hasAudio) {
+      validatedAudio = validateAudioPayload(body.audioBase64!, body.mimeType);
+      if (!validatedAudio.ok || !validatedAudio.bytes) {
+        return new Response(
+          JSON.stringify({ error: validatedAudio.error || "Invalid audio payload." }),
+          {
+            status: validatedAudio.status || 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+    }
+
+    if (hasText && body.text!.length > MAX_TEXT_LENGTH) {
       return new Response(
-        JSON.stringify({ error: "Audio payload exceeds maximum limit of 10MB." }),
+        JSON.stringify({ error: `Text length exceeds maximum allowed limit of ${MAX_TEXT_LENGTH} characters.` }),
         { status: 413, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // 4. Server-side atomic rate limiting (SEC-03: executed ONLY after payload is validated)
+    const { data: rateLimitResult, error: rateLimitError } = await supabase.rpc(
+      "check_and_consume_rate_limit",
+      { p_function_name: "process-voice" }
+    );
+
+    if (rateLimitError) {
+      console.error("[Rate Limit Error] Failed to evaluate rate limit:", rateLimitError.message);
+      return new Response(
+        JSON.stringify({
+          error: "Security verification failed. Rate limit verification unavailable.",
+          code: "RATE_LIMIT_UNAVAILABLE",
+        }),
+        {
+          status: 503,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json",
+            "Retry-After": "60",
+          },
+        }
+      );
+    }
+
+    if (!rateLimitResult || rateLimitResult.allowed === false) {
+      const retryAfter = Number(rateLimitResult?.retry_after) || 60;
+      const isDaily = rateLimitResult?.reason === "daily_window_exceeded";
+      return new Response(
+        JSON.stringify({
+          error: isDaily
+            ? "Daily AI voice processing quota exceeded. Please try again tomorrow."
+            : "Rate limit exceeded. Too many voice processing requests. Please wait before trying again.",
+          code: "RATE_LIMIT_EXCEEDED",
+          retryAfter,
+          reason: rateLimitResult?.reason || "rate_limited",
+        }),
+        {
+          status: 429,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json",
+            "Retry-After": String(retryAfter),
+          },
+        }
+      );
+    }
+
+    // 5. API Key check
+    const groqApiKey = Deno.env.get("GROQ_API_KEY");
+    if (!groqApiKey) {
+      return new Response(
+        JSON.stringify({ error: "GROQ_API_KEY is not configured in Edge Function secrets." }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -214,21 +286,11 @@ Deno.serve(async (req: Request) => {
     let sttProvider: "indicconformer" | "whisper" | "manual_text" = hasText ? "manual_text" : "whisper";
 
     // 5. Audio Transcription: AI4Bharat IndicConformer (PRIMARY) with Groq Whisper (SECONDARY FALLBACK)
-    if (hasAudio) {
-      const rawBase64 = body.audioBase64!.includes(",")
-        ? body.audioBase64!.split(",")[1]
-        : body.audioBase64!;
-      const binaryString = atob(rawBase64);
-      const bytes = new Uint8Array(binaryString.length);
-      for (let i = 0; i < binaryString.length; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-      }
-
-      const mime = body.mimeType || "audio/webm";
-      let extension = "webm";
-      if (mime.includes("mp4") || mime.includes("m4a")) extension = "m4a";
-      else if (mime.includes("ogg")) extension = "ogg";
-      else if (mime.includes("wav")) extension = "wav";
+    if (hasAudio && validatedAudio && validatedAudio.bytes) {
+      const bytes = validatedAudio.bytes;
+      const mime = validatedAudio.canonicalMime || "audio/webm";
+      const extension = validatedAudio.extension || "webm";
+      const rawBase64 = validatedAudio.rawBase64 || body.audioBase64!;
 
       // 5A. PRIMARY: AI4Bharat IndicConformer STT Service
       const indicUrl = Deno.env.get("INDICCONFORMER_URL");
@@ -253,7 +315,7 @@ Deno.serve(async (req: Request) => {
               "X-FLOVA-STT-KEY": indicKey,
             },
             body: JSON.stringify({
-              audioBase64: body.audioBase64,
+              audioBase64: rawBase64,
               mimeType: mime,
               language: body.language || "kn",
             }),
@@ -279,7 +341,7 @@ Deno.serve(async (req: Request) => {
 
       // 5B. SECONDARY FALLBACK: Groq Whisper
       if (!indicSucceeded) {
-        const audioBlob = new Blob([bytes], { type: mime });
+        const audioBlob = new Blob([bytes as any], { type: mime });
         const formData = new FormData();
         formData.append("file", audioBlob, `recording.${extension}`);
         formData.append("response_format", "json");

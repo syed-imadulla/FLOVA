@@ -113,11 +113,28 @@ export async function updateTransaction(id: string, t: Partial<NewTransaction>):
   if (t.type) row.type = t.type;
   if (t.amount !== undefined) row.amount = money(t.amount);
   if (t.category !== undefined) row.category = t.category;
-  if (t.description !== undefined) row.description = t.description;
-  if (t.expenseType !== undefined) row.expense_type = t.expenseType;
+  if (t.description !== undefined) row.description = t.description ? t.description.trim() : null;
   if (t.ownership) row.ownership = t.ownership;
-  if (t.payoutId !== undefined) row.payout_id = t.payoutId;
   if (t.date) row.transaction_date = t.date;
+
+  // Determine effective type and ownership to strictly enforce check constraints
+  const isIncome = t.type === "income";
+  const isNotMine = t.ownership === "not_mine";
+
+  if (isIncome || isNotMine) {
+    // Both income and not-mine money must NEVER have expense_type or payout link violations
+    row.expense_type = null;
+    if (isNotMine) {
+      row.payout_id = null;
+    }
+  } else if (t.expenseType !== undefined) {
+    row.expense_type = t.expenseType ?? null;
+  }
+
+  if (t.payoutId !== undefined && !isNotMine) {
+    row.payout_id = t.payoutId;
+  }
+
   return unwrap(await supabase.from("transactions").update(row).eq("id", id).select().single(), "Update transaction");
 }
 

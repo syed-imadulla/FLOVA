@@ -203,3 +203,104 @@ def test_model_file_present_never_returns_fake_transcript(monkeypatch):
     )
     assert response.status_code == 503
     assert "ಪೆಟ್ರೋಲ್" not in response.text
+
+
+# =====================================================================
+# SEC-05: CORS Security & Configuration Tests
+# =====================================================================
+
+def test_cors_allowed_origin_get():
+    """Validates that permitted origin receives Access-Control-Allow-Origin without credentials."""
+    response = client.get("/health", headers={"Origin": "http://localhost:5173"})
+    assert response.status_code == 200
+    assert response.headers.get("access-control-allow-origin") == "http://localhost:5173"
+    # Credentials must NOT be allowed
+    assert response.headers.get("access-control-allow-credentials") != "true"
+
+
+def test_cors_allowed_production_origin():
+    """Validates that production web origin receives Access-Control-Allow-Origin."""
+    response = client.get("/health", headers={"Origin": "https://myflova.vercel.app"})
+    assert response.status_code == 200
+    assert response.headers.get("access-control-allow-origin") == "https://myflova.vercel.app"
+    assert response.headers.get("access-control-allow-credentials") != "true"
+
+
+def test_cors_rejected_origin():
+    """Validates that unauthorized origins do not receive Access-Control-Allow-Origin header."""
+    response = client.get("/health", headers={"Origin": "https://malicious-attacker.evil.com"})
+    assert response.status_code == 200
+    assert "access-control-allow-origin" not in response.headers
+
+
+def test_cors_missing_origin_header():
+    """Validates that standard server-to-server calls without Origin header work with zero CORS interference."""
+    response = client.get("/health")
+    assert response.status_code == 200
+    assert "access-control-allow-origin" not in response.headers
+
+
+def test_cors_preflight_options_allowed():
+    """Validates preflight OPTIONS request for /transcribe with authorized headers and methods."""
+    response = client.options(
+        "/transcribe",
+        headers={
+            "Origin": "http://localhost:5173",
+            "Access-Control-Request-Method": "POST",
+            "Access-Control-Request-Headers": "Content-Type, X-FLOVA-STT-KEY, Authorization",
+        },
+    )
+    assert response.status_code == 200
+    assert response.headers.get("access-control-allow-origin") == "http://localhost:5173"
+    assert "POST" in response.headers.get("access-control-allow-methods", "")
+    assert "X-FLOVA-STT-KEY" in response.headers.get("access-control-allow-headers", "")
+    assert response.headers.get("access-control-max-age") == "600"
+    assert response.headers.get("access-control-allow-credentials") != "true"
+
+
+def test_cors_preflight_options_rejected_origin():
+    """Validates that preflight OPTIONS from unauthorized origins do NOT return allow-origin."""
+    response = client.options(
+        "/transcribe",
+        headers={
+            "Origin": "https://evil-origin.example.com",
+            "Access-Control-Request-Method": "POST",
+        },
+    )
+    assert "access-control-allow-origin" not in response.headers
+
+
+def test_cors_preflight_options_disallowed_method():
+    """Validates that preflight OPTIONS for disallowed methods (e.g. DELETE) returns HTTP 400."""
+    response = client.options(
+        "/transcribe",
+        headers={
+            "Origin": "http://localhost:5173",
+            "Access-Control-Request-Method": "DELETE",
+        },
+    )
+    assert response.status_code == 400
+
+
+def test_cors_env_parsing_and_wildcard_rejection():
+    """Validates safe parsing and rejection of wildcard '*' in environment origins."""
+    from stt_service.config import parse_cors_origins
+
+    # Unset returns safe defaults
+    default_origins = parse_cors_origins(None)
+    assert "http://localhost:5173" in default_origins
+    assert "https://myflova.vercel.app" in default_origins
+
+    # Empty string returns empty list (zero cross-origin access)
+    empty_origins = parse_cors_origins("")
+    assert empty_origins == []
+
+    # Custom origins
+    custom_origins = parse_cors_origins("https://custom1.com, https://custom2.com")
+    assert custom_origins == ["https://custom1.com", "https://custom2.com"]
+
+    # Wildcard '*' is strictly stripped out
+    wildcard_filtered = parse_cors_origins("*, https://safe.com, *")
+    assert wildcard_filtered == ["https://safe.com"]
+    assert "*" not in wildcard_filtered
+

@@ -6,6 +6,8 @@
   "description": "FLOVA backend: Supabase schema, Row Level Security and database tests",
   "scripts": {
     "test:db": "node scripts/test-db.mjs",
+    "test:rate-limit": "node scripts/test-rate-limit.mjs",
+    "test:deno": "npx -y deno test --no-check --allow-net --allow-env supabase/functions/tests/edge_rate_limit_deno_test.ts",
     "test:seed": "node --experimental-strip-types --no-warnings --experimental-loader ../frontend/src/engine/__tests__/loader.mjs scripts/seed-demo.mjs --test",
     "seed:demo": "node --env-file=.env.local scripts/seed-demo.mjs",
     "test:rls-live": "node --env-file=.env.local scripts/rls-live-check.mjs",

@@ -121,12 +121,13 @@ function EditBody({ item, onDone }: { item: ActivityItem; onDone: () => void }) 
   const type = item.type === "income" ? "income" : "expense";
 
   async function save(v: TxSubmit) {
+    const isMineExpense = v.type === "expense" && v.ownership === "mine";
     await updateTransaction(item.id, {
       type: v.type,
       amount: v.amountPaise,
       category: v.category,
-      description: v.note || undefined,
-      expenseType: v.expenseType ?? undefined,
+      description: v.note ? v.note.trim() : null,
+      expenseType: isMineExpense ? v.expenseType : null,
       ownership: v.ownership,
       date: v.date,
     });

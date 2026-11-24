@@ -7,10 +7,17 @@
 // =====================================================================
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
+import {
+  readBoundedJsonBody,
+  validateReceiptImagePayload,
+  MAX_TEXT_LENGTH,
+  type ValidatedImageResult,
+} from "../_shared/payload-validator.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-test-model",
+  "Access-Control-Expose-Headers": "Retry-After",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
@@ -172,7 +179,10 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    // 2. Authentication check: Validate user JWT explicitly via incoming bearer token
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: `Bearer ${token}` } },
+    });
     const {
       data: { user },
       error: authErr,
@@ -185,33 +195,103 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    // 3. API Key check
-    const groqApiKey = Deno.env.get("GROQ_API_KEY");
-    if (!groqApiKey) {
+    // 3. Bounded stream reading & safe JSON parsing (SEC-04: Enforce max 10MB HTTP body before full parse)
+    const bodyResult = await readBoundedJsonBody<ExtractReceiptRequest>(req);
+    if (!bodyResult.ok || !bodyResult.data) {
       return new Response(
-        JSON.stringify({ error: "GROQ_API_KEY is not configured in Edge Function secrets." }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: bodyResult.error || "Invalid request body." }),
+        {
+          status: bodyResult.status || 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
       );
     }
+    const body = bodyResult.data;
 
-    // 4. Validate input payload
-    let body: ExtractReceiptRequest;
-    try {
-      body = (await req.json()) as ExtractReceiptRequest;
-    } catch {
-      return new Response(
-        JSON.stringify({ error: "Invalid JSON in request body." }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    const hasImage = typeof body.imageBase64 === "string" && body.imageBase64.length > 50;
+    const hasImage = typeof body.imageBase64 === "string" && body.imageBase64.trim().length > 0;
     const hasText = typeof body.text === "string" && body.text.trim().length > 0;
 
     if (!hasImage && !hasText) {
       return new Response(
         JSON.stringify({ error: "Provide either an imageBase64 string or receipt text." }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    let validatedImage: ValidatedImageResult | null = null;
+    if (hasImage) {
+      validatedImage = validateReceiptImagePayload(body.imageBase64!, body.mimeType);
+      if (!validatedImage.ok || !validatedImage.bytes) {
+        return new Response(
+          JSON.stringify({ error: validatedImage.error || "Invalid image payload." }),
+          {
+            status: validatedImage.status || 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+    }
+
+    if (hasText && body.text!.length > MAX_TEXT_LENGTH) {
+      return new Response(
+        JSON.stringify({ error: `Text length exceeds maximum allowed limit of ${MAX_TEXT_LENGTH} characters.` }),
+        { status: 413, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // 4. Server-side atomic rate limiting (SEC-03: executed ONLY after payload is validated)
+    const { data: rateLimitResult, error: rateLimitError } = await supabase.rpc(
+      "check_and_consume_rate_limit",
+      { p_function_name: "extract-receipt" }
+    );
+
+    if (rateLimitError) {
+      console.error("[Rate Limit Error] Failed to evaluate rate limit:", rateLimitError.message);
+      return new Response(
+        JSON.stringify({
+          error: "Security verification failed. Rate limit verification unavailable.",
+          code: "RATE_LIMIT_UNAVAILABLE",
+        }),
+        {
+          status: 503,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json",
+            "Retry-After": "60",
+          },
+        }
+      );
+    }
+
+    if (!rateLimitResult || rateLimitResult.allowed === false) {
+      const retryAfter = Number(rateLimitResult?.retry_after) || 60;
+      const isDaily = rateLimitResult?.reason === "daily_window_exceeded";
+      return new Response(
+        JSON.stringify({
+          error: isDaily
+            ? "Daily receipt processing quota exceeded. Please try again tomorrow."
+            : "Rate limit exceeded. Too many receipt processing requests. Please wait before trying again.",
+          code: "RATE_LIMIT_EXCEEDED",
+          retryAfter,
+          reason: rateLimitResult?.reason || "rate_limited",
+        }),
+        {
+          status: 429,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json",
+            "Retry-After": String(retryAfter),
+          },
+        }
+      );
+    }
+
+    // 5. API Key check
+    const groqApiKey = Deno.env.get("GROQ_API_KEY");
+    if (!groqApiKey) {
+      return new Response(
+        JSON.stringify({ error: "GROQ_API_KEY is not configured in Edge Function secrets." }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -261,10 +341,8 @@ Return strictly a JSON object matching this schema.`;
 
     let userContent: any;
 
-    if (hasImage) {
-      const imageUrl = body.imageBase64!.startsWith("data:")
-        ? body.imageBase64!
-        : `data:${body.mimeType || "image/jpeg"};base64,${body.imageBase64!}`;
+    if (hasImage && validatedImage) {
+      const imageUrl = `data:${validatedImage.canonicalMime};base64,${validatedImage.rawBase64}`;
 
       userContent = [
         { type: "text", text: "Extract details from this receipt or UPI payment screenshot:" },

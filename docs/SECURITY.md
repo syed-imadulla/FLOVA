@@ -63,3 +63,20 @@ CREATE POLICY "Users can only delete own transactions"
    - Client code (`frontend/src/`) contains only public identifiers (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`).
    - Private keys (`GROQ_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `FLOVA_STT_INTERNAL_KEY`, `HF_TOKEN`) reside exclusively in server-side environment variables and Edge Function secrets.
    - Zero secrets are logged to stdout or embedded in client bundles.
+
+---
+
+## 4. Secure Password Recovery & Redirect URL Control (SEC-10)
+
+1. **Anti-Enumeration Defense:**
+   - The password reset request endpoint presents an identical neutral confirmation message whether or not an email address is registered, preventing user account enumeration attacks.
+2. **Open Redirect Mitigation (CWE-601):**
+   - Redirect targets are validated against `ALLOWED_REDIRECT_ORIGINS` (`https://myflova.vercel.app`, `localhost:5173`, etc.). Any unauthorized or third-party redirect target is rejected and replaced with the safe, canonical `/reset-password` path.
+3. **Session Invalidation:**
+   - Upon successful password update, `supabase.auth.signOut()` is executed immediately to invalidate the temporary recovery session, ensuring the user signs in freshly with their new password.
+4. **Supabase Dashboard Configuration Required:**
+   - In Supabase Dashboard -> **Authentication** -> **URL Configuration** -> **Redirect URLs**, configure:
+     - `https://myflova.vercel.app/reset-password`
+     - `http://localhost:5173/reset-password` (for local development)
+     - `http://127.0.0.1:5173/reset-password`
+     - `in.flova.app://reset-password` (for native Android deep linking if configured)

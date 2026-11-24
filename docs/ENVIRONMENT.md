@@ -14,8 +14,10 @@ Environment variables in FLOVA are divided into three strict tiers:
 
 | Variable | Description | Security Tier | Example |
 |---|---|---|---|
-| `VITE_SUPABASE_URL` | Supabase Project API Gateway URL | Public | `https://msjzkylvafuwlkkujxpv.supabase.co` |
-| `VITE_SUPABASE_ANON_KEY` | Public publishable key with RLS protection | Public | `eyJhbGciOi...` |
+| `VITE_SUPABASE_URL` | Supabase Project API Gateway URL | Public | `https://YOUR-PROJECT-REF.supabase.co` |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | Public publishable key with RLS protection | Public | `sb_publishable_...` |
+| `VITE_SUPABASE_ANON_KEY` | Legacy anon JWT key (alternative to publishable key) | Public | `eyJhbGciOi...` |
+| `VITE_GOOGLE_WEB_CLIENT_ID` | Google OAuth Client ID for Credential Manager | Public | `YOUR_CLIENT_ID.apps.googleusercontent.com` |
 
 *Never add service role keys, Groq API keys, or Hugging Face tokens to `frontend/.env.local`.*
 
