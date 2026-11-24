@@ -1,13 +1,27 @@
-import subprocess
 import io
+import shutil
+import subprocess
 import wave
 import numpy as np
 
 def convert_audio_to_16k_mono_wav(audio_bytes: bytes, input_format: str = "webm") -> bytes:
     """
-    Converts incoming audio bytes (WebM, OGG, MP4, WAV, MP3) into 16 kHz 16-bit mono PCM WAV
-    using ffmpeg subprocess.
+    Converts incoming audio bytes (WebM, OGG, MP4, WAV, MP3) into 16 kHz 16-bit mono PCM WAV.
+    Fast-paths audio that is already 16 kHz 16-bit mono PCM WAV.
+    Uses ffmpeg subprocess for format conversion when needed.
     """
+    # Fast path: if input is already 16 kHz 16-bit mono PCM WAV, no ffmpeg required
+    if audio_bytes.startswith(b"RIFF") and len(audio_bytes) > 44:
+        try:
+            with wave.open(io.BytesIO(audio_bytes), "rb") as wf:
+                if wf.getnchannels() == 1 and wf.getframerate() == 16000 and wf.getsampwidth() == 2:
+                    return audio_bytes
+        except Exception:
+            pass
+
+    if not shutil.which("ffmpeg"):
+        raise RuntimeError("ffmpeg is not installed on the system. Please install ffmpeg to process compressed audio.")
+
     cmd = [
         "ffmpeg",
         "-y",
@@ -49,6 +63,8 @@ def convert_audio_to_16k_mono_wav(audio_bytes: bytes, input_format: str = "webm"
             if fallback_proc.returncode != 0:
                 raise RuntimeError(f"FFmpeg audio conversion failed: {stderr.decode(errors='ignore')}")
         return stdout
+    except FileNotFoundError:
+        raise RuntimeError("ffmpeg is not installed on the system. Please install ffmpeg.")
     except subprocess.TimeoutExpired:
         raise TimeoutError("Audio conversion timed out after 10 seconds.")
 
