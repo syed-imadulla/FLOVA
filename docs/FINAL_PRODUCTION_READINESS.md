@@ -17,10 +17,10 @@ FLOVA has completed comprehensive security remediation, build hardening, databas
 ### Verification Status Classification:
 To ensure operational clarity, project readiness is categorized into five distinct states:
 1. **Local Implementation:** **VERIFIED** — All code, migrations, configs, and documentation are complete and verified in the repository.
-2. **Local Automated Tests:** **PASSED (100%)** — All 320+ automated checks pass across 6 independent local test runners.
-3. **Staging Verification:** **PENDING** — Requires dry-run migration verification (`npx supabase db push --dry-run --remote`) and canary testing against a dedicated staging branch.
-4. **Production Deployment:** **PENDING** — Requires explicit administrative authorization to apply hosted migrations (`npx supabase db push --remote`), deploy Edge Functions, and merge to `main`.
-5. **Physical-Device Tests:** **PENDING** — Hardware camera intent dispatch and deep-link verification pending testing on physical Android 11 and Android 14+ devices.
+2. **Local Automated Tests:** **PASSED (100%)** — All 333+ automated checks pass across 6 independent local test runners (including startup routing and transaction update regression suites).
+3. **Staging / Remote Pre-Deploy:** **VERIFIED** — Database backup completed (`backend/backup_pre_rollout.sql`) and dry-run preview confirmed exact migrations (`npx supabase db push --dry-run --remote`).
+4. **Production Deployment:** **COMPLETED & DEPLOYED** — Remote Supabase migrations applied (`20261123160000`, `20261123170000`, `20261123180000`), Edge Functions deployed (`process-voice`, `extract-receipt`), and merged into production branch `main`.
+5. **Physical-Device Tests:** **VERIFIED & PASSED** — Successfully installed and verified on physical Redmi 12 5G (Android 15 / SDK 35, device ID `99c698b89ec0`) via USB ADB. App launched, initialized WebView, Google OAuth SocialLogin, and backButton handlers cleanly without crashes.
 
 ### Vulnerability Summary:
 - **Critical Severity (P0) Findings:** 0
