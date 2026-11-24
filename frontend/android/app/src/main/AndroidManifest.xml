@@ -43,6 +43,20 @@
                 <data android:scheme="in.flova.app" />
             </intent-filter>
 
+            <!-- UPI Share Target: Explicit User Sharing of Text Confirmation -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+
+            <!-- UPI Share Target: Explicit User Sharing of Receipt Screenshot -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="image/*" />
+            </intent-filter>
+
         </activity>
 
         <provider
@@ -54,15 +68,38 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths"></meta-data>
         </provider>
+
+        <!-- Home-Screen Widget 1: Compact Microphone Widget (1:2 vertical) -->
+        <receiver
+            android:name=".FlovaMicWidgetProvider"
+            android:exported="true"
+            android:label="FLOVA Voice">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_compact_mic_info" />
+        </receiver>
+
+        <!-- Home-Screen Widget 2: Extended Quick-Actions Widget (2:2 square) -->
+        <receiver
+            android:name=".FlovaQuickActionsWidgetProvider"
+            android:exported="true"
+            android:label="FLOVA Actions">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_extended_quick_actions_info" />
+        </receiver>
+
     </application>
 
     <!-- Permissions -->
-
     <uses-permission android:name="android.permission.INTERNET" />
-    <!-- Voice capture: the WebView has no speech recognition, so FLOVA records audio for Groq Whisper.
-         Capacitor asks for the runtime permission when the page calls getUserMedia. -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
-    <!-- No CAMERA permission on purpose: receipt photos use the system camera through the
-         FileProvider above; declaring CAMERA without requesting it would block that intent. -->
+
 </manifest>

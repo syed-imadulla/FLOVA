@@ -12,6 +12,7 @@ import { paiseToInput } from "../app/moneyText";
 import type { ReviewState } from "./AddScreen";
 import { todayLocalISO } from "../data/dates";
 import { extractReceipt, type ExtractionStage } from "../services/receipt";
+import { claimAndResolveShare, renewShareLease, acknowledgeShare } from "../native/sharePlugin";
 import { Button, Card, Notice, Screen, Segmented } from "../ui/kit";
 import { IconCamera, IconImage, IconSparkle, IconTrash } from "../ui/icons";
 
@@ -38,9 +39,73 @@ export function CatchScreen() {
     };
   }, [preview]);
 
-  // Handle incoming PWA Web Share Target content on mount
+  // Handle incoming native shared content & PWA Web Share Target on mount
   useEffect(() => {
+    let heartbeatTimer: ReturnType<typeof setInterval> | null = null;
+
     async function loadSharedContent() {
+      // 1. Native Android Share Target via one-time sharedToken
+      const sharedToken = searchParams.get("sharedToken");
+      if (sharedToken) {
+        // Strip sharedToken from URL immediately to prevent duplicate extraction on re-render
+        navigate("/catch", { replace: true });
+
+        // Retrieve existing claimId from sessionStorage if available
+        let savedClaimId: string | undefined;
+        try {
+          const sess = sessionStorage.getItem("flova_active_share");
+          if (sess) {
+            const parsed = JSON.parse(sess);
+            if (parsed.token === sharedToken) {
+              savedClaimId = parsed.claimId;
+            }
+          }
+        } catch {
+          /* ignore storage issues */
+        }
+
+        const shared = await claimAndResolveShare(sharedToken, savedClaimId);
+        if (shared) {
+          // Persist active claim in sessionStorage for recovery
+          try {
+            sessionStorage.setItem("flova_active_share", JSON.stringify({ token: sharedToken, claimId: shared.claimId }));
+          } catch {
+            /* ignore */
+          }
+
+          // Start 20s heartbeat lease renewal
+          heartbeatTimer = setInterval(() => {
+            void renewShareLease(sharedToken, shared.claimId);
+          }, 20000);
+
+          if (shared.type === "text" && shared.text) {
+            setMode("text");
+            setText(shared.text);
+            setShareNotice("Payment information received from UPI app.");
+            await acknowledgeShare(sharedToken, shared.claimId);
+            try { sessionStorage.removeItem("flova_active_share"); } catch { /* ignore */ }
+            if (heartbeatTimer) clearInterval(heartbeatTimer);
+          } else if (shared.type === "image" && shared.imageUrl) {
+            try {
+              // Fetch local asset into File object
+              const response = await fetch(shared.imageUrl);
+              const blob = await response.blob();
+              const sharedFile = new File([blob], "shared-upi-receipt.jpg", { type: blob.type || "image/jpeg" });
+              pick(sharedFile);
+              setShareNotice("Payment receipt received from UPI app.");
+              // Acknowledge consumption once loaded into memory
+              await acknowledgeShare(sharedToken, shared.claimId);
+              try { sessionStorage.removeItem("flova_active_share"); } catch { /* ignore */ }
+              if (heartbeatTimer) clearInterval(heartbeatTimer);
+            } catch (fetchErr) {
+              console.error("Failed to fetch shared image from converted URL:", fetchErr);
+              setError("Failed to load shared image. Please try sharing again.");
+            }
+          }
+        }
+        return;
+      }
+
       const isShared = searchParams.get("shared") === "1";
       const sharedTextParam = searchParams.get("text") || searchParams.get("url");
 
@@ -84,7 +149,11 @@ export function CatchScreen() {
     }
 
     void loadSharedContent();
-  }, [searchParams]);
+
+    return () => {
+      if (heartbeatTimer) clearInterval(heartbeatTimer);
+    };
+  }, [searchParams, navigate]);
 
   function pick(f: File | null) {
     setError(null);

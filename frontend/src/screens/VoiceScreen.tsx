@@ -2,7 +2,7 @@
 // Groq Whisper via the process-voice Edge Function), then the AI layer *suggests* a transaction.
 // Every result opens a review screen; nothing is saved here.
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { paiseToInput, rupeeStringToInput } from "../app/moneyText";
 import type { QueuedReviewCandidate, ReviewState } from "./AddScreen";
 import type { CheckinPrefillState } from "./CheckinScreen";
@@ -49,6 +49,8 @@ function readLang(): string {
 
 export function VoiceScreen() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const autoRecordGuardRef = useRef<boolean>(false);
   const speech = useSpeechToText();
   const recorder = useAudioRecorder();
   const { runway, rawInput } = useRunway({ horizonDays: 7 });
@@ -67,6 +69,23 @@ export function VoiceScreen() {
   // Prefer the browser recogniser (live transcript, many Indian languages); fall back to
   // recording audio for Groq Whisper on browsers without it.
   const useBrowserSpeech = speech.supported;
+
+  // Auto-record one-shot execution guard
+  useEffect(() => {
+    const shouldAutoRecord = searchParams.get("autoRecord") === "true";
+    if (shouldAutoRecord && !autoRecordGuardRef.current) {
+      autoRecordGuardRef.current = true;
+      // Strip autoRecord from URL immediately to prevent remount duplicate triggers
+      navigate("/voice", { replace: true });
+
+      // Start recording once
+      if (useBrowserSpeech) {
+        if (speech.status === "idle") speech.start(lang);
+      } else {
+        if (recorder.status === "idle") void recorder.startRecording();
+      }
+    }
+  }, [searchParams, navigate, useBrowserSpeech, lang, speech, recorder]);
 
   function chooseLang(v: string) {
     setLang(v);

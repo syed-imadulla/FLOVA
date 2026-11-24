@@ -26,12 +26,14 @@ import { WishScreen } from "./screens/WishScreen";
 import { InvoicesScreen } from "./screens/InvoicesScreen";
 import { ProfileScreen } from "./screens/ProfileScreen";
 import { AndroidBackButton } from "./native/AndroidBackButton";
+import { AppUrlListener } from "./native/AppUrlListener";
 import { APP_START_PATH, IS_NATIVE_APP } from "./native/platform";
 
 export default function App() {
   return (
     <BrowserRouter>
       <AndroidBackButton />
+      <AppUrlListener />
       <AuthProvider>
         <ProfileProvider>
           <DataVersionProvider>

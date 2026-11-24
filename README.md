@@ -16,7 +16,7 @@
 
 <p align="center">
   <a href="https://myflova.vercel.app"><img src="https://img.shields.io/badge/Web_App-myflova.vercel.app-0F5C4C.svg?style=flat" alt="Live Web App"></a>
-  <a href="https://github.com/syed-imadulla/FLOVA/releases"><img src="https://img.shields.io/badge/Release-v1.0.0-0F5C4C.svg?style=flat" alt="Release v1.0.0"></a>
+  <a href="https://github.com/syed-imadulla/FLOVA/releases"><img src="https://img.shields.io/badge/Release-v1.0.1-0F5C4C.svg?style=flat" alt="Release v1.0.1"></a>
   <a href="https://github.com/syed-imadulla/FLOVA/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-0F5C4C.svg?style=flat" alt="License: MIT"></a>
   <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/TypeScript-5.6-3178C6.svg?logo=typescript&logoColor=white" alt="TypeScript"></a>
   <a href="https://react.dev/"><img src="https://img.shields.io/badge/React-18.3-61DAFB.svg?logo=react&logoColor=black" alt="React"></a>
@@ -302,14 +302,14 @@ PYTHONPATH=. pytest tests/
 FLOVA for Android is distributed as an optimized, signed APK via **GitHub Releases**. It is not published to Google Play.
 
 ### Downloading the APK
-- Download the official release APK: [**FLOVA v1.0.0 Android APK**](https://github.com/syed-imadulla/FLOVA/releases/download/v1.0.0/FLOVA-v1.0.0-android.apk)
+- Download the official release APK: [**FLOVA v1.0.1 Android APK**](https://github.com/syed-imadulla/FLOVA/releases/download/v1.0.1/FLOVA-v1.0.1-android.apk)
 - Package Identifier: `in.flova.app`
-- Version: `1.0.0` (versionCode `1`)
+- Version: `1.0.1` (versionCode `2`)
 - Minimum Android Version: Android 7.0 (API 24)
 - Target Android Version: Android 15/16 (API 36)
 
 ### Sideloading Instructions
-1. Download `FLOVA-v1.0.0-android.apk` to your Android device.
+1. Download `FLOVA-v1.0.1-android.apk` to your Android device.
 2. In your device settings, enable **Install unknown apps** for your browser or file manager.
 3. Open the downloaded APK and tap **Install**.
 4. Launch FLOVA and tap **Continue with Google** to sign in.
@@ -318,7 +318,7 @@ FLOVA for Android is distributed as an optimized, signed APK via **GitHub Releas
 All official FLOVA builds are signed with a permanent RSA 4096-bit release certificate. Users can verify the package integrity using the Android SDK:
 
 ```bash
-apksigner verify --verbose --print-certs FLOVA-v1.0.0-android.apk
+apksigner verify --verbose --print-certs FLOVA-v1.0.1-android.apk
 ```
 
 **Expected Certificate Fingerprints:**
@@ -426,4 +426,4 @@ This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) f
 - **GitHub Repository:** [https://github.com/syed-imadulla/FLOVA](https://github.com/syed-imadulla/FLOVA)
 - **Live Web Application:** [https://myflova.vercel.app](https://myflova.vercel.app)
 - **GitHub Releases:** [https://github.com/syed-imadulla/FLOVA/releases](https://github.com/syed-imadulla/FLOVA/releases)
-- **Latest Android APK:** [Download v1.0.0 APK](https://github.com/syed-imadulla/FLOVA/releases/download/v1.0.0/FLOVA-v1.0.0-android.apk)
+- **Latest Android APK:** [Download v1.0.1 APK](https://github.com/syed-imadulla/FLOVA/releases/download/v1.0.1/FLOVA-v1.0.1-android.apk)
