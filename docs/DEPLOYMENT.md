@@ -10,12 +10,30 @@ FLOVA is deployed across three environments:
 
 ## 2. Frontend Deployment (Vercel / Static Hosting)
 
-The frontend uses Vite SPA routing. A `vercel.json` rewrites all client routes to `/index.html`:
+The frontend uses Vite SPA routing. A `vercel.json` rewrites client routes to `/index.html`, explicitly excluding `/.well-known/` for Android App Links verification:
 
 ```json
 {
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/((?!\\.well-known/).*)",
+      "destination": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/.well-known/assetlinks.json",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600, s-maxage=3600"
+        }
+      ]
+    }
   ]
 }
 ```
@@ -92,3 +110,28 @@ COPY ai-engine/stt_service ./stt_service
 EXPOSE 8001
 CMD ["uvicorn", "stt_service.main:app", "--host", "0.0.0.0", "--port", "8001"]
 ```
+
+---
+
+## 5. Android Native Release & Distribution
+
+FLOVA Android is built with Capacitor and distributed directly via GitHub Releases:
+
+- **Package ID:** `in.flova.app`
+- **Distribution Model:** Direct APK sideloading via GitHub Releases (no Google Play store auto-updates).
+- **Signing Keystore:** Permanent RSA 4096-bit release keystore (`~/.android/flova-release.keystore`).
+- **Signature Schemes:** APK Signature Scheme v2 and v3 enabled.
+- **App Links:** Verified against `https://myflova.vercel.app/.well-known/assetlinks.json`.
+- **Build Command:**
+  ```bash
+  cd frontend
+  npm run build
+  npx cap sync android
+  cd android && ./gradlew assembleRelease
+  ```
+- **Output:** `frontend/android/app/build/outputs/apk/release/app-release.apk`
+- **Verification:**
+  ```bash
+  $ANDROID_HOME/build-tools/35.0.0/apksigner verify --verbose --print-certs frontend/android/app/build/outputs/apk/release/app-release.apk
+  ```
+

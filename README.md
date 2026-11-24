@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://github.com/syed-imadulla/FLOVA">
-    <img src="docs/assets/flova-icon.png" width="130" alt="FLOVA Application Icon" style="border-radius: 28px;">
+    <img src="docs/assets/flova-icon.png" width="128" alt="FLOVA Application Icon" style="border-radius: 28px;">
   </a>
 </p>
 
@@ -11,343 +11,419 @@
 </p>
 
 <p align="center">
-  A voice-first, deterministic financial companion engineered for irregular earners, gig delivery partners, and independent tradespeople across India.
+  A voice-first, deterministic financial companion engineered for irregular earners, freelancers, gig workers, and independent tradespeople across India.
 </p>
 
 <p align="center">
-  <a href="#what-is-flova">Overview</a> •
-  <a href="#key-features">Features</a> •
-  <a href="#how-flova-works">How It Works</a> •
-  <a href="#system-architecture">Architecture</a> •
-  <a href="#getting-started">Quickstart</a> •
-  <a href="#documentation-index">Documentation</a> •
-  <a href="LICENSE">License</a>
-</p>
-
-<p align="center">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-0F5C4C.svg" alt="License: MIT"></a>
+  <a href="https://myflova.vercel.app"><img src="https://img.shields.io/badge/Web_App-myflova.vercel.app-0F5C4C.svg?style=flat" alt="Live Web App"></a>
+  <a href="https://github.com/syed-imadulla/FLOVA/releases"><img src="https://img.shields.io/badge/Release-v1.0.0-0F5C4C.svg?style=flat" alt="Release v1.0.0"></a>
+  <a href="https://github.com/syed-imadulla/FLOVA/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-0F5C4C.svg?style=flat" alt="License: MIT"></a>
   <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/TypeScript-5.6-3178C6.svg?logo=typescript&logoColor=white" alt="TypeScript"></a>
   <a href="https://react.dev/"><img src="https://img.shields.io/badge/React-18.3-61DAFB.svg?logo=react&logoColor=black" alt="React"></a>
-  <a href="https://vitejs.dev/"><img src="https://img.shields.io/badge/Vite-5.4-646CFF.svg?logo=vite&logoColor=white" alt="Vite"></a>
-  <a href="https://www.python.org/"><img src="https://img.shields.io/badge/Python-3.10%2B-3776AB.svg?logo=python&logoColor=white" alt="Python"></a>
-  <a href="https://fastapi.tiangolo.com/"><img src="https://img.shields.io/badge/FastAPI-0.115-009688.svg?logo=fastapi&logoColor=white" alt="FastAPI"></a>
-  <a href="https://github.com/syed-imadulla/FLOVA/stargazers"><img src="https://img.shields.io/github/stars/syed-imadulla/FLOVA?style=flat&color=0F5C4C" alt="Stars"></a>
-  <a href="https://github.com/syed-imadulla/FLOVA/network/members"><img src="https://img.shields.io/github/forks/syed-imadulla/FLOVA?style=flat&color=0F5C4C" alt="Forks"></a>
-  <a href="https://github.com/syed-imadulla/FLOVA/issues"><img src="https://img.shields.io/github/issues/syed-imadulla/FLOVA?style=flat&color=0F5C4C" alt="Issues"></a>
-  <a href="https://github.com/syed-imadulla/FLOVA/commits/main"><img src="https://img.shields.io/github/last-commit/syed-imadulla/FLOVA?style=flat&color=0F5C4C" alt="Last Commit"></a>
+  <a href="https://capacitorjs.com/"><img src="https://img.shields.io/badge/Capacitor-8.6-119EFF.svg?logo=capacitor&logoColor=white" alt="Capacitor"></a>
+  <a href="https://supabase.com/"><img src="https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E.svg?logo=supabase&logoColor=white" alt="Supabase"></a>
+</p>
+
+<p align="center">
+  <a href="#overview">Overview</a> •
+  <a href="#the-problem">The Problem</a> •
+  <a href="#how-flova-works">How It Works</a> •
+  <a href="#core-features">Features</a> •
+  <a href="#visual-identity">Visual Identity</a> •
+  <a href="#system-architecture">Architecture</a> •
+  <a href="#technology-stack">Tech Stack</a> •
+  <a href="#repository-structure">Repository</a> •
+  <a href="#financial-safety-principles">Financial Safety</a> •
+  <a href="#quickstart--development">Quickstart</a> •
+  <a href="#android-installation">Android Release</a> •
+  <a href="#testing-suite">Testing</a> •
+  <a href="#deployment">Deployment</a> •
+  <a href="#security">Security</a> •
+  <a href="#roadmap">Roadmap</a> •
+  <a href="#contributing">Contributing</a> •
+  <a href="#license">License</a>
 </p>
 
 ---
 
-## What is FLOVA?
+## Overview
 
-### The Irregular Income Problem
-Traditional budgeting tools assume a predictable monthly paycheck deposited on a fixed date. For over 15 million Indian gig delivery partners, cab drivers, auto drivers, and daily wage earners, earnings arrive unpredictably:
-- Daily cash mixed with personal funds.
-- Platform payouts subject to deductions, delays, and weekly cycles.
-- Volatile demand driven by festivals, monsoon disruptions, and seasonal peaks.
+FLOVA is a financial companion designed specifically for people with variable, unpredictable income. Built from the ground up for freelancers, independent contractors, delivery executives, cab drivers, and small business owners in India, FLOVA departs from rigid calendar-month budgeting tools and instead anchors personal finance on **cash runway intelligence** and **deterministic ledger mathematics**.
 
-When income oscillates between ₹2,000 one week and ₹7,500 the next, monthly budgeting apps fail.
-
-### The Cash Runway Approach
-FLOVA replaces rigid monthly budgets with real-time **cash runway intelligence**, answering the only question that truly matters: **"Will my available money last until my next payout?"**
-
-- **Voice-First Recording:** Speak naturally in 10 Indian languages to record transactions on the go.
-- **Deterministic Math:** Financial calculations run strictly in integer paise (`100 paise = ₹1.00`). No AI balance approximations.
-- **Custodial Cash Isolation:** Third-party collections (Cash on Delivery) are segregated from personal spendable income.
-- **Adaptive Safety Buffer:** Maintain an emergency reserve dynamically sized to the worker's income volatility profile.
-
-### 📱 Native Android Experience
-- **Capacitor 8.6.2 Native Wrapper:** Full native Android runtime with package ID `in.flova.app`, targeting Android 15/16 (`compileSdk 36`, `targetSdk 36`, `minSdk 24`).
-- **Native Google Sign-In:** Integrated Android Credential Manager (`androidx.credentials`) via `@capgo/capacitor-social-login` with cryptographic SHA-256 raw nonce replay protection and Supabase `signInWithIdToken`.
-- **Strict Portrait Orientation Lock:** Enforces vertical layout (`android:screenOrientation="portrait"`), preventing layout shifting during active phone rotation.
-- **Hardware Back Navigation:** Managed back-stack handling with confirmation modals on exit.
-- **Direct APK Distribution:** Production web landing page hosts verified, direct Android APK downloads (`/download/flova-latest.apk`) alongside PWA installation.
+FLOVA operates under a foundational design invariant: **AI Suggests, User Confirms**. Machine learning models assist in transcribing multilingual voice notes and optical character recognition (OCR) on receipts, but all financial calculations, state transitions, and database writes are governed by deterministic, verifiable rules.
 
 ---
 
-## Key Features
+## The Problem
 
-### 🎙️ Voice Intelligence
-- **AI4Bharat IndicConformer (Primary STT):** High-accuracy speech recognition fine-tuned for regional Indian languages, accents, and code-switching (`kn`, `hi`, `te`, `ta`, `ml`, `en`).
-- **Groq Whisper (Fallback STT):** Automated, fail-safe failover to `whisper-large-v3-turbo` if the primary service times out (>7s) or encounters errors.
-- **Multi-Transaction Parsing:** Separates multiple financial events from a single sentence (e.g., *"Spent ₹250 on petrol and earned ₹800 from delivery"*) without amount duplication.
+Conventional personal finance applications are built on the assumption of a predictable monthly paycheck deposited on a fixed date. For over 15 million gig workers, independent service professionals, and irregular earners across India:
 
-### 📸 Smart Capture & Receipt OCR
-- **Paper Receipt Scanning:** Extracts line items, quantities, taxes, and totals with automatic arithmetic discrepancy checking.
-- **UPI Screenshot Intelligence:** Classifies payment status (`COMPLETED`, `PENDING`, `FAILED`) and extracts 12-digit UTR reference numbers from standard UPI payment screenshots (including Google Pay, PhonePe, Paytm, and CRED). All third-party names are trademarks of their respective owners and are referenced solely for technical format compatibility.
-- **Duplicate UTR Safeguard:** Prevents double-counting by rejecting duplicate transaction entries with matching reference numbers.
-- **Client Image Optimizer:** Compresses and resizes camera uploads up to 20 MB down to sub-megabyte payloads client-side before transmission.
-
-### 🧾 Invoice Intelligence
-- **Receivables & Payables:** Track contractor and client invoices with counterparties, line items, and due dates.
-- **Partial Settlements:** Record multi-part payments with automatic status lifecycle (`unpaid` → `partially_paid` → `paid` → `overdue`).
-- **No Double-Counting:** Unsettled receivables represent expected future cash flow and never inflate the confirmed bank balance.
-
-### 📐 Financial Engine & Runway
-- **Integer Paise Arithmetic:** Pure TypeScript engine (`frontend/src/engine/`) guarantees exact balance precision with zero floating-point drift.
-- **Custodial Money Segregation:** Cash on Delivery (COD) collections are tagged `ownership: 'not_mine'` and excluded from personal runway calculations.
-- **Adaptive Safety Buffer:** Dynamically calculates 3 to 21 days of reserve buffer based on work profile and earnings variability.
-- **30-Day Forward Runway:** Day-by-day cash flow simulation alerting users to buffer shortfalls before actual cash deficits occur.
-- **WISH 2.0 Micro-Goals:** Persistent savings goals that absorb surplus earnings during high-revenue weeks.
-
-> **Feature Status Overview:** Core Voice Capture, IndicConformer + Whisper, Receipt/UPI OCR, Invoices, Paise Math, Runway, and Makefile Tunneling are **Implemented**. PWA Web Share Target and in-browser ONNX inference are **Experimental**. Bank statement PDF parsing and direct UPI deep-linking are **Planned**.
+1. **Unpredictable Inflow Timing:** Earnings arrive on varying schedules—daily cash tips, weekly platform payouts, or net-30 client invoices.
+2. **Custodial Money Mixing:** Delivery partners frequently collect Cash on Delivery (COD) for third-party platforms. When mixed into personal wallets or UPI accounts, standard apps treat customer cash as spendable personal wealth.
+3. **Volatility & Runway Blindness:** When weekly earnings swing between ₹2,500 and ₹9,000, monthly category budgets provide no actionable guidance. Users need to know: *"Will my available cash survive until my next confirmed payout?"*
 
 ---
 
 ## How FLOVA Works
 
-FLOVA enforces an **"AI Suggests, User Confirms"** invariant. AI models produce reviewable candidate drafts, but never commit transactions directly to the ledger without user approval.
-
-```mermaid
-flowchart LR
-    A[User Input\nVoice / Receipt / UPI] --> B[AI Extraction\nIndicConformer / Vision / LLM]
-    B --> C[Candidate Draft\nneedsReview Flagging]
-    C --> D[User Review in /add\nInspect & Edit]
-    D -->|User Confirms| E[Deterministic Engine\nInteger Paise Math]
-    E --> F[PostgreSQL + RLS\n₹10L Daily Safeguard]
-    F --> G[Runway Outlook\nDay-by-Day Forecast]
 ```
+┌────────────────────────────────────────────────────────────────────────┐
+│                        FLOVA Interaction Model                         │
+└────────────────────────────────────────────────────────────────────────┘
+
+    Voice Note (Whisper)       Receipt / UPI Screenshot (OCR)
+            │                                  │
+            ▼                                  ▼
+ ┌──────────────────────┐           ┌──────────────────────┐
+ │  Groq Audio Pipeline │           │ Qwen Vision / Regex  │
+ └──────────┬───────────┘           └──────────┬───────────┘
+            │                                  │
+            └───────────────┬──────────────────┘
+                            ▼
+           ┌──────────────────────────────────┐
+           │ Structured Candidate Extraction  │
+           └────────────────┬─────────────────┘
+                            ▼
+           ┌──────────────────────────────────┐
+           │   AI Suggests, User Confirms     │◄── Explicit User Review
+           └────────────────┬─────────────────┘
+                            ▼
+           ┌──────────────────────────────────┐
+           │ Pure Integer Paise Engine        │
+           │ (Deterministic, Zero Math Drift) │
+           └────────────────┬─────────────────┘
+                            ▼
+           ┌──────────────────────────────────┐
+           │ Day-by-Day Cash Runway & Ledger  │
+           └──────────────────────────────────┘
+```
+
+1. **Natural Input:** Record a quick voice note in English, Hindi, Kannada, Tamil, Telugu, or Malayalam, or snap a photo of a merchant receipt or UPI payment confirmation.
+2. **Structured Proposal:** FLOVA extracts transaction amounts, categories, dates, and ownership types (`mine` vs. `not_mine`), presenting an interactive candidate draft.
+3. **User Confirmation:** No transaction enters the ledger automatically. The user reviews and verifies details before commitment.
+4. **Runway Simulation:** The deterministic financial engine computes available liquidity, separates custodial cash, calculates required adaptive buffers, and simulates forward cash runway.
+
+---
+
+## Core Features
+
+### 1. Cash Runway Intelligence
+- **Day-by-Day Simulation:** Projects cash availability over the next 30 days based on confirmed daily living burn rates and scheduled commitments.
+- **Adaptive Safety Buffer:** Dynamically calculates between 3 and 21 days of baseline reserves based on the worker's earnings variability profile (daily, weekly, or unpredictable).
+- **Buffer Breach Warnings:** Identifies cash shortfalls before they occur, allowing users to adjust discretionary spending proactively.
+
+### 2. Custodial Cash Isolation (`not_mine`)
+- **COD Separation:** Mark transactions as custodial third-party money (e.g. delivery cash collections).
+- **Zero Runway Inflation:** Custodial cash is excluded from spendable balances, ensuring users never accidentally spend money owed back to an employer or platform.
+
+### 3. Balance Check-Ins & Reconciliation
+- **Physical Cash & Bank Splitting:** Separate tracking for physical wallet cash and digital bank balances.
+- **One-Tap Reconciliation:** Periodic check-ins compare calculated ledger balances against actual wallet counts and surface discrepancies without destructive database overwrites.
+
+### 4. Invoices & Gig Payout Management
+- **Receivables & Payables:** Track contractor invoices and upcoming platform payouts with due dates and counterparties.
+- **Partial Settlements:** Record multi-part payments with automated contract status lifecycles (`unpaid`, `partially_paid`, `paid`, `overdue`).
+- **No Inflow Double-Counting:** Unsettled expected payouts never inflate current spendable cash until confirmed as received.
+
+### 5. Multilingual Voice Intelligence
+- **Cloud STT via Groq Whisper:** Sub-second speech recognition fine-tuned for Indian English, Hindi, and regional accents using `whisper-large-v3-turbo`.
+- **Compound Sentence Parsing:** Automatically parses complex multi-intent sentences (e.g. *"Spent 300 on petrol and received 1200 from client"*) into distinct income and expense records.
+- **Local Fallback Pipeline:** Architecture preserves dormant support for self-hosted AI4Bharat IndicConformer on dedicated GPU instances.
+
+### 6. Smart Capture & Receipt OCR
+- **Receipt Line-Item Extraction:** Extracts merchant names, dates, individual line items, and totals with automatic arithmetic verification.
+- **UPI Screenshot Intelligence:** Recognizes payment status (`COMPLETED`, `PENDING`, `FAILED`) and extracts 12-digit UTR reference numbers.
+- **UTR De-Duplication:** Rejects duplicate submissions sharing the same reference number to eliminate double-counting.
+
+### 7. WISH 2.0 Micro-Savings Goals
+- **Surplus Absorption:** Direct surplus cash during peak earnings weeks into dedicated micro-goals (tools, bike maintenance, insurance).
+- **Database-Backed Persistence:** Complete tracking with contribution histories and goal progress milestones.
+
+---
+
+## Visual Identity
+
+<p align="center">
+  <img src="docs/assets/flova-logo.svg" width="320" alt="FLOVA Vector Logo">
+</p>
+
+The FLOVA visual system balances utilitarian clarity with warmth. Designed with high contrast for outdoor visibility in Indian sunlight, it utilizes an emerald primary palette (`#0F5C4C`), clean typography, and tactile list cards.
 
 ---
 
 ## System Architecture
 
-```mermaid
-flowchart TD
-    subgraph Client["Frontend Client (React 18 + Vite PWA)"]
-        UI["UI Views & Screens"]
-        VoiceComp["Voice Capture"]
-        CaptureComp["Smart Capture"]
-        ReviewComp["Review & Confirmation (/add)"]
-        Engine["Deterministic Engine (Paise Math)"]
-        UI --> VoiceComp & CaptureComp
-        VoiceComp & CaptureComp --> ReviewComp
-        ReviewComp --> Engine
-    end
+FLOVA is built with an offline-tolerant, decoupled architecture:
 
-    subgraph Serverless["Supabase Edge Functions"]
-        VoiceFunc["process-voice"]
-        VisionFunc["extract-receipt"]
-    end
-
-    subgraph AI["Speech & Vision Layer"]
-        STT["Primary STT: IndicConformer (:8001)"]
-        Whisper["Fallback STT: Groq Whisper Large v3"]
-        Vision["Vision OCR: Groq Qwen 2.5 27B"]
-        LLM["Intent Parser: Groq Llama 3.3 70B"]
-    end
-
-    subgraph DB["PostgreSQL 15 (Supabase)"]
-        Tables[(Transactions, Invoices, Profiles, WISH)]
-        RLS["Row Level Security Policies"]
-        Triggers["₹10L Calendar-Day Limit Triggers"]
-        Tables --- RLS & Triggers
-    end
-
-    VoiceComp -- Audio Blob --> VoiceFunc
-    VoiceFunc -- 1. Primary --> STT
-    VoiceFunc -. 2. Fallback .-> Whisper
-    VoiceFunc -- Transcript --> LLM
-    LLM -- Candidate DTO --> ReviewComp
-
-    CaptureComp -- Image Stream --> VisionFunc
-    VisionFunc --> Vision
-    Vision -- Receipt DTO --> ReviewComp
-
-    Engine -- Confirmed Transactions (JWT) --> DB
 ```
+┌────────────────────────────────────────────────────────────────────────┐
+│                          System Architecture                           │
+└────────────────────────────────────────────────────────────────────────┘
 
-*For in-depth architectural contracts and system boundaries, see [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).*
+ [Android Release APK] (in.flova.app)     [Web Progressive Web App]
+         │                                            │
+         └─────────────────────┬──────────────────────┘
+                               │
+                       Vite + React 18 SPA
+                      (Tailwind CSS, Router)
+                               │
+            ┌──────────────────┴──────────────────┐
+            ▼                                     ▼
+   Pure Financial Engine                 Supabase Auth Client
+  (Integer Paise Arithmetic,            (Native Google Sign-In,
+   Runway Simulation, Cache)             Credential Manager OIDC)
+            │                                     │
+            └──────────────────┬──────────────────┘
+                               │ HTTPS / TLS 1.3
+                               ▼
+        ┌──────────────────────────────────────────────┐
+        │        Supabase Backend (ap-south-1)         │
+        ├──────────────────────────────────────────────┤
+        │ • PostgreSQL 17 (Row Level Security)         │
+        │ • GoTrue Auth (Automatic Account Linking)    │
+        │ • Edge Functions (process-voice, rate-limit) │
+        └──────────────────────┬───────────────────────┘
+                               │ Private API
+                               ▼
+        ┌──────────────────────────────────────────────┐
+        │            External AI Providers             │
+        ├──────────────────────────────────────────────┤
+        │ • Groq Cloud (Whisper Large v3, Llama 3.3)   │
+        └──────────────────────────────────────────────┘
+```
 
 ---
 
 ## Technology Stack
 
-| Layer | Technologies | Description |
+| Layer | Technologies | Purpose |
 |---|---|---|
-| **Frontend PWA** | React 18, Vite 5.4, TypeScript 5.6, Tailwind CSS 3.4 | Mobile-first progressive web app with responsive layout |
-| **Financial Engine** | Pure TypeScript (`frontend/src/engine/`) | Integer paise math, runway simulation, adaptive buffer |
-| **Edge Functions** | Deno, TypeScript, Supabase CLI | Serverless ingestion, CORS headers, model failover |
-| **Primary Speech** | AI4Bharat IndicConformer, FastAPI, ONNX Runtime | High-speed local inference for Indic languages |
-| **Fallback Speech** | Groq Whisper Large v3 Turbo | Cloud transcription fallback on timeout or error |
-| **Vision & Intent** | Groq Qwen 2.5 27B Vision, Groq Llama 3.3 70B | Structured line-item OCR and financial intent extraction |
-| **Database & Auth** | PostgreSQL 15, Supabase Auth, Row Level Security | Multi-tenant tenant isolation and row-level locks |
-| **Process Runner** | GNU Make, Python 3 dev-runner, Cloudflare Tunnel | One-command orchestration with public HTTPS tunneling |
+| **Mobile Runtime** | Capacitor 8.6.2, Android SDK 36 (Android 15/16) | Native Android container with orientation lock |
+| **Frontend Framework** | React 18.3, TypeScript 5.6, Vite 6.4 | SPA application layer with responsive mobile UX |
+| **Styling** | Tailwind CSS 3.4, PostCSS, Autoprefixer | High-contrast design system optimized for readability |
+| **Authentication** | Supabase Auth (GoTrue), Android Credential Manager | Native Google OAuth with automatic account linking |
+| **Database & API** | Supabase PostgreSQL 17 (`ap-south-1`) | Persistent ledger, strict RLS isolation, atomic triggers |
+| **Edge Compute** | Deno runtime (Supabase Edge Functions) | Rate-limited serverless token extraction and AI proxy |
+| **AI Processing** | Groq Cloud (Whisper Large v3 Turbo, Llama 3.3 70B) | Multilingual STT and structured financial NLP |
+| **Hosting & CDN** | Vercel (Edge Network) | Static SPA hosting and verified Android App Links |
 
 ---
 
-## Getting Started
+## Repository Structure
+
+```
+FLOVA/
+├── ai-engine/                  # Python STT services & algorithmic engines
+│   ├── stt_service/            # FastAPI microservice for audio transcription
+│   ├── udaan_engine/           # Quantitative income & runway analysis
+│   └── tests/                  # Pytest test suite (36 tests)
+├── backend/                    # Supabase database & serverless backend
+│   ├── scripts/                # PGlite regression and concurrency suites
+│   ├── supabase/functions/     # Edge functions (process-voice, extract-receipt)
+│   └── supabase/migrations/    # 11 declarative PostgreSQL migrations (RLS, schema)
+├── docs/                       # Architecture, security, and operational documentation
+│   ├── assets/                 # Brand assets, vectors, and icons
+│   ├── ARCHITECTURE.md         # Detailed technical design contract
+│   ├── DEPLOYMENT.md           # Production deployment & operations manual
+│   ├── ENVIRONMENT.md          # Variable classification & secrets reference
+│   └── SECURITY.md             # Threat model, RLS audit, and controls
+├── frontend/                   # React TypeScript web & mobile application
+│   ├── android/                # Native Android project (Capacitor)
+│   ├── public/                 # Static assets & .well-known/assetlinks.json
+│   ├── src/                    # Application source code
+│   │   ├── app/                # Layouts, navigation, activity rows, categories
+│   │   ├── engine/             # Deterministic integer-paise financial engine
+│   │   ├── lib/                # Supabase client & API utilities
+│   │   ├── pages/              # Screen components (Dashboard, Ledger, Invoices)
+│   │   └── services/           # Social login, OCR, voice intent adapters
+│   └── package.json            # Node.js dependencies and scripts
+├── .gitignore                  # Strict credential, dump, and keystore exclusions
+├── CHANGELOG.md                # Semantic version release history
+└── README.md                   # Project overview & documentation
+```
+
+---
+
+## Financial Safety Principles
+
+1. **Integer Paise Mathematics:** Every monetary value is stored and calculated in whole paise (`1 INR = 100 paise`). Floats are strictly forbidden in calculation routines to eliminate rounding anomalies.
+2. **AI Never Writes Directly:** Machine learning extractors output draft proposals. Transactions only commit to the database when confirmed by the user.
+3. **Custodial Isolation:** Third-party funds (`ownership: 'not_mine'`) are strictly partitioned from personal liquid balances.
+4. **Row Level Security (RLS):** Every PostgreSQL table enforces `auth.uid() = user_id`. No user can query or modify another user's financial ledger.
+5. **Atomic Payout Sync:** Compound foreign keys (`payout_id, user_id`) and PostgreSQL `FOR UPDATE` triggers prevent double-crediting or lost updates during simultaneous transactions.
+
+---
+
+## Quickstart & Development
 
 ### Prerequisites
-- **GNU Make:** `make` (Available on Linux/macOS. Ubuntu: `sudo apt install make`, macOS: `brew install make`)
-- **Node.js:** Node.js 20+ with npm (`node --version`)
-- **Python:** Python 3.10+ with `python3-venv` (`python3 --version`)
-- **FFmpeg:** Required for audio transcoding (`sudo apt install ffmpeg` or `brew install ffmpeg`)
+- Node.js 20+ and npm 10+
+- Python 3.10+ (for `ai-engine`)
+- Git
 
-### 1. Clone & Install
+### 1. Clone Repository
 ```bash
-# Clone the repository
 git clone https://github.com/syed-imadulla/FLOVA.git
 cd FLOVA
-
-# Install all dependencies across Frontend, Backend, and STT
-make install
 ```
 
-### 2. Configure Environment
+### 2. Frontend Setup
 ```bash
-# Copy frontend environment template
-cp frontend/.env.example frontend/.env.local
+cd frontend
+npm install
+cp .env.example .env.local
 ```
-Add your Supabase project credentials in `frontend/.env.local`:
-```env
+
+Configure `frontend/.env.local`:
+```ini
 VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
+VITE_SUPABASE_ANON_KEY=your-anon-key
+VITE_GOOGLE_WEB_CLIENT_ID=your-google-web-client-id.apps.googleusercontent.com
 ```
 
-### 3. Start Development Server
+Start the Vite development server:
 ```bash
-# Start Frontend, STT Microservice, and Public Tunnel concurrently
-make dev
+npm run dev
 ```
-`make dev` automatically starts:
-- **Frontend:** [http://localhost:5173](http://localhost:5173)
-- **STT Service:** [http://localhost:8001](http://localhost:8001) (Health: `/health`)
-- **Live Public Tunnel:** Generates a secure HTTPS link (e.g. `https://<name>.trycloudflare.com`) for direct mobile PWA testing.
 
-*(To run locally without an external tunnel, use `make dev TUNNEL=0`).*
-
----
-
-## Development Workflow
-
-The root `Makefile` provides verified commands for development, testing, and builds:
-
-| Command | Description |
-|---|---|
-| `make dev` | Start Frontend, STT, and Public HTTPS Tunnel concurrently |
-| `make tunnel` | Start only the public HTTPS tunnel for the Vite frontend |
-| `make frontend` | Start only the React + Vite frontend server (:5173) |
-| `make stt` | Start only the IndicConformer FastAPI STT service (:8001) |
-| `make dev-status` | Inspect status, active ports, and health of local services |
-| `make stop` | Terminate any running processes on dev ports (5173 / 8001) |
-| `make test` | Run ALL automated test suites (Frontend + Backend + AI) |
-| `make test-frontend` | Run frontend services and financial engine tests |
-| `make test-backend` | Run database schema RLS and demo seeding tests |
-| `make test-stt` | Run Python IndicConformer STT and engine unit tests |
-| `make lint` | Run TypeScript type checks across the frontend (`tsc -b`) |
-| `make build` | Compile production frontend bundle (`tsc -b && vite build`) |
-| `make clean` | Remove temporary build files and caches |
-| `make help` | Display interactive Makefile command guide |
-
----
-
-## Project Structure
-
-```text
-FLOVA/
-├── Makefile                     # Root development workflows and automation
-├── LICENSE                      # Open-source MIT License
-├── README.md                    # Project documentation
-├── CLAUDE.md                    # Engineering invariants and coding guidelines
-├── scripts/
-│   └── dev-runner.py            # Process supervisor with port checks & tunneling
-├── docs/                        # Detailed architectural and technical guides
-│   ├── assets/                  # Brand assets and application icons
-│   ├── ARCHITECTURE.md          # System philosophy and design contracts
-│   ├── VOICE-STT.md             # IndicConformer and Whisper audio pipeline
-│   ├── SMART-CAPTURE.md         # Receipt OCR and UPI screenshot parsing
-│   ├── INVOICE-INTELLIGENCE.md  # Invoices, payables, and settlements
-│   ├── FINANCIAL-ENGINE.md      # Integer paise arithmetic and invariants
-│   ├── ADAPTIVE-BUFFER.md       # Safety buffer and runway formulas
-│   ├── SECURITY.md              # Row Level Security and authentication
-│   ├── DEPLOYMENT.md            # Production deployment instructions
-│   ├── ENVIRONMENT.md           # Environment variables and secrets reference
-│   └── TESTING.md               # Automated testing strategies
-├── frontend/                    # Client React 18 + Vite PWA
-│   ├── src/
-│   │   ├── engine/              # Deterministic financial calculations (paise)
-│   │   ├── services/            # Client data services (voice, receipt, data)
-│   │   ├── screens/             # UI screen components
-│   │   └── lib/                 # Utilities (money formatting, Supabase client)
-│   └── package.json             # Frontend dependencies
-├── backend/                     # Database migrations and serverless functions
-│   └── supabase/
-│       ├── functions/           # Deno Edge Functions (process-voice, extract-receipt)
-│       └── migrations/          # Idempotent PostgreSQL schema migrations
-└── ai-engine/                   # Python STT microservice & reference engine
-    ├── stt_service/             # FastAPI IndicConformer microservice
-    └── tests/                   # Pytest test suites
+### 3. Backend & AI Engine Setup
+```bash
+cd ../ai-engine
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+PYTHONPATH=. pytest tests/
 ```
 
 ---
 
-## Security & Financial Principles
+## Android Installation
 
-1. **Deterministic Financial Math:** Authoritative balances and runway projections are computed entirely in integer paise (`100 paise = ₹1.00`) by pure TypeScript logic. LLMs are strictly forbidden from performing arithmetic.
-2. **AI Suggests, User Confirms:** Every voice transcript and receipt scan produces an unconfirmed candidate. No transaction is written to the database without explicit user confirmation.
-3. **Custodial Money Segregation:** Third-party cash collections (e.g. Cash on Delivery) are tagged `ownership: 'not_mine'` and never counted toward personal spendable runway.
-4. **Receivable Segregation:** Expected gig payouts and unpaid invoices represent future receivables; they are excluded from the available cash balance until confirmed as received.
-5. **₹10 Lakh Safeguard Limits:** Maximum single transaction (₹10,00,000) and calendar-day aggregate (₹10,00,000) limits are enforced in PostgreSQL triggers with profile row-level locks.
-6. **Zero Client Secrets:** The frontend bundle contains only public publishable variables (`VITE_*`). All private tokens remain securely in server-side vaults.
+FLOVA for Android is distributed as an optimized, signed APK via **GitHub Releases**. It is not published to Google Play.
+
+### Downloading the APK
+- Download the official release APK: [**FLOVA v1.0.0 Android APK**](https://github.com/syed-imadulla/FLOVA/releases/download/v1.0.0/FLOVA-v1.0.0-android.apk)
+- Package Identifier: `in.flova.app`
+- Version: `1.0.0` (versionCode `1`)
+- Minimum Android Version: Android 7.0 (API 24)
+- Target Android Version: Android 15/16 (API 36)
+
+### Sideloading Instructions
+1. Download `FLOVA-v1.0.0-android.apk` to your Android device.
+2. In your device settings, enable **Install unknown apps** for your browser or file manager.
+3. Open the downloaded APK and tap **Install**.
+4. Launch FLOVA and tap **Continue with Google** to sign in.
+
+### Permanent Certificate Verification
+All official FLOVA builds are signed with a permanent RSA 4096-bit release certificate. Users can verify the package integrity using the Android SDK:
+
+```bash
+apksigner verify --verbose --print-certs FLOVA-v1.0.0-android.apk
+```
+
+**Expected Certificate Fingerprints:**
+- **SHA-256:** `3E:2E:D1:B3:24:A8:A9:B3:0E:8A:07:E0:F5:52:D3:C0:6B:E8:9F:A9:4E:4B:C7:E0:A4:1D:F8:23:52:DA:34:D6`
+- **SHA-1:** `32:D2:5D:C8:86:6E:26:C5:0F:12:13:6A:25:16:53:C0:35:A5:B3:4E`
+
+> **Update Policy:** Because FLOVA is distributed outside Google Play, updates are installed manually by downloading new releases. Sideloaded updates must match this exact signing certificate to install without data loss.
 
 ---
 
-## Documentation Index
+## Testing Suite
 
-For in-depth technical specifications, consult the dedicated guides in the [`docs/`](docs/) directory:
+FLOVA maintains a test harness across frontend, backend, and machine learning components:
 
-- 🏛️ [System Architecture](docs/ARCHITECTURE.md) — System boundaries, components, and philosophy
-- 📱 [Android Implementation Report](docs/android-implementation-report.md) — Native Capacitor packaging, SDK configuration, and device verification
-- 📋 [Phase 1 Final Completion Report](docs/PHASE_1_FINAL_COMPLETION_REPORT.md) — Production infrastructure, remote Supabase lockdown, and Whisper STT
-- 📋 [Phase 2 Final Completion Report](docs/PHASE_2_FINAL_COMPLETION_REPORT.md) — Android build stability, portrait lock, and Redmi 12 5G QA sign-off
-- 📋 [Phase 2 Final QA Report](docs/PHASE_2_FINAL_QA_REPORT.md) — Reconciled test metrics, zero secret scan verification, and device test logs
-- 📋 [Phase 3.1 Google Play Launch Audit](docs/PHASE_3_1_GOOGLE_PLAY_AUDIT.md) — Launch readiness audit, legal prerequisites, and Data Safety declaration
-- 🎙️ [Speech-to-Text Pipeline](docs/VOICE-STT.md) — IndicConformer checkpoints, audio normalization, and failover
-- 📸 [Smart Capture & OCR](docs/SMART-CAPTURE.md) — Receipt line-item extraction and UPI reference handling
-- 🧾 [Invoice Intelligence](docs/INVOICE-INTELLIGENCE.md) — Receivables, payables, and settlement reconciliation
-- 📐 [Deterministic Financial Engine](docs/FINANCIAL-ENGINE.md) — Integer paise math and balance formulas
-- 🛡️ [Adaptive Safety Buffer](docs/ADAPTIVE-BUFFER.md) — Volatility-based reserves and runway calculations
-- 🔒 [Security & Row Level Security](docs/SECURITY.md) — Tenant isolation and database protection
-- 🚀 [Deployment Guide](docs/DEPLOYMENT.md) — Vercel, Supabase, and systemd deployment
-- ⚙️ [Environment Variables Reference](docs/ENVIRONMENT.md) — Full configuration and secrets guide
-- 🧪 [Testing & Verification](docs/TESTING.md) — Multi-tier test suite execution and test authoring
+```bash
+# 1. Frontend Unit & Integration Tests (67 tests)
+cd frontend
+npm test
+
+# 2. Category Label Mapping Regression Test (7 tests)
+node --loader ./src/services/__tests__/mockLoader.mjs ./src/services/__tests__/categoryLabelRegression.test.ts
+
+# 3. TypeScript Typecheck & Production Build
+npm run build
+
+# 4. Backend Payout Synchronization & Concurrency Suite (23 tests)
+cd ../backend
+node scripts/test-payout-sync.mjs
+
+# 5. Edge Function Rate Limiting & RLS Suite (54 tests)
+node scripts/test-rate-limit.mjs
+
+# 6. Python STT & Engine Tests (36 tests)
+cd ../ai-engine
+PYTHONPATH=. .venv/bin/pytest tests/
+```
+
+**Total Active Test Coverage:** 187 automated checks passing with zero failures.
+
+---
+
+## Deployment
+
+- **Production Web Application:** Deployed to Vercel at [myflova.vercel.app](https://myflova.vercel.app)
+- **App Links AssetLinks:** Served at `https://myflova.vercel.app/.well-known/assetlinks.json`
+- **Database:** Supabase Managed PostgreSQL in Mumbai (`ap-south-1`)
+- **Serverless Compute:** Supabase Edge Functions in Deno runtime
+
+For complete deployment procedures, consult the [Operations Guide](docs/DEPLOYMENT.md).
+
+---
+
+## Security
+
+FLOVA enforces defense-in-depth principles:
+- **Authentication:** OAuth 2.0 with OpenID Connect (OIDC) through Google Credential Manager and Supabase GoTrue.
+- **Data Protection:** Strict PostgreSQL Row Level Security (RLS) on all user data.
+- **Fail-Closed Rate Limiting:** Sliding-window rate limiters reject excessive unauthenticated or abusive AI requests with HTTP 429 before expensive LLM inference occurs.
+- **Zero Exposed Secrets:** Service-role keys and signing keystores are strictly excluded from code repositories and client distribution bundles.
+
+Report vulnerabilities responsibly to the repository maintainer. For full details, see [SECURITY.md](docs/SECURITY.md).
+
+---
+
+## Roadmap
+
+### Implemented (v1.0.0)
+- [x] Pure integer paise deterministic financial engine
+- [x] Day-by-day 30-day forward cash runway simulation
+- [x] Custodial cash isolation (`not_mine` / COD)
+- [x] Multilingual voice transcription via Groq Whisper Large v3 Turbo
+- [x] Smart capture OCR with receipt line items and UPI UTR de-duplication
+- [x] Accounts receivable/payable with partial settlements
+- [x] WISH 2.0 persistent micro-savings goals
+- [x] Signed Android native APK distribution with Android App Links
+
+### Planned
+- [ ] On-device speech recognition via compressed WebAssembly / ONNX models
+- [ ] Bank statement PDF reconciliation parser
+- [ ] Direct UPI payment deep-linking
+- [ ] Multi-device sync indicators with offline-first write queue
 
 ---
 
 ## Contributing
 
-Contributions are welcome! Please follow these steps:
-
-1. **Fork the Repository:** Create your own fork of `syed-imadulla/FLOVA`.
-2. **Create a Feature Branch:**
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
-3. **Verify Code Quality:**
-   ```bash
-   make lint
-   make test
-   make build
-   ```
-4. **Submit a Pull Request:** Open a PR against the `dev` branch with a clear description of your changes and test verification results.
+Contributions to FLOVA are welcome:
+1. Fork the repository.
+2. Create your feature branch (`git checkout -b feature/new-capability`).
+3. Commit your changes (`git commit -m 'feat: add support for regional date format'`).
+4. Ensure all unit and integration tests pass (`npm test`, `pytest`).
+5. Push to the branch (`git push origin feature/new-capability`).
+6. Open a Pull Request against `dev`.
 
 ---
 
 ## License
 
-This project is open-source software licensed under the [MIT License](LICENSE).
-
-Copyright (c) 2026 Syed Imadulla
-
-*AI4Bharat IndicConformer models are developed by the AI4Bharat research team at IIT Madras and are governed by their respective research and open-source licenses.*
+This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for complete details.
 
 ---
 
-## Acknowledgements
+## Project Links
 
-- **[AI4Bharat](https://ai4bharat.iitm.ac.in/):** Open-source speech technology and IndicConformer checkpoints for Indian languages.
-- **[Groq](https://groq.com/):** Low-latency Llama 3.3, Qwen 2.5 Vision, and Whisper inference.
-- **[Supabase](https://supabase.com/):** PostgreSQL database, Row Level Security, Auth, and Edge Functions.
-- **[Vite](https://vitejs.dev/) & [React](https://react.dev/):** Frontend build tooling and component architecture.
+- **GitHub Repository:** [https://github.com/syed-imadulla/FLOVA](https://github.com/syed-imadulla/FLOVA)
+- **Live Web Application:** [https://myflova.vercel.app](https://myflova.vercel.app)
+- **GitHub Releases:** [https://github.com/syed-imadulla/FLOVA/releases](https://github.com/syed-imadulla/FLOVA/releases)
+- **Latest Android APK:** [Download v1.0.0 APK](https://github.com/syed-imadulla/FLOVA/releases/download/v1.0.0/FLOVA-v1.0.0-android.apk)
