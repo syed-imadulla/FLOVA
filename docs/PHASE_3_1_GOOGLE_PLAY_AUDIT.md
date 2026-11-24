@@ -16,7 +16,7 @@ However, as of **Phase 3.1 initiation**, the application **cannot yet be submitt
 1. Applications handling financial records and voice recording **must provide an active, public Privacy Policy URL** disclosing all third-party AI data pipelines (Groq).
 2. Apps supporting user registration **must offer both an in-app Account Deletion option and an external web request URL**.
 3. A **Signed Android App Bundle (`.aab`)** must be compiled using an official release keystore (not the debug keystore).
-4. For personal developer accounts created after November 2023, Google mandates a **20-tester, 14-day closed testing track** before production track access can be unlocked.
+4. For personal developer accounts created after November 2023, Google mandates a **12-tester, 14-day closed testing track** before production track access can be unlocked (see official Google documentation: https://support.google.com/googleplay/android-developer/answer/14151465).
 
 ---
 
@@ -46,7 +46,7 @@ Every requirement is audited and classified into three strict categories:
 | **Policy & Compliance** | Public Privacy Policy | **CRITICAL BLOCKER** | No `/privacy` URL exists. Google Play immediately flags apps with audio recording without this disclosure. |
 | **Policy & Compliance** | Account Deletion Mechanism | **CRITICAL BLOCKER** | Google Play User Data Policy mandates both in-app account deletion and an external web URL to delete user data. Currently no `deleteUser` route or function exists. |
 | **Policy & Compliance** | Data Safety Section | **NEEDS WORK** | Must declare data collection: Financial Info (income, expense, balance), Audio (voice notes sent to Groq Whisper), Device IDs. |
-| **Testing Track** | 20-Tester Gate | **BLOCKED** | Google Play Console requirement for personal developer accounts: 20 opted-in testers for 14 continuous days. |
+| **Testing Track** | 12-Tester Gate | **BLOCKED** | Google Play Console requirement for personal developer accounts: 12 continuously opted-in testers for 14 continuous days. |
 | **Distribution** | Web APK Download | **READY** | Direct download live at `https://myflova.vercel.app/download/flova-latest.apk` (~20 MB) with proper MIME headers. |
 
 ---

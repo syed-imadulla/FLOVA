@@ -1,21 +1,37 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# =====================================================================
+# FLOVA Android ProGuard / R8 Rules (SEC-09)
+# =====================================================================
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# 1. Capacitor Core & Bridge Reflection
+-keep class com.getcapacitor.** { *; }
+-keep interface com.getcapacitor.** { *; }
+-keepclassmembers class * extends com.getcapacitor.Plugin {
+    public <methods>;
+}
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# 2. Preserve JavaScript Interface Methods for WebView Bridge
+-keepclassmembers class * {
+    @android.webkit.JavascriptInterface <methods>;
+}
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# 3. WebKit & WebView Callbacks
+-keepclassmembers class * extends android.webkit.WebViewClient {
+    public void *(android.webkit.WebView, java.lang.String);
+    public void *(android.webkit.WebView, java.lang.String, android.graphics.Bitmap);
+}
+-keepclassmembers class * extends android.webkit.WebChromeClient {
+    public void *(android.webkit.WebView, java.lang.String);
+}
+
+# 4. Capacitor Social Login & Google Credential Manager
+-keep class ee.forgr.capacitor.social.login.** { *; }
+-keep class com.google.android.gms.auth.api.identity.** { *; }
+-keep class com.google.android.gms.common.api.** { *; }
+-keep class androidx.credentials.** { *; }
+
+# 5. Native Splash Screen & Core UI
+-keep class androidx.core.splashscreen.** { *; }
+
+# 6. Preserve Line Numbers for Debugging Production Stack Traces
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile

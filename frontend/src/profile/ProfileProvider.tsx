@@ -14,13 +14,16 @@ export interface ProfileContextType {
 export const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
 
 export function ProfileProvider({ children }: { children: React.ReactNode }) {
-  const { user } = useSession();
+  const { user, loading: authLoading } = useSession();
   const userId = user?.id;
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchProfile = useCallback(async () => {
+    if (authLoading) {
+      return;
+    }
     if (!userId) {
       setProfile(null);
       setLoading(false);
@@ -41,7 +44,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, [userId]);
+  }, [userId, authLoading]);
 
   useEffect(() => {
     fetchProfile();
@@ -59,8 +62,10 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
     [userId]
   );
 
+  const effectiveLoading = authLoading || loading || (Boolean(userId) && !profile && !error);
+
   return (
-    <ProfileContext.Provider value={{ profile, loading, error, reload: fetchProfile, save }}>
+    <ProfileContext.Provider value={{ profile, loading: effectiveLoading, error, reload: fetchProfile, save }}>
       {children}
     </ProfileContext.Provider>
   );

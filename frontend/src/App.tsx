@@ -6,6 +6,8 @@ import { DataVersionProvider } from "./data/DataVersionProvider";
 import { OnboardingScreen } from "./screens/OnboardingScreen";
 import { LoginPage } from "./pages/auth/LoginPage";
 import { SignupPage } from "./pages/auth/SignupPage";
+import { ForgotPasswordPage } from "./pages/auth/ForgotPasswordPage";
+import { ResetPasswordPage } from "./pages/auth/ResetPasswordPage";
 import { ProfileProvider } from "./profile/ProfileProvider";
 import { RequireOnboarded } from "./profile/RequireOnboarded";
 import { FlovaLandingPage } from "./components/landing/FlovaLandingPage";
@@ -28,7 +30,7 @@ import { APP_START_PATH, IS_NATIVE_APP } from "./native/platform";
 
 export default function App() {
   return (
-    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+    <BrowserRouter>
       <AndroidBackButton />
       <AuthProvider>
         <ProfileProvider>
@@ -39,6 +41,8 @@ export default function App() {
               <Route path="/" element={IS_NATIVE_APP ? <Navigate to={APP_START_PATH} replace /> : <FlovaLandingPage />} />
               <Route path="/login" element={<RedirectIfAuthed><LoginPage /></RedirectIfAuthed>} />
               <Route path="/signup" element={<RedirectIfAuthed><SignupPage /></RedirectIfAuthed>} />
+              <Route path="/forgot-password" element={<RedirectIfAuthed><ForgotPasswordPage /></RedirectIfAuthed>} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
 
               {/* Signed in, before onboarding */}
               <Route path="/onboarding" element={<RequireAuth><OnboardingScreen /></RequireAuth>} />

@@ -36,3 +36,8 @@ frontend/tsconfig.tsbuildinfo
 *.keystore
 keystore.properties
 key.properties
+
+# Database backups and local dumps
+*.dump
+*backup*.sql
+backend/backup*.sql

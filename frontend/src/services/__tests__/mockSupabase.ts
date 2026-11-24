@@ -11,6 +11,8 @@ export interface MockState {
   insertHandler?: (payload: unknown) => Promise<{ data: unknown; error: unknown }>;
   selectSingleHandler?: (id: string) => Promise<{ data: unknown; error: unknown }>;
   functionsInvokeHandler?: (fnName: string, options?: any) => Promise<{ data: any; error: any }>;
+  resetPasswordHandler?: (email: string, options?: any) => Promise<{ data: any; error: any }>;
+  updateUserHandler?: (attributes: any) => Promise<{ data: any; error: any }>;
   transactions: Transaction[];
   balanceCheckins: BalanceCheckin[];
   payouts: Payout[];
@@ -182,7 +184,39 @@ export const supabase = {
           return {
             eq(col: string, val: string) {
               const target = mockState.transactions.find((t: any) => t[col] === val);
-              if (target) Object.assign(target, patch);
+              if (target) {
+                const simulated = { ...target, ...patch };
+                const isMineExpense = simulated.type === "expense" && simulated.ownership === "mine";
+                if (isMineExpense && !simulated.expense_type) {
+                  return {
+                    select() {
+                      return {
+                        single() {
+                          return Promise.resolve({
+                            data: null,
+                            error: { message: 'new row for relation "transactions" violates check constraint "expense_type_rule"' },
+                          });
+                        },
+                      };
+                    },
+                  };
+                }
+                if (!isMineExpense && simulated.expense_type !== null && simulated.expense_type !== undefined) {
+                  return {
+                    select() {
+                      return {
+                        single() {
+                          return Promise.resolve({
+                            data: null,
+                            error: { message: 'new row for relation "transactions" violates check constraint "expense_type_rule"' },
+                          });
+                        },
+                      };
+                    },
+                  };
+                }
+                Object.assign(target, patch);
+              }
               return {
                 select() {
                   return {
@@ -483,6 +517,19 @@ export const supabase = {
   auth: {
     getUser: async () => Promise.resolve({ data: { user: { id: "test-user-id", email: "test@flova.local" } }, error: null }),
     getSession: async () => Promise.resolve({ data: { session: { user: { id: "test-user-id" } } }, error: null }),
+    resetPasswordForEmail: async (email: string, options?: any) => {
+      if (mockState.resetPasswordHandler) {
+        return mockState.resetPasswordHandler(email, options);
+      }
+      return { data: {}, error: null };
+    },
+    updateUser: async (attributes: any) => {
+      if (mockState.updateUserHandler) {
+        return mockState.updateUserHandler(attributes);
+      }
+      return { data: { user: { id: "test-user-id" } }, error: null };
+    },
+    signOut: async () => ({ error: null }),
   },
   functions: {
     invoke: async (fnName: string, options?: any) => {

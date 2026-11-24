@@ -30,6 +30,10 @@ export function OnboardingScreen() {
 
   useEffect(() => {
     if (!profile) return;
+    if (profile.onboarding_completed) {
+      navigate("/app", { replace: true });
+      return;
+    }
     setName(profile.display_name ?? "");
     setWork(profile.work_profile);
     setVariability(profile.income_variability ?? "variable");
@@ -73,7 +77,7 @@ export function OnboardingScreen() {
     }
   }
 
-  if (loading && !profile) return <Splash />;
+  if (loading || (!profile && !saveErr)) return <Splash />;
 
   return (
     <div className="flova-app min-h-dvh bg-[#E9ECE6] text-ink antialiased">
