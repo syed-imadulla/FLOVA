@@ -22,12 +22,13 @@ To maintain operational integrity, progress is strictly classified into distinct
 
 ## 2. Pre-Deployment Baseline & Backup
 
-- [x] **2.1 Production Database Backup (Completed):**
+- [x] **2.1 Production Database Backup (Schema-Only Completed):**
   - Logical schema backup extracted via Supabase CLI:
     ```bash
     npx supabase db dump --remote -f backend/backup_pre_rollout.sql
     ```
   - Backup verified: 47KB, 1654 lines of DDL and object schema.
+  - **Important Notice:** A separate production data backup (`--data-only`) was not established prior to rollout. Database restore must not be initiated.
 - [x] **2.2 Baseline System Health Inspection:**
   - Remote project `flova (msjzkylvafuwlkkujxpv)` active.
   - Zero active outages or P0 issues on Vercel deployment (`myflova.vercel.app`).

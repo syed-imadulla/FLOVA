@@ -18,9 +18,9 @@ FLOVA has completed comprehensive security remediation, build hardening, databas
 To ensure operational clarity, project readiness is categorized into five distinct states:
 1. **Local Implementation:** **VERIFIED** — All code, migrations, configs, and documentation are complete and verified in the repository.
 2. **Local Automated Tests:** **PASSED (100%)** — All 333+ automated checks pass across 6 independent local test runners (including startup routing and transaction update regression suites).
-3. **Staging / Remote Pre-Deploy:** **VERIFIED** — Database backup completed (`backend/backup_pre_rollout.sql`) and dry-run preview confirmed exact migrations (`npx supabase db push --dry-run --remote`).
+3. **Database Pre-Deployment Backup:** **PARTIAL (SCHEMA ONLY)** — Logical schema dump captured to `backend/backup_pre_rollout.sql` (47 KB, 1,654 lines). Note: A separate pre-rollout *data* backup was not established.
 4. **Production Deployment:** **COMPLETED & DEPLOYED** — Remote Supabase migrations applied (`20261123160000`, `20261123170000`, `20261123180000`), Edge Functions deployed (`process-voice`, `extract-receipt`), and merged into production branch `main`.
-5. **Physical-Device Tests:** **VERIFIED & PASSED** — Successfully installed and verified on physical Redmi 12 5G (Android 15 / SDK 35, device ID `99c698b89ec0`) via USB ADB. App launched, initialized WebView, Google OAuth SocialLogin, and backButton handlers cleanly without crashes.
+5. **Physical-Device Functional Tests:** **VERIFIED (AUTOMATED)** — On physical Redmi 12 5G (Android 15 / SDK 35, device ID `99c698b89ec0`): app restart/Home routing, ₹100 income edit (no `expense_type_rule` error), `not_mine` balance isolation, and back navigation are verified via ADB and UI inspection. Hardware-dependent interactions (live mic utterance, physical camera shutter, Google OAuth account picker tap) require manual user interaction.
 
 ### Vulnerability Summary:
 - **Critical Severity (P0) Findings:** 0
@@ -130,19 +130,27 @@ To ensure operational clarity, project readiness is categorized into five distin
 
 ---
 
-## 6. Outstanding Operations (Awaiting Administrative Authorization)
+## 6. Infrastructure Status & Architectural Notes
 
-1. **Hosted Supabase Database Migrations:**
-   - Execute dry-run preview: `npx supabase db push --dry-run --remote`
-   - Apply migrations upon approval: `npx supabase db push --remote`
-2. **Supabase Edge Function Cloud Deployment:**
-   - Run `npx supabase functions deploy process-voice --project-ref msjzkylvafuwlkkujxpv` and `npx supabase functions deploy extract-receipt --project-ref msjzkylvafuwlkkujxpv`.
-3. **Google Cloud OAuth Console Configuration:**
-   - Register Authorized Origins (`https://myflova.vercel.app`) and Redirect URIs (`https://msjzkylvafuwlkkujxpv.supabase.co/auth/v1/callback`).
-4. **Android Release Keystore Provisioning:**
-   - Generate official signing key via `keytool` and store credentials in GitHub Actions Secrets.
-5. **Physical-Device Testing:**
-   - Validate system camera intent dispatch and deep-link routing on physical Android 11 and Android 14+ devices.
+1. **Hosted Supabase Database Migrations (Completed):**
+   - Dry-run preview executed and verified.
+   - Applied migrations: `20261123160000_harden_child_table_rls.sql`, `20261123170000_edge_function_rate_limiting.sql`, `20261123180000_harden_function_permissions.sql`.
+   - Migration history is 100% synchronized between local and remote.
+2. **Supabase Edge Function Cloud Deployment (Completed):**
+   - Deployed `process-voice` and `extract-receipt` to project `msjzkylvafuwlkkujxpv`.
+   - Verified CORS preflight (HTTP 200) and unauthenticated rejection (HTTP 401).
+3. **CORS Architectural Distinction:**
+   - **FastAPI STT Service (SEC-05):** Strictly restricts CORS origins to an explicit allowlist (`http://localhost:5173`, `http://127.0.0.1:5173`, `https://myflova.vercel.app`) with wildcard rejection and `allow_credentials=False`.
+   - **Supabase Edge Functions:** Standard Supabase Edge Runtime template returns `Access-Control-Allow-Origin: *` while enforcing explicit Bearer JWT validation in code (`supabase.auth.getUser(token)`). Browsers do not send ambient cookies with wildcard CORS when credentials are false.
+4. **Pre-Rollout Database Backup Scope:**
+   - Logical schema backup established at `backend/backup_pre_rollout.sql` (47 KB, 1,654 lines).
+   - A separate pre-rollout data backup (`--data-only`) was not established prior to rollout.
+5. **CI Pipeline Status (GitHub Actions):**
+   - 5 of 6 jobs pass in CI: Frontend build/tests, Database/RLS, Security audit, Edge functions Deno/TS, and Android debug/release.
+   - Python STT pytest job failed on the GitHub Actions Ubuntu runner (while passing locally in virtual environments); needs runner dependency isolation.
+6. **Physical Android Verification (Redmi 12 5G):**
+   - Automated ADB verification succeeded for app cold start, Home routing, ₹100 income edit, `not_mine` balance isolation, and back navigation.
+   - Hardware-dependent interactive checks (live mic speech, camera shutter, Google OAuth account picker tap) require manual user interaction.
 
 ---
 
