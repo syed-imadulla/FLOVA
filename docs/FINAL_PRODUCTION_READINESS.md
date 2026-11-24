@@ -146,8 +146,8 @@ To ensure operational clarity, project readiness is categorized into five distin
    - Logical schema backup established at `backend/backup_pre_rollout.sql` (47 KB, 1,654 lines).
    - A separate pre-rollout data backup (`--data-only`) was not established prior to rollout.
 5. **CI Pipeline Status (GitHub Actions):**
-   - 5 of 6 jobs pass in CI: Frontend build/tests, Database/RLS, Security audit, Edge functions Deno/TS, and Android debug/release.
-   - Python STT pytest job failed on the GitHub Actions Ubuntu runner (while passing locally in virtual environments); needs runner dependency isolation.
+   - **6 of 6 jobs PASS in CI (100% Green):** Frontend build/tests, Database/RLS, Security audit, Edge functions Deno/TS, Python STT & Udaan Engine, and Android debug/release (Workflow Run `45351732943`).
+   - CI-01 resolved: Installed system audio dependency `ffmpeg` in runner and added 16 kHz PCM WAV fast-path in `audio.py`.
 6. **Physical Android Verification (Redmi 12 5G):**
    - Automated ADB verification succeeded for app cold start, Home routing, ₹100 income edit, `not_mine` balance isolation, and back navigation.
    - Hardware-dependent interactive checks (live mic speech, camera shutter, Google OAuth account picker tap) require manual user interaction.
