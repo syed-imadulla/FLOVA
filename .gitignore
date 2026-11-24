@@ -41,3 +41,5 @@ key.properties
 *.dump
 *backup*.sql
 backend/backup*.sql
+backups/
+

@@ -8,12 +8,31 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
-        versionName "1.0"
+        versionName "1.0.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
              // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
+        }
+    }
+    signingConfigs {
+        release {
+            def keystorePath = project.findProperty('FLOVA_RELEASE_STORE_FILE') ?: System.getenv('FLOVA_RELEASE_STORE_FILE') ?: "${System.getProperty('user.home')}/.android/flova-release.keystore"
+            def keystoreFile = file(keystorePath)
+            def storePass = project.findProperty('FLOVA_RELEASE_STORE_PASSWORD') ?: System.getenv('FLOVA_RELEASE_STORE_PASSWORD')
+            def kAlias = project.findProperty('FLOVA_RELEASE_KEY_ALIAS') ?: System.getenv('FLOVA_RELEASE_KEY_ALIAS') ?: 'flova-release'
+            def kPass = project.findProperty('FLOVA_RELEASE_KEY_PASSWORD') ?: System.getenv('FLOVA_RELEASE_KEY_PASSWORD') ?: storePass
+
+            if (keystoreFile.exists() && storePass) {
+                storeFile keystoreFile
+                storePassword storePass
+                keyAlias kAlias
+                keyPassword kPass
+                enableV1Signing = true
+                enableV2Signing = true
+                enableV3Signing = true
+            }
         }
     }
     buildTypes {
@@ -22,6 +41,12 @@ android {
             debuggable true
         }
         release {
+            def keystorePath = project.findProperty('FLOVA_RELEASE_STORE_FILE') ?: System.getenv('FLOVA_RELEASE_STORE_FILE') ?: "${System.getProperty('user.home')}/.android/flova-release.keystore"
+            def keystoreFile = file(keystorePath)
+            def storePass = project.findProperty('FLOVA_RELEASE_STORE_PASSWORD') ?: System.getenv('FLOVA_RELEASE_STORE_PASSWORD')
+            if (keystoreFile.exists() && storePass) {
+                signingConfig signingConfigs.release
+            }
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
