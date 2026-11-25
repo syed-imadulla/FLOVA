@@ -43,3 +43,6 @@ key.properties
 backend/backup*.sql
 backups/
 
+# Sarvam voice test audio artifacts
+tests/sarvam-voice/artifacts/
+*.wav

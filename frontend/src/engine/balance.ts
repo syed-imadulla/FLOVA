@@ -4,6 +4,8 @@
 // =====================================================================
 
 import type { Paise, RunwayInput } from "../types/contracts";
+import { calculateGroupCashAndBalances } from "./groupSplitEngine";
+import { calculatePeerDebtSummary } from "./peerDebtEngine";
 import { safeAdd, safeSub, validateBalanceCheckin, validatePayout } from "./validation";
 
 export type ConfirmedBalanceStatus =
@@ -14,8 +16,11 @@ export type ConfirmedBalanceStatus =
 export interface ConfirmedBalanceBreakdown {
   startingPersonalPaise: Paise;
   confirmedIncomePaise: Paise;
+  earnedIncomePaise?: Paise;
+  nonEarnedInflowPaise?: Paise;
   confirmedExpensePaise: Paise;
   netTransactionsPaise: number;
+  peerDebtCashDeltaPaise?: number;
   endingPersonalPaise: number;
 }
 
@@ -23,6 +28,10 @@ export interface ConfirmedBalanceResult {
   status: ConfirmedBalanceStatus;
   confirmedBalancePaise: number | null;
   custodialOwedPaise: number | null;
+  peerLiabilityPaise?: Paise;
+  peerReceivablePaise?: Paise;
+  groupLiabilityPaise?: Paise;
+  groupReceivablePaise?: Paise;
   breakdown?: ConfirmedBalanceBreakdown;
   reason?: string;
   appliedTransactionCount?: number;
@@ -91,6 +100,8 @@ export function calculateConfirmedBalance(input: RunwayInput): ConfirmedBalanceR
   let runningCustodial: number = notMine;
 
   let confirmedIncome = 0;
+  let earnedIncome = 0;
+  let nonEarnedInflow = 0;
   let confirmedExpense = 0;
   let appliedCount = 0;
 
@@ -115,6 +126,12 @@ export function calculateConfirmedBalance(input: RunwayInput): ConfirmedBalanceR
       if (tx.ownership === "mine") {
         if (tx.type === "income") {
           confirmedIncome = safeAdd(confirmedIncome, tx.amount);
+          const inflowCat = tx.inflowCategory ?? "earned";
+          if (inflowCat === "earned") {
+            earnedIncome = safeAdd(earnedIncome, tx.amount);
+          } else {
+            nonEarnedInflow = safeAdd(nonEarnedInflow, tx.amount);
+          }
           runningPersonal = safeAdd(runningPersonal, tx.amount);
         } else if (tx.type === "expense") {
           confirmedExpense = safeAdd(confirmedExpense, tx.amount);
@@ -141,15 +158,63 @@ export function calculateConfirmedBalance(input: RunwayInput): ConfirmedBalanceR
     }
   }
 
+  // Integrate peer debt cash movements (borrowed, lent, repayments) created AFTER latest check-in.
+  // Single source of truth: these are never duplicated in transactions.
+  let peerLiabilityPaise: Paise = 0;
+  let peerReceivablePaise: Paise = 0;
+  let peerDebtCashDeltaPaise = 0;
+  if ((input.peerDebts && input.peerDebts.length > 0) || (input.debtSettlements && input.debtSettlements.length > 0)) {
+    try {
+      const peerSummary = calculatePeerDebtSummary({
+        peerDebts: input.peerDebts,
+        debtSettlements: input.debtSettlements,
+        checkedAt,
+      });
+      peerLiabilityPaise = peerSummary.totalOwedByUserPaise;
+      peerReceivablePaise = peerSummary.totalReceivablePaise;
+      peerDebtCashDeltaPaise = peerSummary.netCashDeltaSinceCheckinPaise;
+      runningPersonal = safeAdd(runningPersonal, peerDebtCashDeltaPaise);
+    } catch (err) {
+      return {
+        status: "INVALID_INPUT",
+        confirmedBalancePaise: null,
+        custodialOwedPaise: null,
+        reason: err instanceof Error ? err.message : "Invalid peer debt input.",
+      };
+    }
+  }
+
+  let groupLiabilityPaise: Paise = 0;
+  let groupReceivablePaise: Paise = 0;
+  if ((input.groupSplits && input.groupSplits.length > 0) || (input.groupSettlements && input.groupSettlements.length > 0)) {
+    const groupSummary = calculateGroupCashAndBalances({
+      groupSplits: input.groupSplits,
+      groupSettlements: input.groupSettlements,
+      checkedAt,
+    });
+    groupLiabilityPaise = groupSummary.totalGroupLiabilityPaise;
+    groupReceivablePaise = groupSummary.totalGroupReceivablePaise;
+    peerLiabilityPaise = safeAdd(peerLiabilityPaise, groupLiabilityPaise);
+    peerReceivablePaise = safeAdd(peerReceivablePaise, groupReceivablePaise);
+    runningPersonal = safeAdd(runningPersonal, groupSummary.netCashDeltaSinceCheckinPaise);
+  }
+
   return {
     status: "CONFIRMED",
     confirmedBalancePaise: runningPersonal,
     custodialOwedPaise: runningCustodial,
+    peerLiabilityPaise,
+    peerReceivablePaise,
+    groupLiabilityPaise,
+    groupReceivablePaise,
     breakdown: {
       startingPersonalPaise: startingPersonal,
       confirmedIncomePaise: confirmedIncome,
+      earnedIncomePaise: earnedIncome,
+      nonEarnedInflowPaise: nonEarnedInflow,
       confirmedExpensePaise: confirmedExpense,
       netTransactionsPaise: safeSub(confirmedIncome, confirmedExpense),
+      peerDebtCashDeltaPaise,
       endingPersonalPaise: runningPersonal,
     },
     appliedTransactionCount: appliedCount,

@@ -23,6 +23,15 @@ export interface MockState {
   wishGoals: any[];
   wishContributions: any[];
   commitments: any[];
+  activeUserId: string;
+  people: any[];
+  peerDebts: any[];
+  debtSettlements: any[];
+  expenseGroups: any[];
+  expenseGroupMembers: any[];
+  groupExpenses: any[];
+  groupExpenseSplits: any[];
+  groupSettlements: any[];
 }
 
 export const mockState: MockState = {
@@ -36,6 +45,15 @@ export const mockState: MockState = {
   wishGoals: [],
   wishContributions: [],
   commitments: [],
+  activeUserId: "test-user-id",
+  people: [],
+  peerDebts: [],
+  debtSettlements: [],
+  expenseGroups: [],
+  expenseGroupMembers: [],
+  groupExpenses: [],
+  groupExpenseSplits: [],
+  groupSettlements: [],
 };
 
 export function resetMockState(): void {
@@ -52,6 +70,15 @@ export function resetMockState(): void {
   mockState.wishGoals = [];
   mockState.wishContributions = [];
   mockState.commitments = [];
+  mockState.activeUserId = "test-user-id";
+  mockState.people = [];
+  mockState.peerDebts = [];
+  mockState.debtSettlements = [];
+  mockState.expenseGroups = [];
+  mockState.expenseGroupMembers = [];
+  mockState.groupExpenses = [];
+  mockState.groupExpenseSplits = [];
+  mockState.groupSettlements = [];
 }
 
 class MockQueryBuilder<T> implements PromiseLike<{ data: T[]; error: null }> {
@@ -503,6 +530,322 @@ export const supabase = {
                     created_at: new Date().toISOString(),
                   };
                   mockState.commitments.push(rec);
+                  return Promise.resolve({ data: rec, error: null });
+                },
+              };
+            },
+          };
+        },
+      };
+    }
+
+    if (table === "people") {
+      return {
+        select() {
+          const own = mockState.people.filter((p) => p.user_id === mockState.activeUserId);
+          return new MockQueryBuilder<any>(own);
+        },
+        insert(payload: any) {
+          return {
+            select() {
+              return {
+                single() {
+                  const rec = {
+                    ...payload,
+                    id: payload.id || "person-" + Math.random().toString(36).slice(2, 9),
+                    user_id: mockState.activeUserId,
+                    is_favorite: payload.is_favorite ?? false,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString(),
+                  };
+                  mockState.people.push(rec);
+                  return Promise.resolve({ data: rec, error: null });
+                },
+              };
+            },
+          };
+        },
+        update(patch: Record<string, unknown>) {
+          return {
+            eq(col: string, val: string) {
+              const target = mockState.people.find((p) => p[col] === val && p.user_id === mockState.activeUserId);
+              if (target) Object.assign(target, patch, { updated_at: new Date().toISOString() });
+              return {
+                select() {
+                  return {
+                    single() {
+                      return target
+                        ? Promise.resolve({ data: target, error: null })
+                        : Promise.resolve({ data: null, error: { message: "Person not found" } });
+                    },
+                  };
+                },
+              };
+            },
+          };
+        },
+        delete() {
+          return {
+            eq(col: string, val: string) {
+              const targetIdx = mockState.people.findIndex((p) => p[col] === val && p.user_id === mockState.activeUserId);
+              if (targetIdx === -1) return Promise.resolve({ error: null });
+              const target = mockState.people[targetIdx];
+              const hasDebts = mockState.peerDebts.some((d) => d.person_id === target.id);
+              if (hasDebts) {
+                return Promise.resolve({
+                  error: { code: "23503", message: 'update or delete on table "people" violates foreign key constraint "peer_debts_person_fk"' },
+                });
+              }
+              mockState.people.splice(targetIdx, 1);
+              return Promise.resolve({ error: null });
+            },
+          };
+        },
+      };
+    }
+
+    if (table === "peer_debts") {
+      return {
+        select() {
+          const own = mockState.peerDebts
+            .filter((d) => d.user_id === mockState.activeUserId)
+            .map((d) => {
+              const person = mockState.people.find((p) => p.id === d.person_id && p.user_id === mockState.activeUserId);
+              return { ...d, person: person ? { name: person.name } : null };
+            });
+          return new MockQueryBuilder<any>(own);
+        },
+        insert(payload: any) {
+          return {
+            select() {
+              return {
+                single() {
+                  const id = payload.id || "debt-" + Math.random().toString(36).slice(2, 9);
+                  if (mockState.peerDebts.some((d) => d.id === id)) {
+                    return Promise.resolve({ data: null, error: { code: "23505", message: "duplicate key value violates unique constraint \"peer_debts_pkey\"" } });
+                  }
+                  const person = mockState.people.find((p) => p.id === payload.person_id && p.user_id === mockState.activeUserId);
+                  if (!person) {
+                    return Promise.resolve({ data: null, error: { code: "23503", message: 'insert or update on table "peer_debts" violates foreign key constraint "peer_debts_person_fk"' } });
+                  }
+                  const rec = {
+                    ...payload,
+                    id,
+                    user_id: mockState.activeUserId,
+                    status: payload.status ?? "active",
+                    created_at: payload.created_at || new Date().toISOString(),
+                    updated_at: new Date().toISOString(),
+                  };
+                  mockState.peerDebts.push(rec);
+                  return Promise.resolve({ data: rec, error: null });
+                },
+              };
+            },
+          };
+        },
+      };
+    }
+
+    if (table === "debt_settlements") {
+      return {
+        select() {
+          const own = mockState.debtSettlements.filter((s) => s.user_id === mockState.activeUserId);
+          return new MockQueryBuilder<any>(own);
+        },
+        insert(payload: any) {
+          return {
+            select() {
+              return {
+                single() {
+                  const id = payload.id || "settle-" + Math.random().toString(36).slice(2, 9);
+                  if (mockState.debtSettlements.some((s) => s.id === id)) {
+                    return Promise.resolve({ data: null, error: { code: "23505", message: "duplicate key value violates unique constraint \"debt_settlements_pkey\"" } });
+                  }
+                  const debt = mockState.peerDebts.find((d) => d.id === payload.debt_id && d.user_id === mockState.activeUserId);
+                  if (!debt) {
+                    return Promise.resolve({ data: null, error: { code: "23503", message: "Referenced peer_debt not found for user" } });
+                  }
+                  const expectedDir = debt.direction === "you_owe" ? "repayment_out" : "repayment_in";
+                  if (payload.direction !== expectedDir) {
+                    return Promise.resolve({ data: null, error: { message: `Invalid settlement direction ${payload.direction} for debt direction ${debt.direction}` } });
+                  }
+                  if (payload.amount_paise <= 0 || payload.amount_paise > debt.remaining_amount_paise) {
+                    return Promise.resolve({ data: null, error: { message: `Overpayment rejected: settlement ${payload.amount_paise} exceeds remaining ${debt.remaining_amount_paise}` } });
+                  }
+                  debt.remaining_amount_paise -= payload.amount_paise;
+                  debt.status = debt.remaining_amount_paise === 0 ? "settled" : "partially_settled";
+                  const rec = {
+                    ...payload,
+                    id,
+                    user_id: mockState.activeUserId,
+                    settled_at: payload.settled_at || new Date().toISOString(),
+                    created_at: payload.created_at || new Date().toISOString(),
+                  };
+                  mockState.debtSettlements.push(rec);
+                  return Promise.resolve({ data: rec, error: null });
+                },
+              };
+            },
+          };
+        },
+      };
+    }
+
+    if (table === "expense_groups") {
+      return {
+        select() {
+          return new MockQueryBuilder<any>(mockState.expenseGroups.filter((g) => g.user_id === mockState.activeUserId));
+        },
+        insert(payload: any) {
+          return {
+            select() {
+              return {
+                single() {
+                  const rec = {
+                    ...payload,
+                    id: payload.id || "grp-" + Math.random().toString(36).slice(2, 9),
+                    user_id: mockState.activeUserId,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString(),
+                  };
+                  mockState.expenseGroups.push(rec);
+                  return Promise.resolve({ data: rec, error: null });
+                },
+              };
+            },
+          };
+        },
+        delete() {
+          return {
+            eq(col: string, val: string) {
+              const idx = mockState.expenseGroups.findIndex((g) => g[col] === val && g.user_id === mockState.activeUserId);
+              if (idx === -1) return Promise.resolve({ error: null });
+              const grp = mockState.expenseGroups[idx];
+              if (mockState.groupExpenses.some((e) => e.group_id === grp.id)) {
+                return Promise.resolve({
+                  error: { code: "23503", message: 'update or delete on table "expense_groups" violates foreign key constraint "group_expenses_group_fk"' },
+                });
+              }
+              mockState.expenseGroups.splice(idx, 1);
+              return Promise.resolve({ error: null });
+            },
+          };
+        },
+      };
+    }
+
+    if (table === "expense_group_members") {
+      return {
+        select() {
+          return new MockQueryBuilder<any>(mockState.expenseGroupMembers.filter((m) => m.user_id === mockState.activeUserId));
+        },
+        insert(payload: any) {
+          const rows = Array.isArray(payload) ? payload : [payload];
+          const inserted = rows.map((r) => ({
+            ...r,
+            id: r.id || "mem-" + Math.random().toString(36).slice(2, 9),
+            user_id: mockState.activeUserId,
+            joined_at: new Date().toISOString(),
+          }));
+          mockState.expenseGroupMembers.push(...inserted);
+          return {
+            select() {
+              return Promise.resolve({ data: inserted, error: null });
+            },
+            then(resolve: any) {
+              return Promise.resolve({ data: inserted, error: null }).then(resolve);
+            },
+          };
+        },
+      };
+    }
+
+    if (table === "group_expenses") {
+      return {
+        select() {
+          return new MockQueryBuilder<any>(mockState.groupExpenses.filter((e) => e.user_id === mockState.activeUserId));
+        },
+        insert(payload: any) {
+          return {
+            select() {
+              return {
+                single() {
+                  const rec = {
+                    ...payload,
+                    id: payload.id || "gexp-" + Math.random().toString(36).slice(2, 9),
+                    user_id: mockState.activeUserId,
+                    created_at: payload.created_at || new Date().toISOString(),
+                    updated_at: new Date().toISOString(),
+                  };
+                  mockState.groupExpenses.push(rec);
+                  return Promise.resolve({ data: rec, error: null });
+                },
+              };
+            },
+          };
+        },
+      };
+    }
+
+    if (table === "group_expense_splits") {
+      return {
+        select() {
+          return new MockQueryBuilder<any>(mockState.groupExpenseSplits.filter((s) => s.user_id === mockState.activeUserId));
+        },
+        insert(payload: any) {
+          const rows = Array.isArray(payload) ? payload : [payload];
+          const inserted = rows.map((r) => ({
+            ...r,
+            id: r.id || "gspl-" + Math.random().toString(36).slice(2, 9),
+            user_id: mockState.activeUserId,
+            created_at: r.created_at || new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          }));
+          mockState.groupExpenseSplits.push(...inserted);
+          return {
+            select() {
+              return Promise.resolve({ data: inserted, error: null });
+            },
+          };
+        },
+      };
+    }
+
+    if (table === "group_settlements") {
+      return {
+        select() {
+          return new MockQueryBuilder<any>(mockState.groupSettlements.filter((s) => s.user_id === mockState.activeUserId));
+        },
+        insert(payload: any) {
+          return {
+            select() {
+              return {
+                single() {
+                  const id = payload.id || "gset-" + Math.random().toString(36).slice(2, 9);
+                  if (mockState.groupSettlements.some((s) => s.id === id)) {
+                    return Promise.resolve({ data: null, error: { code: "23505", message: "duplicate key value violates unique constraint \"group_settlements_pkey\"" } });
+                  }
+                  const split = mockState.groupExpenseSplits.find((s) => s.id === payload.group_expense_split_id && s.user_id === mockState.activeUserId);
+                  if (!split) {
+                    return Promise.resolve({ data: null, error: { message: "Referenced group_expense_split not found for user" } });
+                  }
+                  const expectedDir = split.direction === "you_owe" ? "repayment_out" : "repayment_in";
+                  if (payload.direction !== expectedDir) {
+                    return Promise.resolve({ data: null, error: { message: `Invalid settlement direction ${payload.direction} for split direction ${split.direction}` } });
+                  }
+                  if (payload.amount_paise <= 0 || payload.amount_paise > split.remaining_amount_paise) {
+                    return Promise.resolve({ data: null, error: { message: `Overpayment rejected: settlement ${payload.amount_paise} exceeds remaining ${split.remaining_amount_paise}` } });
+                  }
+                  split.remaining_amount_paise -= payload.amount_paise;
+                  split.status = split.remaining_amount_paise === 0 ? "settled" : "partially_settled";
+                  const rec = {
+                    ...payload,
+                    id,
+                    user_id: mockState.activeUserId,
+                    settled_at: payload.settled_at || new Date().toISOString(),
+                    created_at: payload.created_at || new Date().toISOString(),
+                  };
+                  mockState.groupSettlements.push(rec);
                   return Promise.resolve({ data: rec, error: null });
                 },
               };

@@ -10,6 +10,26 @@ export {
 } from "./balance";
 
 export {
+  calculatePeerDebtSummary,
+  validateAndApplySettlement,
+  validatePeerDebt,
+  type PeerDebtSummary,
+  type SettlementApplicationResult,
+} from "./peerDebtEngine";
+
+export {
+  calculateGroupCashAndBalances,
+  computeGroupExpenseAccounting,
+  splitCustom,
+  splitEqual,
+  splitPercentage,
+  type ComputedSplitShare,
+  type GroupAccountingSplit,
+  type GroupCashAndBalanceSummary,
+  type SplitParticipant,
+} from "./groupSplitEngine";
+
+export {
   addDays,
   calculateDailyRunway,
   type DailyProjectionEntry,

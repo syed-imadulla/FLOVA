@@ -11,6 +11,9 @@ const GROUPS: Array<{ title: string; items: Array<{ to: string; icon: React.Reac
   {
     title: "Plan",
     items: [
+      { to: "/people", icon: <IconUser size={20} />, label: "People", hint: "Who owes you and whom you owe" },
+      { to: "/money", icon: <IconWallet size={20} />, label: "Borrowing & lending", hint: "Track loans and repayments" },
+      { to: "/groups", icon: <IconUser size={20} />, label: "Group expenses", hint: "Split bills & shared settlements" },
       { to: "/wish", icon: <IconTarget size={20} />, label: "WISH savings goal", hint: "Save for what matters" },
       { to: "/invoices", icon: <IconCalendar size={20} />, label: "Invoices & client bills", hint: "Track receivables and payables" },
       { to: "/commitments", icon: <IconCalendar size={20} />, label: "Bills & debts", hint: "Rent, EMI, fees" },

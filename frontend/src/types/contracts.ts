@@ -34,6 +34,10 @@ export const PAYOUT_STATUSES = ["scheduled", "estimated", "unearned", "partial",
 export const COMMITMENT_KINDS = ["bill", "debt"] as const;
 export const COMMITMENT_STATUSES = ["upcoming", "paid", "cancelled"] as const;
 export const ENTRY_SOURCES = ["manual", "voice", "ai_suggestion", "demo"] as const;
+export const INFLOW_CATEGORIES = ["earned", "family_support", "pocket_money", "gift", "donation"] as const;
+export const PEER_DEBT_DIRECTIONS = ["you_owe", "they_owe"] as const;
+export const PEER_DEBT_STATUSES = ["active", "partially_settled", "settled", "forgiven"] as const;
+export const SETTLEMENT_DIRECTIONS = ["repayment_out", "repayment_in"] as const;
 
 export type WorkProfile = (typeof WORK_PROFILES)[number];
 export type PayoutPattern = (typeof PAYOUT_PATTERNS)[number];
@@ -47,6 +51,14 @@ export type PayoutStatus = (typeof PAYOUT_STATUSES)[number];
 export type CommitmentKind = (typeof COMMITMENT_KINDS)[number];
 export type CommitmentStatus = (typeof COMMITMENT_STATUSES)[number];
 export type EntrySource = (typeof ENTRY_SOURCES)[number];
+export type InflowCategory = (typeof INFLOW_CATEGORIES)[number];
+export type PeerDebtDirection = (typeof PEER_DEBT_DIRECTIONS)[number];
+export type PeerDebtStatus = (typeof PEER_DEBT_STATUSES)[number];
+export const GROUP_SPLIT_TYPES = ["equal", "custom", "percentage"] as const;
+export const GROUP_SPLIT_DIRECTIONS = ["they_owe", "you_owe", "self_share", "third_party"] as const;
+export type GroupSplitType = (typeof GROUP_SPLIT_TYPES)[number];
+export type GroupSplitDirection = (typeof GROUP_SPLIT_DIRECTIONS)[number];
+export type SettlementDirection = (typeof SETTLEMENT_DIRECTIONS)[number];
 
 /** Universal personal living expense categories applicable across all worker types */
 export const UNIVERSAL_LIVING_CATEGORIES = [
@@ -177,12 +189,66 @@ export interface Transaction {
   category: string;
   description: string | null;
   expense_type: ExpenseType | null; // required when type='expense' AND ownership='mine'
+  inflow_category?: InflowCategory | null; // optional FLOVA 2.0 segregation for own income
   ownership: MoneyOwnership;
   payout_id: string | null; // own income that settles (part of) a payout
   transaction_date: ISODate;
   source: EntrySource;
   created_at: ISOTimestamp;
   updated_at: ISOTimestamp;
+}
+
+export interface Person {
+  id: string;
+  user_id: string;
+  name: string;
+  phone: string | null;
+  upi_id: string | null;
+  relationship: string | null;
+  is_favorite: boolean;
+  created_at: ISOTimestamp;
+  updated_at: ISOTimestamp;
+}
+
+export interface PeerDebt {
+  id: string;
+  user_id: string;
+  person_id: string;
+  direction: PeerDebtDirection;
+  total_amount_paise: Paise;
+  remaining_amount_paise: Paise;
+  reason: string | null;
+  status: PeerDebtStatus;
+  due_date: ISODate | null;
+  created_at: ISOTimestamp;
+  updated_at: ISOTimestamp;
+}
+
+export interface DebtSettlement {
+  id: string;
+  user_id: string;
+  debt_id: string;
+  direction: SettlementDirection;
+  amount_paise: Paise;
+  payment_mode: string | null;
+  reference_id: string | null;
+  settled_at: ISOTimestamp;
+  notes: string | null;
+  created_at: ISOTimestamp;
+}
+
+export interface FinancialAuditLogEntry {
+  id: string;
+  user_id: string;
+  acting_user_id: string | null;
+  entity_type: "transaction" | "peer_debt" | "debt_settlement" | "commitment" | "person";
+  entity_id: string;
+  action: "INSERT" | "UPDATE" | "DELETE";
+  state_before: Record<string, unknown> | null;
+  state_after: Record<string, unknown> | null;
+  actor: string;
+  reason: string | null;
+  created_at: ISOTimestamp;
 }
 
 export interface Commitment {
@@ -230,10 +296,112 @@ export interface NewTransaction {
   category?: string;
   description?: string | null;
   expenseType?: ExpenseType | null;
+  inflowCategory?: InflowCategory | null;
   ownership?: MoneyOwnership;
   payoutId?: string | null;
   date?: ISODate;
   source?: EntrySource;
+}
+
+export interface PeerDebtEngineItem {
+  id: string;
+  personId: string;
+  personName?: string;
+  direction: PeerDebtDirection;
+  totalAmountPaise: Paise;
+  remainingAmountPaise: Paise;
+  status: PeerDebtStatus;
+  dueDate: ISODate | null;
+  createdAt: ISOTimestamp;
+}
+
+export interface DebtSettlementEngineItem {
+  id: string;
+  debtId: string;
+  direction: SettlementDirection;
+  amountPaise: Paise;
+  settledAt: ISOTimestamp;
+  createdAt: ISOTimestamp;
+}
+
+export interface ExpenseGroup {
+  id: string;
+  user_id: string;
+  name: string;
+  description: string | null;
+  created_at: ISOTimestamp;
+  updated_at: ISOTimestamp;
+}
+
+export interface ExpenseGroupMember {
+  id: string;
+  user_id: string;
+  group_id: string;
+  is_self: boolean;
+  person_id: string | null;
+  joined_at: ISOTimestamp;
+}
+
+export interface GroupExpense {
+  id: string;
+  user_id: string;
+  group_id: string;
+  description: string;
+  total_amount_paise: Paise;
+  paid_by_self: boolean;
+  paid_by_person_id: string | null;
+  expense_date: ISODate;
+  split_type: GroupSplitType;
+  self_transaction_id: string | null;
+  note: string | null;
+  created_at: ISOTimestamp;
+  updated_at: ISOTimestamp;
+}
+
+export interface GroupExpenseSplit {
+  id: string;
+  user_id: string;
+  group_expense_id: string;
+  is_self: boolean;
+  person_id: string | null;
+  direction: GroupSplitDirection;
+  share_amount_paise: Paise;
+  remaining_amount_paise: Paise;
+  status: Extract<PeerDebtStatus, "active" | "partially_settled" | "settled">;
+  created_at: ISOTimestamp;
+  updated_at: ISOTimestamp;
+}
+
+export interface GroupSettlement {
+  id: string;
+  user_id: string;
+  group_expense_split_id: string;
+  direction: SettlementDirection;
+  amount_paise: Paise;
+  settled_at: ISOTimestamp;
+  notes: string | null;
+  created_at: ISOTimestamp;
+}
+
+export interface GroupSplitEngineItem {
+  id: string;
+  groupExpenseId: string;
+  isSelf: boolean;
+  personId: string | null;
+  direction: GroupSplitDirection;
+  shareAmountPaise: Paise;
+  remainingAmountPaise: Paise;
+  status: Extract<PeerDebtStatus, "active" | "partially_settled" | "settled">;
+  createdAt: ISOTimestamp;
+}
+
+export interface GroupSettlementEngineItem {
+  id: string;
+  groupExpenseSplitId: string;
+  direction: SettlementDirection;
+  amountPaise: Paise;
+  settledAt: ISOTimestamp;
+  createdAt: ISOTimestamp;
 }
 
 export interface NewCommitment {
@@ -258,13 +426,18 @@ export interface RunwayInput {
   latestCheckin: { cash: Paise; bank: Paise; notMine: Paise; checkedAt: ISOTimestamp } | null;
   transactionsSinceCheckin: Array<{
     id: string; type: TransactionType; amount: Paise; ownership: MoneyOwnership;
-    expenseType: ExpenseType | null; payoutId: string | null; date: ISODate; createdAt: ISOTimestamp;
+    expenseType: ExpenseType | null; inflowCategory?: InflowCategory | null;
+    payoutId: string | null; date: ISODate; createdAt: ISOTimestamp;
   }>;
   payouts: Array<{
     id: string; kind: PayoutKind; expected: Paise; received: Paise;
     expectedDate: ISODate | null; status: PayoutStatus;
   }>;
   commitments: Array<{ id: string; title: string; amount: Paise; dueDate: ISODate; kind: CommitmentKind }>;
+  peerDebts?: PeerDebtEngineItem[];
+  debtSettlements?: DebtSettlementEngineItem[];
+  groupSplits?: GroupSplitEngineItem[];
+  groupSettlements?: GroupSettlementEngineItem[];
 }
 
 // ---------- Candidate DTOs (Receipt & Voice Extraction) ----------

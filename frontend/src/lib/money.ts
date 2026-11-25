@@ -29,6 +29,24 @@ export function toPaiseOrNull(value: RupeeString | number | null | undefined): P
   return value === null || value === undefined || value === "" ? null : toPaise(value);
 }
 
+/**
+ * Validates and normalizes integer paise directly from bigint-paise DB columns
+ * (e.g. peer_debts.total_amount_paise, debt_settlements.amount_paise).
+ * Never multiplies by 100.
+ */
+export function assertPaise(value: unknown): Paise {
+  if (typeof value === "number") {
+    if (!Number.isSafeInteger(value)) throw new Error(`Paise must be a safe integer: ${value}`);
+    return value;
+  }
+  if (typeof value === "string" && /^-?\d+$/.test(value.trim())) {
+    const parsed = Number(value.trim());
+    if (!Number.isSafeInteger(parsed)) throw new Error(`Paise integer out of safe range: ${value}`);
+    return parsed;
+  }
+  throw new Error(`Invalid integer paise value: ${String(value)}`);
+}
+
 /** 450050 -> "4500.50" (what Supabase accepts for numeric columns). */
 export function paiseToRupeeString(paise: Paise): RupeeString {
   if (!Number.isSafeInteger(paise)) throw new Error(`Paise must be an integer: ${paise}`);

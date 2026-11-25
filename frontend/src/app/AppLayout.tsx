@@ -4,9 +4,9 @@ import { useEffect } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { cx } from "../ui/kit";
 import { useKeyboardOpen } from "../native/keyboard";
-import { IconActivity, IconChart, IconHome, IconMic, IconMore } from "../ui/icons";
+import { IconActivity, IconHome, IconInsights, IconMic, IconWallet } from "../ui/icons";
 
-const MORE_PATHS = ["/more", "/wish", "/payouts", "/commitments", "/profile"];
+const MONEY_PATHS = ["/money", "/groups", "/insights", "/more", "/wish", "/payouts", "/commitments", "/invoices", "/profile"];
 
 export function AppLayout() {
   const { pathname } = useLocation();
@@ -16,7 +16,8 @@ export function AppLayout() {
     window.scrollTo(0, 0);
   }, [pathname]);
 
-  const moreActive = MORE_PATHS.some((p) => pathname.startsWith(p));
+  const peopleActive = pathname.startsWith("/people");
+  const moneyActive = MONEY_PATHS.some((p) => pathname.startsWith(p));
   // Hide the bottom bar while the on-screen keyboard is open so it does not sit on top of it.
   const keyboardOpen = useKeyboardOpen();
 
@@ -49,8 +50,8 @@ export function AppLayout() {
                 <IconMic size={26} />
               </NavLink>
             </div>
-            <Tab to="/insights" label="Insights" icon={<IconChart />} />
-            <Tab to="/more" label="More" icon={<IconMore />} forceActive={moreActive} />
+            <Tab to="/people" label="People" icon={<IconInsights />} forceActive={peopleActive} />
+            <Tab to="/money" label="Money" icon={<IconWallet />} forceActive={moneyActive} />
           </div>
         </nav>
       </div>

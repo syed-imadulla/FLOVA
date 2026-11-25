@@ -1,10 +1,10 @@
 # FLOVA 2.0 — Feature Audit & Product Backlog Status Matrix
 
-**Document Version:** 2.0.0-sprint0  
-**Audit Date:** 2026-11-24  
-**Auditor:** Technical Architect & Lead Engineer (FLOVA 2.0 Sprint 0)  
+**Document Version:** 2.0.0-PROD-PLAN-REV2  
+**Audit Date:** 2026-11-25  
+**Auditor:** Technical Architect & Lead Engineer  
 **Repository:** `https://github.com/syed-imadulla/FLOVA`  
-**Current Release Tag:** `v1.0.0` (Commit `09999df`)  
+**Current Release Tag:** `v1.0.1` (Commit `ab4bdef`)  
 **Target Environment:** Linux, Android (`in.flova.app`), Web (`https://myflova.vercel.app`)
 
 ---
@@ -16,7 +16,7 @@ This feature audit systematically evaluates the existing FLOVA codebase against 
 The audit evaluates real source files, test suites, database migrations, Edge Functions, and Android configurations without making assumptions or relying on mock documentation.
 
 ### Classification Taxonomy
-- **Working:** Fully implemented, backed by automated unit/integration tests, wired to UI/API, verified in v1.0.0.
+- **Working:** Fully implemented, backed by automated unit/integration tests, wired to UI/API, verified in v1.0.1.
 - **Partially Working:** Core logic or UI exists, but lacks end-to-end integration, full persistence, or specific sub-features.
 - **Needs Improvement:** Implemented in early form but exhibits usability, performance, architectural, or scalability shortcomings.
 - **Not Implemented:** No functional code or schema exists in the repository.
@@ -30,7 +30,7 @@ The audit evaluates real source files, test suites, database migrations, Edge Fu
 
 | Feature / Capability | Status | Evidence (Files, Functions, DB Objects, Tests) | Technical Assessment & Gaps |
 | :--- | :--- | :--- | :--- |
-| **New Home Screen** | Partially Working | `frontend/src/screens/HomeScreen.tsx`, `frontend/src/app/AppLayout.tsx` | v1.0.0 home screen displays available money, 7-day runway, recent activity, and quick actions. Lacks assistant-first cards, conversational history, and quick voice prompt chips. |
+| **New Home Screen** | Partially Working | `frontend/src/screens/HomeScreen.tsx`, `frontend/src/app/AppLayout.tsx` | v1.0.1 home screen displays available money, 7-day runway, recent activity, and quick actions. Lacks assistant-first cards, conversational history, and quick voice prompt chips. |
 | **Prominent Microphone Interaction** | Working | `frontend/src/app/AppLayout.tsx` (FAB mic button), `frontend/src/screens/VoiceScreen.tsx` | Floating Action Button in bottom navigation bar links directly to `/voice` with animated pulse during capture. Needs conversational modal/inline transition instead of hard screen navigation. |
 | **Conversational Assistant Interface** | Needs Improvement | `frontend/src/screens/VoiceScreen.tsx`, `frontend/src/services/voice.ts` | Currently single-turn request-response (`processVoice` -> displays extracted candidate or runway answer). Lacks continuous conversational thread, chat bubbles, and memory. |
 | **Transaction Confirmation Cards** | Working | `frontend/src/screens/AddScreen.tsx`, `frontend/src/engine/candidateAdapter.ts`, `frontend/src/engine/__tests__/candidateAdapter.test.ts` | Clean review card displaying amount, category, type, and source tags. Enforces non-negotiable principle #6 & #7 (no direct writes; explicit user confirmation). |
@@ -85,7 +85,7 @@ The audit evaluates real source files, test suites, database migrations, Edge Fu
 | **Payment-Method Classification** | Partially Working | `frontend/src/types/contracts.ts` (category free text), `backend/supabase/migrations/20261120000100_init_schema.sql` | No explicit `payment_method` enum (`cash`, `upi`, `bank_transfer`, `card`) on `transactions` table. |
 | **Duplicate Detection** | Partially Working | `frontend/src/services/voice.ts` (`candidateId` UUID idempotency), `frontend/src/services/receipt.ts` | UI deduplicates concurrent candidate saves using client UUIDs. Database lacks content hash / time-window duplicate transaction checks. |
 | **Editing & Deletion** | Working | `frontend/src/app/TransactionForm.tsx`, `frontend/src/services/__tests__/transactionUpdateCheckConstraint.test.ts` | Fully supported. Transactions can be edited or deleted with database trigger integrity (`expense_type_rule` regression tests pass). |
-| **Financial Audit History** | Needs Improvement | `backend/supabase/migrations/20261120000100_init_schema.sql` (`updated_at` trigger) | Updated timestamp tracked, but no append-only change log / ledger table (`transaction_audit_logs`) recording previous values or edit reasons. |
+| **Financial Audit History** | Needs Improvement | `backend/supabase/migrations/20261120000100_init_schema.sql` (`updated_at` trigger) | Updated timestamp tracked, but no append-only change log / ledger table (`financial_audit_log`) recording `acting_user_id`, `state_before`, `state_after`, or edit reasons. |
 
 ---
 
@@ -172,29 +172,26 @@ The audit evaluates real source files, test suites, database migrations, Edge Fu
 | **Performance** | Working | `frontend/vite.config.ts`, `frontend/src/app/AppLayout.tsx` | Fast Vite builds, route-level code splitting, sub-50ms deterministic balance calculation. |
 | **Accessibility (A11y)** | Working | `frontend/src/ui/kit.tsx`, `frontend/src/app/AppLayout.tsx` | Semantic HTML, accessible aria-labels on buttons and bottom navigation, high-contrast text. |
 | **Multilingual Testing** | Working | `frontend/src/services/__tests__/multilingualVoice.test.ts` | Automated test suite verifying extraction across 10 Indic languages. |
-| **Beta Testing & Release** | Working | `docs/FINAL_PRODUCTION_READINESS.md`, `v1.0.0` Git tag | v1.0.0 released with verified Android release build (`in.flova.app`) and Vercel web deployment. |
+| **Beta Testing & Release** | Working | `docs/FINAL_PRODUCTION_READINESS.md`, `v1.0.1` Git tag (`ab4bdef`) | v1.0.1 released with verified Android release APK (`in.flova.app`) via GitHub Releases and Vercel web deployment. |
 
 ---
 
-### New Feature 1: Android Home-Screen Widget
+### Shipped in v1.0.1: Android Home-Screen Widgets (Privacy-Preserving)
 
-| Feature / Capability | Status | Evidence | Technical Assessment & Gaps |
+| Feature / Capability | Status | Evidence | Technical Assessment |
 | :--- | :--- | :--- | :--- |
-| **Branding & Icon** | Not Implemented | `frontend/android/app/src/main/res/` | Launcher icons exist; widget preview drawables and layout XMLs do not exist. |
-| **Add Transaction Action** | Not Implemented | N/A | Requires `PendingIntent` launching `MainActivity` with deep link `in.flova.app://add`. |
-| **Microphone Shortcut** | Not Implemented | N/A | Requires `PendingIntent` launching `MainActivity` with deep link `in.flova.app://voice`. |
-| **Daily Financial Summary** | Not Implemented | N/A | Requires native Android data store (e.g. `SharedPreferences` populated by Capacitor plugin or background worker) and `RemoteViews` binding. |
-| **Battery & Background Restrictions** | Not Implemented | N/A | Must use standard `AppWidgetProvider.onUpdate` with periodic intervals $\ge 30$ mins or push updates from app on financial writes. |
+| **Compact Mic Widget (2×2)** | Working | `CompactMicWidgetProvider.java`, `widget_compact_mic.xml` | Verified on Xiaomi Redmi 12 5G. Deep links to `/voice?autoRecord=true`. Privacy-preserving: zero financial data displayed. |
+| **Quick Actions Widget (2×2 & 4×2)** | Working | `QuickActionsWidgetProvider.java`, `widget_quick_actions.xml` | Verified resizable 2×2 and 4×2 layouts with 4 action tiles (Voice, Add, Receipt, History). Zero financial data displayed. |
 
 ---
 
-### New Feature 2: Android UPI Share Target
+### Shipped in v1.0.1: Android UPI Share Target (`ACTION_SEND`)
 
-| Feature / Capability | Status | Evidence | Technical Assessment & Gaps |
+| Feature / Capability | Status | Evidence | Technical Assessment |
 | :--- | :--- | :--- | :--- |
-| **`ACTION_SEND` Intent Filter** | Not Implemented | `frontend/android/app/src/main/AndroidManifest.xml` | `MainActivity` does not declare `android.intent.action.SEND` for `text/plain` or `image/*`. |
-| **Capacitor Intent Bridge** | Not Implemented | `frontend/android/app/src/main/java/in/flova/app/MainActivity.java` | `MainActivity` is an empty `BridgeActivity`. Needs intent extraction in `onCreate`/`onNewIntent` or a dedicated Capacitor Share Target plugin. |
-| **Deep-link Routing to `/catch`** | Partially Working | `frontend/src/screens/CatchScreen.tsx` | `/catch` is designed to receive URL search params (`?text=...`) and PWA cache entries. Needs native-to-web bridge event dispatcher. |
+| **`ACTION_SEND` Intent Filter** | Working | `frontend/android/app/src/main/AndroidManifest.xml` | Declares `android.intent.action.SEND` for `text/plain` and `image/*`. |
+| **Capacitor Native Claim Bridge** | Working | `MainActivity.java`, `ShareReceiverPlugin.java` | Authoritative native claim store with heartbeat lease renewal, atomic acknowledgment, and background stream copy. |
+| **Deep-link Routing to `/catch`** | Working | `frontend/src/screens/CatchScreen.tsx` | Parses shared UPI text/images into candidate cards with explicit user confirmation. |
 | **Untrusted Input Validation** | Working | `frontend/src/services/receipt.ts`, `backend/supabase/functions/_shared/payload-validator.ts` | Strict byte limits, text length validation, and zero execution of arbitrary code in place. |
 | **Explicit Confirmation Enforced** | Working | `frontend/src/screens/AddScreen.tsx`, `frontend/src/screens/CatchScreen.tsx` | Shared receipts or text always route to candidate preview in `/catch` and `/add`; never saved automatically. |
 
@@ -203,17 +200,16 @@ The audit evaluates real source files, test suites, database migrations, Edge Fu
 ## 3. Backlog Feature Count Summary
 
 - **Total Features Audited:** 48
-- **Working (v1.0.0 Production):** 17 (35.4%)
-- **Partially Working:** 14 (29.2%)
+- **Working (v1.0.1 Production):** 22 (45.8%)
+- **Partially Working:** 13 (27.1%)
 - **Needs Improvement:** 6 (12.5%)
-- **Not Implemented:** 11 (22.9%)
+- **Not Implemented:** 7 (14.6%)
 - **Blocked by Dependency:** 0 (0.0%)
 
 ---
 
 ## 4. Architectural Gaps & Recommendations
 
-1. **Native Android Capabilities Gap:** FLOVA 1.0 relied entirely on standard Capacitor WebView capabilities with PWA Web Share Target. To support the Home-Screen Widget and Native UPI Share Target, FLOVA 2.0 requires native Android components (`AppWidgetProvider`, `RemoteViews`, `ACTION_SEND` intent receiver, and custom Capacitor plugins or native bridge methods).
-2. **Conversation State Machine Gap:** The voice interface currently operates as a one-shot query. Two-way conversational voice requires an in-memory conversation state machine managing turn-taking, follow-up clarification, and audio synthesis.
-3. **Database Schema Gaps:** Peer-to-peer shared finances (People, Loans, Repayments, Group Splits) lack first-class database tables and RLS policies.
-4. **Offline Queue Gap:** The deterministic engine operates in TypeScript on the client, but transaction saves directly hit Supabase PostgREST. An IndexedDB write-ahead log (WAL) is required for true offline reliability.
+1. **Financial Engine & Schema Gaps (Sprint 1 Target):** Peer-to-peer shared finances (`people`, `peer_debts`, `debt_settlements`) and append-only `financial_audit_log` lack first-class tables, composite FK isolation, and dual Available Liquidity vs. Sustainable Runway formulas.
+2. **Conversation State Machine Gap (Sprint 3 Target):** The voice interface currently operates as a one-shot query. Two-way conversational voice requires an in-memory conversation state machine managing turn-taking, follow-up clarification, and audio synthesis.
+3. **Offline Queue Gap (Sprint 6 Target):** The deterministic engine operates in TypeScript on the client, but transaction saves directly hit Supabase PostgREST. An IndexedDB write-ahead log (WAL) is required for true offline reliability.

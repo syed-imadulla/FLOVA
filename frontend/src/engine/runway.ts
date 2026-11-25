@@ -7,6 +7,7 @@
 
 import type { ISODate, Paise, RunwayInput } from "../types/contracts";
 import { calculateConfirmedBalance } from "./balance";
+import { calculatePeerDebtSummary } from "./peerDebtEngine";
 import { isValidISODate, isValidPaise, safeAdd, safeSub } from "./validation";
 
 export interface DailyProjectionEntry {
@@ -38,6 +39,16 @@ export interface RunwayProjectionResult {
   safeRunwayBufferPaise?: Paise;
   /** Available spendable balance after reserving the emergency cushion (never negative, never distorts confirmed balance) */
   startingSpendableBalancePaise?: number | null;
+  /** Explicit Available Liquidity (cash-flow view, paise) */
+  availableLiquidityPaise?: number | null;
+  /** Unencumbered Sustainable Capital: max(0, confirmedBalance - totalPeerLiabilities - safeBuffer) */
+  sustainableCapitalPaise?: number | null;
+  /** Runway days funded by Sustainable Capital (excludes due peer debt to avoid double-counting L_outstanding) */
+  sustainableRunwayDays?: number | null;
+  /** Total unpaid peer liabilities owed by user (L_outstanding, paise) */
+  peerLiabilityPaise?: Paise;
+  /** Total unpaid peer receivables owed to user (segregated asset, paise) */
+  peerReceivablePaise?: Paise;
   dailyEssentialExpensePaise: Paise | null;
   horizonDays: number;
   runwayDays: number | null;
@@ -189,17 +200,44 @@ export function calculateDailyRunway(input: RunwayProjectionInput): RunwayProjec
     };
   }
 
-  // 4. Group upcoming commitments by due date
+  // 4. Group upcoming commitments by due date (bills + due peer debt repayments)
+  // billsCommitmentsByDate tracks non-peer bills (K_bills) for Sustainable Runway (avoids double-counting L_outstanding).
+  // commitmentsByDate tracks K_bills + K_debt_due for the Available Liquidity cash-flow projection.
+  const billsCommitmentsByDate = new Map<ISODate, Array<{ id: string; title: string; amount: Paise }>>();
   const commitmentsByDate = new Map<ISODate, Array<{ id: string; title: string; amount: Paise }>>();
   if (Array.isArray(input.commitments)) {
     for (const c of input.commitments) {
       if (c && isValidPaise(c.amount) && c.amount > 0 && isValidISODate(c.dueDate)) {
+        const billList = billsCommitmentsByDate.get(c.dueDate) ?? [];
+        billList.push({ id: c.id, title: c.title, amount: c.amount });
+        billsCommitmentsByDate.set(c.dueDate, billList);
+
         const existing = commitmentsByDate.get(c.dueDate) ?? [];
         existing.push({ id: c.id, title: c.title, amount: c.amount });
         commitmentsByDate.set(c.dueDate, existing);
       }
     }
   }
+
+  const peerLiabilityPaise: Paise = balanceResult.peerLiabilityPaise ?? 0;
+  const peerReceivablePaise: Paise = balanceResult.peerReceivablePaise ?? 0;
+  if (input.peerDebts && input.peerDebts.length > 0 && input.latestCheckin) {
+    const peerSummary = calculatePeerDebtSummary({
+      peerDebts: input.peerDebts,
+      debtSettlements: input.debtSettlements,
+      checkedAt: input.latestCheckin.checkedAt,
+    });
+    for (const dc of peerSummary.dueDebtCommitments) {
+      const existing = commitmentsByDate.get(dc.dueDate) ?? [];
+      existing.push({ id: dc.id, title: dc.title, amount: dc.amount });
+      commitmentsByDate.set(dc.dueDate, existing);
+    }
+  }
+
+  const sustainableCapitalPaise = Math.max(
+    0,
+    safeSub(safeSub(balanceResult.confirmedBalancePaise!, peerLiabilityPaise), safeBuffer)
+  );
 
   // 5. Option A — Remaining Daily Budget Calculation for Current Projection Date (Day 0)
   // Deduct only estimated daily expenses that the worker has not already spent today.
@@ -308,11 +346,38 @@ export function calculateDailyRunway(input: RunwayProjectionInput): RunwayProjec
 
   const runwayDays = firstShortfallDate !== null ? coveredDaysCount : horizon;
 
+  // Sustainable Runway days: starts from (confirmedBalance - totalPeerLiabilities) and deducts ONLY non-debt bills
+  // so L_outstanding is counted once and never double-counted with dueDebtCommitments.
+  let sustainableBalance = safeSub(balanceResult.confirmedBalancePaise!, peerLiabilityPaise);
+  let sustainableCoveredDays = 0;
+  let sustainableShortfallHit = false;
+  for (let d = 0; d < horizon; d++) {
+    const currentDate = addDays(startDate, d);
+    let dayBills: Paise = 0;
+    for (const b of billsCommitmentsByDate.get(currentDate) ?? []) {
+      dayBills = safeAdd(dayBills, b.amount);
+    }
+    const dayEssential = d === 0 ? remainingDailyBudget : dailyEssentialExpense;
+    sustainableBalance = safeSub(sustainableBalance, safeAdd(dayEssential, dayBills));
+    if (!sustainableShortfallHit) {
+      if (sustainableBalance < 0) {
+        sustainableShortfallHit = true;
+      } else {
+        sustainableCoveredDays++;
+      }
+    }
+  }
+
   return {
     status: "PROJECTED",
     startingConfirmedBalancePaise: balanceResult.confirmedBalancePaise,
     safeRunwayBufferPaise: safeBuffer,
     startingSpendableBalancePaise: startingSpendable,
+    availableLiquidityPaise: startingSpendable,
+    sustainableCapitalPaise,
+    sustainableRunwayDays: sustainableShortfallHit ? sustainableCoveredDays : horizon,
+    peerLiabilityPaise,
+    peerReceivablePaise,
     dailyEssentialExpensePaise: dailyEssentialExpense,
     horizonDays: horizon,
     runwayDays,

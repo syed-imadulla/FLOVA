@@ -1,12 +1,15 @@
 // Data services (owner: M1). Every call runs as the signed-in user; RLS on the
 // database guarantees users only ever touch their own rows. Inputs are in paise.
 import { supabase, unwrap } from "../lib/supabase";
-import { paiseToRupeeString, toPaise, toPaiseOrNull } from "../lib/money";
+import { assertPaise, paiseToRupeeString, toPaise, toPaiseOrNull } from "../lib/money";
 import { LIMIT_ERROR_MESSAGE, MAX_TRANSACTION_LIMIT_PAISE } from "../lib/limits";
 import type {
-  ActivityItem, BalanceCheckin, Commitment, CommitmentStatus, ExtractedReceiptCandidate,
+  ActivityItem, BalanceCheckin, Commitment, CommitmentStatus,
+  DebtSettlementEngineItem, ExtractedReceiptCandidate,
+  GroupSettlementEngineItem, GroupSplitEngineItem,
   NewBalanceCheckin, NewCommitment, NewPayout, NewTransaction,
-  Payout, PayoutStatus, Profile, ProfileUpdate, RunwayInput, Transaction, VoiceTransactionCandidate,
+  Payout, PayoutStatus, PeerDebtEngineItem, Profile, ProfileUpdate,
+  RunwayInput, Transaction, VoiceTransactionCandidate,
 } from "../types/contracts";
 
 const money = (p: number | null | undefined) => (p === null || p === undefined ? p : paiseToRupeeString(p));
@@ -62,6 +65,7 @@ export async function addTransaction(t: NewTransaction): Promise<Transaction> {
     id: t.id,
     type: t.type, amount: money(t.amount), category: t.category ?? "other", description: t.description ?? null,
     expense_type: expectedExpenseType,
+    ...(t.inflowCategory ? { inflow_category: t.inflowCategory } : {}),
     ownership, payout_id: t.payoutId ?? null, source: t.source ?? "manual",
     ...(t.date ? { transaction_date: t.date } : {}),
   }).select().single();
@@ -186,12 +190,74 @@ export async function setCommitmentStatus(id: string, status: CommitmentStatus):
 export async function loadRunwayInput(): Promise<RunwayInput> {
   const [profile, checkin] = await Promise.all([getMyProfile(), getLatestCheckin()]);
   const since = checkin ? checkin.checked_at.slice(0, 10) : undefined;
-  const [txs, payouts, commitments] = await Promise.all([
+  const [txs, payouts, commitments, peerDebtsRes, settlementsRes, groupSplitsRes, groupSettlementsRes] = await Promise.all([
     since ? unwrap(await supabase.from("transactions").select("*").gte("transaction_date", since), "Load transactions")
           : Promise.resolve([] as Transaction[]),
     listPayouts(),
     listCommitments("upcoming"),
+    supabase.from("peer_debts").select("*, person:people(name)"),
+    since ? supabase.from("debt_settlements").select("*").gte("created_at", checkin!.checked_at)
+          : Promise.resolve({ data: [], error: null }),
+    supabase.from("group_expense_splits").select("*"),
+    since ? supabase.from("group_settlements").select("*").gte("created_at", checkin!.checked_at)
+          : Promise.resolve({ data: [], error: null }),
   ]);
+
+  // Graceful fallback when peer_debts/debt_settlements tables are not yet migrated (v1.0.1 compatibility)
+  const peerDebts: PeerDebtEngineItem[] =
+    !peerDebtsRes.error && Array.isArray(peerDebtsRes.data)
+      ? peerDebtsRes.data.map((d: any) => ({
+          id: d.id,
+          personId: d.person_id,
+          personName: d.person?.name ?? undefined,
+          direction: d.direction,
+          totalAmountPaise: assertPaise(d.total_amount_paise),
+          remainingAmountPaise: assertPaise(d.remaining_amount_paise),
+          status: d.status,
+          dueDate: d.due_date ?? null,
+          createdAt: d.created_at,
+        }))
+      : [];
+
+  const debtSettlements: DebtSettlementEngineItem[] =
+    !settlementsRes.error && Array.isArray(settlementsRes.data)
+      ? settlementsRes.data.map((s: any) => ({
+          id: s.id,
+          debtId: s.debt_id,
+          direction: s.direction,
+          amountPaise: assertPaise(s.amount_paise),
+          settledAt: s.settled_at,
+          createdAt: s.created_at,
+        }))
+      : [];
+
+  const groupSplits: GroupSplitEngineItem[] =
+    !groupSplitsRes.error && Array.isArray(groupSplitsRes.data)
+      ? groupSplitsRes.data.map((sp: any) => ({
+          id: sp.id,
+          groupExpenseId: sp.group_expense_id,
+          isSelf: Boolean(sp.is_self),
+          personId: sp.person_id ?? null,
+          direction: sp.direction,
+          shareAmountPaise: assertPaise(sp.share_amount_paise),
+          remainingAmountPaise: assertPaise(sp.remaining_amount_paise),
+          status: sp.status,
+          createdAt: sp.created_at,
+        }))
+      : [];
+
+  const groupSettlements: GroupSettlementEngineItem[] =
+    !groupSettlementsRes.error && Array.isArray(groupSettlementsRes.data)
+      ? groupSettlementsRes.data.map((gs: any) => ({
+          id: gs.id,
+          groupExpenseSplitId: gs.group_expense_split_id,
+          direction: gs.direction,
+          amountPaise: assertPaise(gs.amount_paise),
+          settledAt: gs.settled_at,
+          createdAt: gs.created_at,
+        }))
+      : [];
+
   return {
     profile: {
       workProfile: profile.work_profile,
@@ -209,6 +275,7 @@ export async function loadRunwayInput(): Promise<RunwayInput> {
     // includes same-day rows; M3 compares createdAt with checkedAt to skip anything already in the check-in
     transactionsSinceCheckin: (txs as Transaction[]).map((t) => ({
       id: t.id, type: t.type, amount: toPaise(t.amount), ownership: t.ownership, expenseType: t.expense_type,
+      inflowCategory: t.inflow_category ?? null,
       payoutId: t.payout_id, date: t.transaction_date, createdAt: t.created_at,
     })),
     payouts: payouts.filter((p) => p.status !== "cancelled").map((p) => ({
@@ -216,6 +283,10 @@ export async function loadRunwayInput(): Promise<RunwayInput> {
       expectedDate: p.expected_date, status: p.status,
     })),
     commitments: commitments.map((c) => ({ id: c.id, title: c.title, amount: toPaise(c.amount), dueDate: c.due_date, kind: c.kind })),
+    peerDebts,
+    debtSettlements,
+    groupSplits,
+    groupSettlements,
   };
 }
 

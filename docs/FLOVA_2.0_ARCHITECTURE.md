@@ -24,7 +24,7 @@ In accordance with the **Mandatory Engineering Principles**, FLOVA 2.0 is an **i
 
 ## 2. Current Architecture (FLOVA 1.0) vs Target Architecture (FLOVA 2.0)
 
-### 2.1 Current Architecture Overview (v1.0.0)
+### 2.1 Current Architecture Overview (v1.0.1, Commit `ab4bdef`)
 
 FLOVA 1.0 consists of:
 - **Frontend / Client:** React 18 SPA built with Vite, TypeScript, and Tailwind CSS, wrapped in Capacitor 8 for Android and hosted on Vercel as a PWA.
@@ -132,11 +132,11 @@ FLOVA 2.0 introduces four architectural pillars:
 |  |                                                                                             |  |
 |  |   Existing Core Tables:              New FLOVA 2.0 Tables:                                  |  |
 |  |   • profiles                         • people (Directory of counterparties)                 |  |
-|  |   • transactions                     • peer_debts (Lending & borrowing ledger)              |  |
-|  |   • payouts                          • debt_repayments (Installment repayments)             |  |
+|  |   • transactions                     • peer_debts (Single source of truth for loans)   |  |
+|  |   • payouts                          • debt_settlements (Installment settlements)         |  |
 |  |   • commitments                      • group_expenses (Shared expense events)               |  |
-|  |   • balance_checkins                 • group_splits (Individual splits & settlements)       |  |
-|  |   • invoices                         • audit_logs (Append-only change history)              |  |
+|  |   • balance_checkins                 • group_splits (Individual splits)                   |  |
+|  |   • invoices                         • financial_audit_log (Append-only change history)   |  |
 |  |   • wish_goals / contributions                                                              |  |
 |  |                                                                                             |  |
 |  |   Security & Constraints:                                                                   |  |
@@ -224,9 +224,10 @@ FLOVA 2.0 introduces four architectural pillars:
 
 ## 5. Security, Rate Limiting & RLS Boundaries
 
-1. **Database Row Level Security (RLS):**
-   - All newly proposed tables (`people`, `peer_debts`, `debt_repayments`, `group_expenses`, `group_splits`, `audit_logs`) will enforce `ENABLE ROW LEVEL SECURITY`.
-   - Security policies will strictly bind rows to `auth.uid() = user_id`.
+1. **Database Row Level Security (RLS) & Composite Foreign Keys:**
+   - All newly proposed tables (`people`, `peer_debts`, `debt_settlements`, `group_expenses`, `group_splits`, `financial_audit_log`) will enforce `ENABLE ROW LEVEL SECURITY` (`auth.uid() = user_id`).
+   - Composite unique constraints (`UNIQUE (id, user_id)` on `people` and `peer_debts`) and composite foreign keys (`peer_debts(person_id, user_id) -> people(id, user_id)` and `debt_settlements(debt_id, user_id) -> peer_debts(id, user_id)`) prevent cross-user references at the database constraint level.
+   - `financial_audit_log` audits `transactions`, `peer_debts`, `debt_settlements`, `commitments`, and `people`, with `REVOKE INSERT, UPDATE, DELETE, TRUNCATE` from client roles and `SECURITY DEFINER` triggers.
 2. **Edge Function Protection:**
    - Edge Functions continue to enforce user-based and IP-based rate limiting using PostgreSQL tables `edge_function_rate_limits` and `edge_function_rate_limit_configs`.
    - Service-role keys and Groq API keys remain strictly server-side secrets in Supabase vault; never bundled into the client build.
@@ -239,10 +240,10 @@ FLOVA 2.0 introduces four architectural pillars:
 
 ## 6. Migration Requirements & Backward Compatibility
 
-- **Database Schemas:** All FLOVA 2.0 schema additions will be purely additive migrations (`20261125000100_people_and_debts.sql`). No existing columns or tables from v1.0.0 will be altered or dropped.
+- **Database Schemas:** All FLOVA 2.0 schema additions use additive, forward-only migrations (`20261125000100_flova_2_foundation.sql`). No existing columns or tables from v1.0.1 will be altered or dropped. Rollback scripts are restricted to disposable local test databases.
 - **Preserved Existing Features:**
   - Integer paise representation and `lib/money.ts` utilities remain unchanged.
   - The ₹10,00,000 IST daily limit trigger and payout sync triggers remain intact.
-  - The v1.0.0 navigation routes (`/app`, `/activity`, `/voice`, `/add`, `/insights`, `/payouts`, `/wish`) remain active and functional.
+  - The v1.0.1 navigation routes (`/app`, `/activity`, `/voice`, `/add`, `/insights`, `/payouts`, `/wish`), privacy-preserving widgets, and UPI Share Target remain active and functional.
 - **Android Signing & Keystore:**
-  - The permanent Android release signing certificate (`flova-release-key.jks`) is preserved untouched. No package name change (`in.flova.app` is permanent).
+  - The permanent RSA 4096-bit Android release signing keystore (`~/.android/flova-release.keystore`, alias `flova-release`, SHA-256 `3E:2E:D1:B3:24:A8:A9:B3:0E:8A:07:E0:F5:52:D3:C0:6B:E8:9F:A9:4E:4B:C7:E0:A4:1D:F8:23:52:DA:34:D6`, Min SDK 24, Compile/Target SDK 36) is preserved untouched for GitHub Releases APK distribution. No package name change (`in.flova.app` is permanent).

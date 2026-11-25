@@ -123,8 +123,8 @@
 - **Dependencies:** None
 - **Description:** As a user or auditor, any modification or deletion of a transaction is recorded in an immutable audit log.
 - **Acceptance Criteria:**
-  - Database trigger captures `old_data`, `new_data`, `action` (`INSERT`, `UPDATE`, `DELETE`), and `timestamp`.
-  - Stored in `transaction_audit_logs` table protected by RLS.
+  - Database trigger (`SECURITY DEFINER`) captures `acting_user_id`, `state_before`, `state_after`, `action` (`INSERT`, `UPDATE`, `DELETE`), and `created_at` across `transactions`, `peer_debts`, `debt_settlements`, `commitments`, and `people`.
+  - Stored in `financial_audit_log` table protected by RLS, `REVOKE INSERT, UPDATE, DELETE, TRUNCATE`, and an append-only immutability trigger.
   - Users can view "Edited on [date]" in the transaction details modal.
 
 ---
@@ -137,10 +137,10 @@
 - **Dependencies:** None
 - **Description:** As a user, I have a dedicated People tab where I see who owes me money and whom I owe, with running net balances.
 - **Acceptance Criteria:**
-  - PostgreSQL table `people` (`id`, `user_id`, `name`, `phone`, `created_at`).
-  - Table `peer_debts` (`id`, `user_id`, `person_id`, `amount_paise`, `direction`, `status`, `due_date`).
+  - PostgreSQL table `people` (`id`, `user_id`, `name`, `phone`, `upi_id`, `created_at`) with `UNIQUE (id, user_id)`.
+  - Table `peer_debts` (`id`, `user_id`, `person_id`, `total_amount_paise`, `remaining_amount_paise`, `direction`, `status`, `due_date`) with `UNIQUE (id, user_id)` and composite `FOREIGN KEY (person_id, user_id) REFERENCES people(id, user_id)`.
   - Displays total receivables (money lent) and total liabilities (money borrowed).
-  - Strictly isolates receivables from spendable cash until confirmed repaid.
+  - Strictly isolates receivables from spendable cash until confirmed repaid, and never duplicates `peer_debts` into `transactions`.
 
 ### US-E2: Partial Repayments & Settlement History
 - **Priority:** P1
@@ -148,9 +148,9 @@
 - **Dependencies:** US-E1
 - **Description:** As a user, when someone repays part of a loan, I can record a partial repayment and see the remaining outstanding balance.
 - **Acceptance Criteria:**
-  - Table `debt_repayments` records each installment in integer paise.
-  - Updates `peer_debts.amount_repaid_paise` and marks status `settled` when fully paid.
-  - Recording repayment prompts an optional linked cash/bank transaction update.
+  - Table `debt_settlements` (`FOREIGN KEY (debt_id, user_id) REFERENCES peer_debts(id, user_id)`) records each installment in integer paise.
+  - Server-side trigger validates `amount_paise <= remaining_amount_paise`, updates `peer_debts.remaining_amount_paise`, and marks status `partially_settled` or `settled`.
+  - Settlement updates `C_owned` directly via `PeerDebtNetCash` without creating duplicate `transactions` rows.
 
 ### US-E3: Group Expense Splitting
 - **Priority:** P2
@@ -180,16 +180,10 @@
 
 ## Epic G: Receipt and UPI Intelligence
 
-### US-G1: Native Android UPI Share Target
-- **Priority:** P0
-- **Complexity:** High (8 pts)
-- **Dependencies:** None
-- **Description:** As an Android user, when I share a payment receipt or text from Google Pay, PhonePe, Paytm, or BHIM, FLOVA appears as a share option and opens `/catch` with the transaction parsed.
-- **Acceptance Criteria:**
-  - `AndroidManifest.xml` registers `ACTION_SEND` for `text/plain` and `image/*`.
-  - `MainActivity.java` captures intent extras and forwards them to Capacitor WebView.
-  - `/catch` receives payload, calls `extract-receipt` Edge Function, and displays candidate card.
-  - **Zero auto-commit:** Transaction is saved only after user explicitly reviews and taps "Confirm" on `/add`.
+### US-G1: Native Android UPI Share Target (Completed in v1.0.1)
+- **Priority:** Completed (Baseline `v1.0.1`)
+- **Status:** Implemented and Verified (`ab4bdef`)
+- **Description:** Native `ACTION_SEND` receiver (`ShareReceiverPlugin.java`) with durable claim lease, background file copy, and `/catch` candidate extraction. Retained and maintained in FLOVA 2.0.
 
 ### US-G2: Cloud Receipt Storage & Attachments
 - **Priority:** P2
@@ -219,18 +213,10 @@
 
 ## Epic I: Android Home-Screen Widget & Proactive Assistance
 
-### US-I1: Native Android Home-Screen Widgets (Compact 1:2 & Extended 2:2)
-- **Priority:** P0
-- **Complexity:** High (8 pts)
-- **Dependencies:** None
-- **Description:** As an Android user, I can add two native FLOVA widgets to my home screen: a compact 1:2 microphone widget for one-tap voice capture, and an extended 2:2 quick-actions widget with Voice, Add, Receipt, and History.
-- **Acceptance Criteria:**
-  - Implemented as two native Android `AppWidgetProvider` classes with `RemoteViews`: `FlovaMicWidgetProvider` (1:2 vertical) and `FlovaQuickActionsWidgetProvider` (2:2 square).
-  - Compact widget shows FLOVA branding, prominent microphone button, and "Tap to speak" label.
-  - Extended widget shows FLOVA branding with a 2x2 grid of action tiles: Voice (`in.flova.app://voice?autoRecord=true`), Add (`in.flova.app://add`), Receipt (`in.flova.app://catch`), and History (`in.flova.app://activity`).
-  - No balances or financial PII displayed, ensuring 100% lock-screen privacy.
-  - User logout or account switching calls `FlovaWidgetBridge.clearWidgetData()` to reset widgets.
-  - Zero background battery drain; updates driven by intent events without background audio recording violations.
+### US-I1: Native Android Home-Screen Widgets — Compact Mic 2×2 & Quick Actions 2×2/4×2 (Completed in v1.0.1)
+- **Priority:** Completed (Baseline `v1.0.1`)
+- **Status:** Implemented and Verified on Xiaomi Redmi 12 5G (`ab4bdef`)
+- **Description:** Privacy-preserving mic-first widgets (`CompactMicWidgetProvider.java` 2×2, `QuickActionsWidgetProvider.java` 2×2 / 4×2) with zero financial balances or private data displayed on the home screen. Retained and maintained in FLOVA 2.0.
 
 ### US-I2: Local Push Notifications for Bills & Check-Ins
 - **Priority:** P1

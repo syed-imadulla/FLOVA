@@ -11,6 +11,11 @@ export interface ProcessedRunway {
   safeRunwayBufferPaise?: number;
   /** max(0, confirmed − buffer); null when the balance is not confirmed. */
   startingSpendableBalancePaise?: number | null;
+  availableLiquidityPaise?: number | null;
+  sustainableCapitalPaise?: number | null;
+  sustainableRunwayDays?: number | null;
+  peerLiabilityPaise?: number;
+  peerReceivablePaise?: number;
   /** First day the projected balance dips below the reserved cushion. */
   firstBufferShortfallDate?: ISODate | null;
   projectedZeroBalanceDate: ISODate | null;
@@ -111,6 +116,11 @@ export function processRunwayFeed(
     firstShortfallDate: projectionResult.firstShortfallDate,
     safeRunwayBufferPaise: projectionResult.safeRunwayBufferPaise ?? safeRunwayBufferPaise,
     startingSpendableBalancePaise: projectionResult.startingSpendableBalancePaise ?? null,
+    availableLiquidityPaise: projectionResult.availableLiquidityPaise ?? projectionResult.startingSpendableBalancePaise ?? null,
+    sustainableCapitalPaise: projectionResult.sustainableCapitalPaise ?? null,
+    sustainableRunwayDays: projectionResult.sustainableRunwayDays ?? null,
+    peerLiabilityPaise: projectionResult.peerLiabilityPaise ?? 0,
+    peerReceivablePaise: projectionResult.peerReceivablePaise ?? 0,
     firstBufferShortfallDate: projectionResult.firstBufferShortfallDate ?? null,
     projectedZeroBalanceDate: projectionResult.projectedZeroBalanceDate,
     runwayDays: projectionResult.runwayDays,

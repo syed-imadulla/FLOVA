@@ -25,6 +25,9 @@ import { CommitmentsScreen } from "./screens/CommitmentsScreen";
 import { WishScreen } from "./screens/WishScreen";
 import { InvoicesScreen } from "./screens/InvoicesScreen";
 import { ProfileScreen } from "./screens/ProfileScreen";
+import { PeopleScreen } from "./screens/PeopleScreen";
+import { MoneyScreen } from "./screens/MoneyScreen";
+import { GroupsScreen } from "./screens/GroupsScreen";
 import { AndroidBackButton } from "./native/AndroidBackButton";
 import { AppUrlListener } from "./native/AppUrlListener";
 import { APP_START_PATH, IS_NATIVE_APP } from "./native/platform";
@@ -62,6 +65,11 @@ export default function App() {
                 <Route path="/app" element={<HomeScreen />} />
                 <Route path="/activity" element={<ActivityScreen />} />
                 <Route path="/voice" element={<VoiceScreen />} />
+                <Route path="/people" element={<PeopleScreen />} />
+                <Route path="/people/:personId" element={<PeopleScreen />} />
+                <Route path="/money" element={<MoneyScreen />} />
+                <Route path="/groups" element={<GroupsScreen />} />
+                <Route path="/groups/:groupId" element={<GroupsScreen />} />
                 <Route path="/insights" element={<InsightsScreen />} />
                 <Route path="/more" element={<MoreScreen />} />
                 <Route path="/checkin" element={<CheckinScreen />} />
