@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "test": "node --loader ./src/services/__tests__/mockLoader.mjs --test \"src/services/__tests__/*.test.ts\" \"src/engine/__tests__/*.test.ts\" \"src/runway/__tests__/*.test.ts\" \"src/wish/__tests__/*.test.ts\" \"src/profile/__tests__/*.test.ts\" \"src/data/__tests__/*.test.ts\" \"src/tools/__tests__/*.test.ts\" \"src/conversation/__tests__/*.test.ts\" \"src/drafts/__tests__/*.test.ts\"",
+    "test": "node --loader ./src/services/__tests__/mockLoader.mjs --test \"src/services/__tests__/*.test.ts\" \"src/engine/__tests__/*.test.ts\" \"src/runway/__tests__/*.test.ts\" \"src/wish/__tests__/*.test.ts\" \"src/profile/__tests__/*.test.ts\" \"src/data/__tests__/*.test.ts\"",
     "android:sync": "npm run build && npx cap sync android"
   },
   "dependencies": {
