@@ -1,21 +1,24 @@
 // People — Track everyone you lend to or borrow from, with full history and zero-balance support.
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { formatINR } from "../lib/money";
+import { formatINR, toPaiseStrict } from "../lib/money";
 import { useDataVersion } from "../data/DataVersionProvider";
 import {
   computePeopleSummaries,
   createPerson,
+  deletePeerDebt,
   deletePerson,
   listDebtSettlements,
   listPeerDebts,
   listPeople,
+  reverseDebtSettlement,
+  updatePeerDebt,
   updatePerson,
   type PersonFinancialSummary,
 } from "../services/peerDebts";
 import { listGroupExpenses, listGroupSettlements, listGroupSplits } from "../services/groupExpenses";
-import type { GroupExpense, GroupExpenseSplit, GroupSettlement } from "../types/contracts";
-import { Button, Card, Field, Notice, Screen, SectionTitle, Skeleton, TextInput, cx, formatDay } from "../ui/kit";
+import type { GroupExpense, GroupExpenseSplit, GroupSettlement, PeerDebt } from "../types/contracts";
+import { Button, Card, Field, MoneyInput, Notice, Screen, SectionTitle, SelectInput, Skeleton, TextInput, cx, formatDay } from "../ui/kit";
 import { IconChevronRight, IconPencil, IconPlus, IconTrash, IconUser } from "../ui/icons";
 
 export function PeopleScreen() {
@@ -37,6 +40,18 @@ export function PeopleScreen() {
   const [saving, setSaving] = useState(false);
   const [formErr, setFormErr] = useState<string | null>(null);
   const [deleteErr, setDeleteErr] = useState<string | null>(null);
+
+  // Debt edit / delete / settlement reversal state
+  const [editingDebt, setEditingDebt] = useState<PeerDebt | null>(null);
+  const [editDebtPersonId, setEditDebtPersonId] = useState("");
+  const [editDebtAmount, setEditDebtAmount] = useState("");
+  const [editDebtDue, setEditDebtDue] = useState("");
+  const [editDebtReason, setEditDebtReason] = useState("");
+  const [editDebtErr, setEditDebtErr] = useState<string | null>(null);
+  const [savingDebt, setSavingDebt] = useState(false);
+  const [confirmDeleteDebtId, setConfirmDeleteDebtId] = useState<string | null>(null);
+  const [confirmReverseId, setConfirmReverseId] = useState<string | null>(null);
+  const [debtActionErr, setDebtActionErr] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -138,6 +153,68 @@ export function PeopleScreen() {
     }
   }
 
+  function openEditDebt(d: PeerDebt) {
+    setEditingDebt(d);
+    setEditDebtPersonId(d.person_id);
+    setEditDebtAmount((d.total_amount_paise / 100).toString());
+    setEditDebtDue(d.due_date ?? "");
+    setEditDebtReason(d.reason ?? "");
+    setEditDebtErr(null);
+  }
+
+  async function handleSaveDebtEdit() {
+    if (!editingDebt) return;
+    setEditDebtErr(null);
+    let paise = 0;
+    try {
+      paise = toPaiseStrict(editDebtAmount.replace(/,/g, "").trim());
+    } catch {
+      paise = 0;
+    }
+    if (!paise || paise <= 0) {
+      setEditDebtErr("Enter a valid original amount greater than ₹0.");
+      return;
+    }
+    setSavingDebt(true);
+    try {
+      await updatePeerDebt({
+        debtId: editingDebt.id,
+        personId: editDebtPersonId,
+        totalAmountPaise: paise,
+        dueDate: editDebtDue || null,
+        reason: editDebtReason || null,
+      });
+      setEditingDebt(null);
+      bump();
+    } catch (err) {
+      setEditDebtErr(err instanceof Error ? err.message : "Could not update debt.");
+    } finally {
+      setSavingDebt(false);
+    }
+  }
+
+  async function handleDeleteDebt(debtId: string) {
+    setDebtActionErr(null);
+    try {
+      await deletePeerDebt(debtId);
+      setConfirmDeleteDebtId(null);
+      bump();
+    } catch (err) {
+      setDebtActionErr(err instanceof Error ? err.message : "Could not delete debt.");
+    }
+  }
+
+  async function handleReverseSettlement(settlementId: string) {
+    setDebtActionErr(null);
+    try {
+      await reverseDebtSettlement(settlementId);
+      setConfirmReverseId(null);
+      bump();
+    } catch (err) {
+      setDebtActionErr(err instanceof Error ? err.message : "Could not reverse repayment.");
+    }
+  }
+
   // Detail View for a single person
   if (personId) {
     if (loading) {
@@ -233,6 +310,35 @@ export function PeopleScreen() {
         </div>
 
         <SectionTitle>History ({selected.debts.length})</SectionTitle>
+        {debtActionErr ? <Notice tone="danger">{debtActionErr}</Notice> : null}
+        {editingDebt ? (
+          <Card className="p-4 space-y-3 border-brand-200">
+            <SectionTitle>Edit debt</SectionTitle>
+            {editDebtErr ? <Notice tone="danger">{editDebtErr}</Notice> : null}
+            <Field label="Person">
+              {(id) => (
+                <SelectInput id={id} value={editDebtPersonId} onChange={(e) => setEditDebtPersonId(e.target.value)}>
+                  {summaries.map((s) => (
+                    <option key={s.person.id} value={s.person.id}>{s.person.name}</option>
+                  ))}
+                </SelectInput>
+              )}
+            </Field>
+            <Field label="Original amount">
+              {(id) => <MoneyInput id={id} value={editDebtAmount} onChange={setEditDebtAmount} />}
+            </Field>
+            <Field label="Due date (optional)">
+              {(id) => <TextInput id={id} type="date" value={editDebtDue} onChange={(e) => setEditDebtDue(e.target.value)} />}
+            </Field>
+            <Field label="Note (optional)">
+              {(id) => <TextInput id={id} value={editDebtReason} onChange={(e) => setEditDebtReason(e.target.value)} />}
+            </Field>
+            <div className="grid grid-cols-2 gap-2 pt-1">
+              <Button variant="secondary" onClick={() => setEditingDebt(null)}>Cancel</Button>
+              <Button loading={savingDebt} onClick={handleSaveDebtEdit}>Save debt</Button>
+            </div>
+          </Card>
+        ) : null}
         {selected.debts.length === 0 ? (
           <Card className="p-5 text-center space-y-1">
             <p className="text-[15px] font-semibold text-ink">No borrowing or lending yet</p>
@@ -276,13 +382,48 @@ export function PeopleScreen() {
                   {dSettlements.length > 0 ? (
                     <div className="pt-1 space-y-1">
                       {dSettlements.map((s) => (
-                        <p key={s.id} className="text-[11.5px] text-ink-muted">
-                          • {formatDay(s.settled_at.slice(0, 10))}: {formatINR(s.amount_paise)}
-                          {s.notes ? ` (${s.notes})` : ""}
-                        </p>
+                        <div key={s.id} className="flex items-center justify-between gap-2 text-[11.5px] text-ink-muted">
+                          <span>
+                            • {formatDay(s.settled_at.slice(0, 10))}: {formatINR(s.amount_paise)}
+                            {s.notes ? ` (${s.notes})` : ""}
+                          </span>
+                          {confirmReverseId === s.id ? (
+                            <span className="inline-flex items-center gap-1.5">
+                              <button type="button" onClick={() => handleReverseSettlement(s.id)} className="text-red-700 font-semibold">
+                                Confirm reverse
+                              </button>
+                              <button type="button" onClick={() => setConfirmReverseId(null)} className="text-ink-soft">
+                                Keep
+                              </button>
+                            </span>
+                          ) : (
+                            <button type="button" onClick={() => setConfirmReverseId(s.id)} className="text-red-700 font-medium">
+                              Reverse
+                            </button>
+                          )}
+                        </div>
                       ))}
                     </div>
                   ) : null}
+                  <div className="flex items-center justify-between gap-2 pt-1 text-xs">
+                    <button type="button" onClick={() => openEditDebt(d)} className="font-semibold text-ink-soft hover:text-ink">
+                      Edit
+                    </button>
+                    {confirmDeleteDebtId === d.id ? (
+                      <span className="inline-flex items-center gap-2">
+                        <button type="button" onClick={() => handleDeleteDebt(d.id)} className="font-semibold text-red-700">
+                          Confirm delete
+                        </button>
+                        <button type="button" onClick={() => setConfirmDeleteDebtId(null)} className="text-ink-soft">
+                          Cancel
+                        </button>
+                      </span>
+                    ) : (
+                      <button type="button" onClick={() => setConfirmDeleteDebtId(d.id)} className="font-semibold text-red-700">
+                        Delete
+                      </button>
+                    )}
+                  </div>
                   {d.remaining_amount_paise > 0 ? (
                     <Link
                       to={`/money?settle=${d.id}`}

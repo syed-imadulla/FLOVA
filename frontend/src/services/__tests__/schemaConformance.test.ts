@@ -95,9 +95,22 @@ const schema = loadSchema();
 const writes = findWrites();
 
 check("migrations define the tables the app writes to", () => {
-  for (const t of ["profiles", "transactions", "payouts", "balance_checkins", "commitments", "invoices", "invoice_items", "invoice_settlements", "wish_goals", "wish_contributions"]) {
+  for (const t of [
+    "profiles", "transactions", "payouts", "balance_checkins", "commitments",
+    "invoices", "invoice_items", "invoice_settlements", "wish_goals", "wish_contributions",
+    "people", "peer_debts", "debt_settlements",
+    "expense_groups", "expense_group_members", "group_expenses", "group_expense_splits", "group_settlements",
+  ]) {
     if (!schema.has(t)) throw new Error(`table ${t} not found in migrations`);
   }
+});
+
+check("Sprint 4B columns exist in migrations (payment_method, receipt_path, idempotency_key)", () => {
+  const txCols = schema.get("transactions");
+  if (!txCols?.has("payment_method")) throw new Error("transactions.payment_method missing");
+  if (!txCols?.has("receipt_path")) throw new Error("transactions.receipt_path missing");
+  const geCols = schema.get("group_expenses");
+  if (!geCols?.has("idempotency_key")) throw new Error("group_expenses.idempotency_key missing");
 });
 
 check("frontend writes are discovered", () => {

@@ -35,6 +35,7 @@ export const COMMITMENT_KINDS = ["bill", "debt"] as const;
 export const COMMITMENT_STATUSES = ["upcoming", "paid", "cancelled"] as const;
 export const ENTRY_SOURCES = ["manual", "voice", "ai_suggestion", "demo"] as const;
 export const INFLOW_CATEGORIES = ["earned", "family_support", "pocket_money", "gift", "donation"] as const;
+export const PAYMENT_METHODS = ["cash", "bank", "upi"] as const;
 export const PEER_DEBT_DIRECTIONS = ["you_owe", "they_owe"] as const;
 export const PEER_DEBT_STATUSES = ["active", "partially_settled", "settled", "forgiven"] as const;
 export const SETTLEMENT_DIRECTIONS = ["repayment_out", "repayment_in"] as const;
@@ -52,6 +53,7 @@ export type CommitmentKind = (typeof COMMITMENT_KINDS)[number];
 export type CommitmentStatus = (typeof COMMITMENT_STATUSES)[number];
 export type EntrySource = (typeof ENTRY_SOURCES)[number];
 export type InflowCategory = (typeof INFLOW_CATEGORIES)[number];
+export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
 export type PeerDebtDirection = (typeof PEER_DEBT_DIRECTIONS)[number];
 export type PeerDebtStatus = (typeof PEER_DEBT_STATUSES)[number];
 export const GROUP_SPLIT_TYPES = ["equal", "custom", "percentage"] as const;
@@ -190,6 +192,8 @@ export interface Transaction {
   description: string | null;
   expense_type: ExpenseType | null; // required when type='expense' AND ownership='mine'
   inflow_category?: InflowCategory | null; // optional FLOVA 2.0 segregation for own income
+  payment_method?: PaymentMethod | null; // optional Sprint 4B payment method ('cash' | 'bank' | 'upi')
+  receipt_path?: string | null; // optional Sprint 4B private storage path
   ownership: MoneyOwnership;
   payout_id: string | null; // own income that settles (part of) a payout
   transaction_date: ISODate;
@@ -297,6 +301,8 @@ export interface NewTransaction {
   description?: string | null;
   expenseType?: ExpenseType | null;
   inflowCategory?: InflowCategory | null;
+  paymentMethod?: PaymentMethod | null;
+  receiptPath?: string | null;
   ownership?: MoneyOwnership;
   payoutId?: string | null;
   date?: ISODate;
@@ -353,6 +359,8 @@ export interface GroupExpense {
   expense_date: ISODate;
   split_type: GroupSplitType;
   self_transaction_id: string | null;
+  category?: string;
+  expense_type?: ExpenseType;
   note: string | null;
   created_at: ISOTimestamp;
   updated_at: ISOTimestamp;
@@ -472,6 +480,8 @@ export interface ExtractedReceiptCandidate {
   expenseType: ExpenseType | null;
   expense_type?: ExpenseType | null;
   ownership?: MoneyOwnership;
+  paymentMethod?: PaymentMethod | null;
+  receiptPath?: string | null;
   date: ISODate | null;
   extractedDate?: ISODate | null;
   extracted_date?: ISODate | null;
@@ -554,6 +564,9 @@ export interface ActivityItem {
   category?: string;
   ownership?: MoneyOwnership;
   expenseType?: ExpenseType | null;
+  inflowCategory?: InflowCategory | null;
+  paymentMethod?: PaymentMethod | null;
+  receiptPath?: string | null;
   amountPaise?: Paise;
   rupeeAmount?: RupeeString;
   snapshot?: {

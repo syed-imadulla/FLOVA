@@ -5,7 +5,7 @@ import { useState } from "react";
 import { categoriesFor, EXPENSE_CATEGORIES } from "./categories";
 import { parseRequiredRupees } from "../profile/parseRupees";
 import { todayLocalISO } from "../data/dates";
-import type { ExpenseType, MoneyOwnership, TransactionType, WorkProfile } from "../types/contracts";
+import type { ExpenseType, InflowCategory, MoneyOwnership, PaymentMethod, TransactionType, WorkProfile } from "../types/contracts";
 import { Button, Card, Field, MoneyInput, Notice, Segmented, SelectInput, TextInput, cx } from "../ui/kit";
 import { IconCheck } from "../ui/icons";
 
@@ -14,6 +14,8 @@ export interface TxDraft {
   amount: string;
   category: string;
   expenseType: ExpenseType | "";
+  inflowCategory?: InflowCategory | "";
+  paymentMethod?: PaymentMethod | "";
   ownership: MoneyOwnership;
   date: string;
   note: string;
@@ -24,13 +26,39 @@ export interface TxSubmit {
   amountPaise: number;
   category: string;
   expenseType: ExpenseType | null;
+  inflowCategory: InflowCategory | null;
+  paymentMethod: PaymentMethod | null;
   ownership: MoneyOwnership;
   date: string;
   note: string;
 }
 
+const INFLOW_OPTIONS: Array<{ value: InflowCategory; label: string }> = [
+  { value: "earned", label: "Earned income (work, salary, sales)" },
+  { value: "family_support", label: "Family support" },
+  { value: "pocket_money", label: "Pocket money" },
+  { value: "gift", label: "Gift" },
+  { value: "donation", label: "Donation" },
+];
+
+const PAYMENT_METHOD_OPTIONS: Array<{ value: PaymentMethod; label: string }> = [
+  { value: "cash", label: "Cash" },
+  { value: "bank", label: "Bank" },
+  { value: "upi", label: "UPI" },
+];
+
 export function emptyDraft(type: TransactionType = "expense"): TxDraft {
-  return { type, amount: "", category: type === "income" ? "earnings" : "", expenseType: "", ownership: "mine", date: todayLocalISO(), note: "" };
+  return {
+    type,
+    amount: "",
+    category: type === "income" ? "earnings" : "",
+    expenseType: "",
+    inflowCategory: type === "income" ? "earned" : "",
+    paymentMethod: "",
+    ownership: "mine",
+    date: todayLocalISO(),
+    note: "",
+  };
 }
 
 export function TransactionForm({
@@ -66,6 +94,7 @@ export function TransactionForm({
   };
 
   const needsExpenseType = d.type === "expense" && d.ownership === "mine";
+  const needsInflowCategory = d.type === "income" && d.ownership === "mine";
   const suggestion = EXPENSE_CATEGORIES.find((c) => c.value === d.category)?.suggests;
 
   async function submit() {
@@ -86,6 +115,8 @@ export function TransactionForm({
         amountPaise: amt.paise,
         category: d.category,
         expenseType: needsExpenseType ? (d.expenseType as ExpenseType) : null,
+        inflowCategory: needsInflowCategory ? ((d.inflowCategory || null) as InflowCategory | null) : null,
+        paymentMethod: (d.paymentMethod || null) as PaymentMethod | null,
         ownership: d.ownership,
         date: d.date,
         note: d.note.trim(),
@@ -106,7 +137,14 @@ export function TransactionForm({
         {!lockType ? (
           <Segmented
             value={d.type}
-            onChange={(t) => setD((cur) => ({ ...cur, type: t, category: t === "income" ? (cur.type === "income" ? cur.category : "earnings") : cur.type === "expense" ? cur.category : "" }))}
+            onChange={(t) =>
+              setD((cur) => ({
+                ...cur,
+                type: t,
+                category: t === "income" ? (cur.type === "income" ? cur.category : "earnings") : cur.type === "expense" ? cur.category : "",
+                inflowCategory: t === "income" ? (cur.inflowCategory || "earned") : "",
+              }))
+            }
             options={[
               { value: "income", label: "Income" },
               { value: "expense", label: "Expense" },
@@ -161,6 +199,49 @@ export function TransactionForm({
             ) : null}
           </div>
         ) : null}
+
+        {needsInflowCategory ? (
+          <Field label="Income source" hint="Gifts and family support are kept separate from earned income. For loans, use Money.">
+            {(id) => (
+              <SelectInput
+                id={id}
+                value={d.inflowCategory ?? ""}
+                onChange={(e) => set("inflowCategory", e.target.value as InflowCategory | "")}
+              >
+                <option value="">Not specified (counts as earned)</option>
+                {INFLOW_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </SelectInput>
+            )}
+          </Field>
+        ) : null}
+
+        <div className="space-y-1.5">
+          <p className="text-[13px] font-semibold text-ink-soft">Payment method (optional)</p>
+          <div className="grid grid-cols-3 gap-2">
+            {PAYMENT_METHOD_OPTIONS.map((m) => {
+              const active = d.paymentMethod === m.value;
+              return (
+                <button
+                  key={m.value}
+                  type="button"
+                  onClick={() => set("paymentMethod", active ? "" : m.value)}
+                  aria-pressed={active}
+                  className={cx(
+                    "h-11 rounded-xl border text-sm font-semibold flex items-center justify-center gap-1.5",
+                    active ? "border-brand-700 bg-brand-50 text-brand-800" : "border-line bg-white text-ink-soft"
+                  )}
+                >
+                  {active ? <IconCheck size={15} /> : null}
+                  {m.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
         <Field label="Date" error={errors.date}>
           {(id) => <TextInput id={id} type="date" max={todayLocalISO()} value={d.date} onChange={(e) => set("date", e.target.value)} invalid={!!errors.date} />}

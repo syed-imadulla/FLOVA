@@ -14,6 +14,7 @@ import {
   listPeerDebts,
   listPeople,
   recordDebtSettlement,
+  recordGiftTransaction,
   type MoneyOverview,
 } from "../services/peerDebts";
 import { listGroupSplits } from "../services/groupExpenses";
@@ -47,8 +48,10 @@ export function MoneyScreen() {
   const [groupSplits, setGroupSplits] = useState<GroupExpenseSplit[]>([]);
   const [tab, setTab] = useState<MoneyTab>("receive");
 
-  // Record Borrowing / Lending state
+  // Record Borrowing / Lending / Gift state
   const [showRecord, setShowRecord] = useState(false);
+  const [entryKind, setEntryKind] = useState<"loan" | "gift">("loan");
+  const [giftDir, setGiftDir] = useState<"received" | "given">("received");
   const [recordDir, setRecordDir] = useState<PeerDebtDirection>("they_owe");
   const [selectedPersonId, setSelectedPersonId] = useState<string>("");
   const [quickPersonName, setQuickPersonName] = useState("");
@@ -125,6 +128,8 @@ export function MoneyScreen() {
   const items = tab === "receive" ? overview.receivables : overview.payables;
 
   function openNewRecord(dir: PeerDebtDirection) {
+    setEntryKind("loan");
+    setGiftDir("received");
     setRecordDir(dir);
     setSelectedPersonId(people[0]?.id ?? "__new__");
     setQuickPersonName("");
@@ -144,7 +149,7 @@ export function MoneyScreen() {
       setRecordErr("Enter a valid amount greater than ₹0.");
       return;
     }
-    if (selectedPersonId === "__new__" || !selectedPersonId) {
+    if (entryKind === "loan" && (selectedPersonId === "__new__" || !selectedPersonId)) {
       if (!quickPersonName.trim()) {
         setRecordErr("Select a person or enter a new person's name.");
         return;
@@ -162,6 +167,24 @@ export function MoneyScreen() {
     }
     setSavingRecord(true);
     try {
+      if (entryKind === "gift") {
+        const pName =
+          selectedPersonId && selectedPersonId !== "__new__"
+            ? people.find((p) => p.id === selectedPersonId)?.name ?? null
+            : quickPersonName.trim() || null;
+        await recordGiftTransaction({
+          direction: giftDir,
+          amountPaise: paise,
+          personName: pName,
+          date: dateInput,
+          note: noteInput || null,
+        });
+        setShowRecord(false);
+        setConfirmPreview(false);
+        bump();
+        return;
+      }
+
       let personId = selectedPersonId;
       if (!personId || personId === "__new__") {
         const created = await createPerson({ name: quickPersonName.trim() });
@@ -284,17 +307,27 @@ export function MoneyScreen() {
             <div className="space-y-3">
               <Card tone="soft" className="p-3.5 space-y-1">
                 <p className="text-xs font-semibold text-ink-soft">
-                  {recordDir === "they_owe" ? "Lending (Money to receive)" : "Borrowing (Money to repay)"}
+                  {entryKind === "gift"
+                    ? giftDir === "received"
+                      ? "Gift received (non-repayable, not earned income)"
+                      : "Gift given (expense, not a receivable)"
+                    : recordDir === "they_owe"
+                      ? "Lending (Money to receive)"
+                      : "Borrowing (Money to repay)"}
                 </p>
                 <p className="text-[22px] font-extrabold tabular-nums text-ink">{formatINR(previewPaise)}</p>
                 <p className="text-[13px] text-ink">
-                  {recordDir === "they_owe"
-                    ? `You lent ${formatINR(previewPaise)} to ${previewPersonName}`
-                    : `You borrowed ${formatINR(previewPaise)} from ${previewPersonName}`}
+                  {entryKind === "gift"
+                    ? giftDir === "received"
+                      ? `Gift received${previewPersonName ? ` from ${previewPersonName}` : ""}`
+                      : `Gift given${previewPersonName ? ` to ${previewPersonName}` : ""}`
+                    : recordDir === "they_owe"
+                      ? `You lent ${formatINR(previewPaise)} to ${previewPersonName}`
+                      : `You borrowed ${formatINR(previewPaise)} from ${previewPersonName}`}
                 </p>
                 <p className="text-xs text-ink-muted">
                   Date: {formatDay(dateInput)}
-                  {dueDateInput ? ` · Due: ${formatDay(dueDateInput)}` : ""}
+                  {entryKind === "loan" && dueDateInput ? ` · Due: ${formatDay(dueDateInput)}` : ""}
                   {noteInput ? ` · ${noteInput}` : ""}
                 </p>
               </Card>
@@ -308,13 +341,34 @@ export function MoneyScreen() {
           ) : (
             <div className="space-y-3">
               <Segmented
-                value={recordDir}
-                onChange={setRecordDir}
+                value={entryKind}
+                onChange={setEntryKind}
+                size="sm"
                 options={[
-                  { value: "they_owe", label: "I lent money" },
-                  { value: "you_owe", label: "I borrowed" },
+                  { value: "loan", label: "Loan (to repay)" },
+                  { value: "gift", label: "Gift (no repayment)" },
                 ]}
               />
+
+              {entryKind === "loan" ? (
+                <Segmented
+                  value={recordDir}
+                  onChange={setRecordDir}
+                  options={[
+                    { value: "they_owe", label: "I lent money" },
+                    { value: "you_owe", label: "I borrowed" },
+                  ]}
+                />
+              ) : (
+                <Segmented
+                  value={giftDir}
+                  onChange={setGiftDir}
+                  options={[
+                    { value: "received", label: "Gift received" },
+                    { value: "given", label: "Gift given" },
+                  ]}
+                />
+              )}
 
               <Field label="Person">
                 {(id) => (

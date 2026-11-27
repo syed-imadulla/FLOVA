@@ -4,6 +4,19 @@ import type { ActivityItem } from "../types/contracts";
 import { ListRow } from "../ui/kit";
 import { IconArrowDown, IconArrowUp, IconClock, IconWallet } from "../ui/icons";
 
+const INFLOW_LABELS: Record<string, string> = {
+  family_support: "Family support",
+  pocket_money: "Pocket money",
+  gift: "Gift",
+  donation: "Donation",
+};
+
+const PAYMENT_LABELS: Record<string, string> = {
+  cash: "Cash",
+  bank: "Bank",
+  upi: "UPI",
+};
+
 /** One activity entry, rendered identically on Home and Activity. */
 export function ActivityRow({ item, onClick }: { item: ActivityItem; onClick?: () => void }) {
   if (item.kind === "checkin") {
@@ -38,6 +51,8 @@ export function ActivityRow({ item, onClick }: { item: ActivityItem; onClick?: (
   const sub = [
     categoryLabel(item.category, txType),
     notMine ? "Not your money" : item.expenseType ? (item.expenseType === "work" ? "Work" : "Living") : null,
+    income && item.inflowCategory && INFLOW_LABELS[item.inflowCategory] ? INFLOW_LABELS[item.inflowCategory] : null,
+    item.paymentMethod && PAYMENT_LABELS[item.paymentMethod] ? PAYMENT_LABELS[item.paymentMethod] : null,
   ]
     .filter(Boolean)
     .join(" · ");

@@ -7,7 +7,6 @@
 
 import { supabase, unwrap } from "../lib/supabase";
 import { assertPaise } from "../lib/money";
-import { addTransaction } from "./data";
 import {
   computeGroupExpenseAccounting,
   type ComputedSplitShare,
@@ -15,6 +14,7 @@ import {
 import type {
   ExpenseGroup,
   ExpenseGroupMember,
+  ExpenseType,
   GroupExpense,
   GroupExpenseSplit,
   GroupSettlement,
@@ -34,7 +34,12 @@ function generateId(): string {
 }
 
 function normalizeExpense(row: any): GroupExpense {
-  return { ...row, total_amount_paise: assertPaise(row.total_amount_paise) };
+  return {
+    ...row,
+    total_amount_paise: assertPaise(row.total_amount_paise),
+    category: row.category || "food",
+    expense_type: row.expense_type || "living",
+  };
 }
 
 function normalizeSplit(row: any): GroupExpenseSplit {
@@ -143,75 +148,140 @@ export async function recordGroupExpense(input: {
   expenseDate: ISODate;
   splitType: GroupSplitType;
   shares: ComputedSplitShare[];
+  category?: string;
+  expenseType?: ExpenseType;
   note?: string | null;
+  idempotencyKey?: string;
   createdAt?: ISOTimestamp;
 }): Promise<{ expense: GroupExpense; splits: GroupExpenseSplit[] }> {
   const desc = input.description.trim();
   if (!desc) throw new Error("Enter a description for this shared expense.");
 
-  const accounting = computeGroupExpenseAccounting({
+  const category = input.category?.trim() || "food";
+  const expenseType: ExpenseType = input.expenseType === "work" ? "work" : "living";
+
+  // Validate accounting & split totals locally before RPC
+  computeGroupExpenseAccounting({
     totalAmountPaise: input.totalAmountPaise,
     paidBySelf: input.paidBySelf,
     paidByPersonId: input.paidByPersonId,
     shares: input.shares,
   });
 
-  // Record ONLY the user's own share as a consumption expense in transactions
-  let selfTxId: string | null = null;
-  if (accounting.selfSharePaise > 0) {
-    const tx = await addTransaction({
-      type: "expense",
-      amount: accounting.selfSharePaise,
-      category: "food",
-      description: `${desc} (your share)`,
-      expenseType: "living",
-      ownership: "mine",
-      date: input.expenseDate,
-      source: "manual",
-    });
-    selfTxId = tx.id;
-  }
+  const idempotencyKey = input.idempotencyKey?.trim() || generateId();
+  const payload = {
+    p_group_id: input.groupId,
+    p_description: desc,
+    p_total_amount_paise: input.totalAmountPaise,
+    p_paid_by_self: input.paidBySelf,
+    p_paid_by_person_id: input.paidBySelf ? null : input.paidByPersonId,
+    p_expense_date: input.expenseDate,
+    p_split_type: input.splitType,
+    p_splits: input.shares.map((s) => ({
+      isSelf: s.isSelf,
+      personId: s.isSelf ? null : s.personId,
+      shareAmountPaise: s.shareAmountPaise,
+    })),
+    p_note: input.note?.trim() || null,
+    p_idempotency_key: idempotencyKey,
+    p_self_category: category,
+    p_self_expense_type: expenseType,
+    p_created_at: input.createdAt ?? null,
+  };
 
-  const expense = normalizeExpense(
-    unwrap(
-      await supabase
-        .from("group_expenses")
-        .insert({
-          group_id: input.groupId,
-          description: desc,
-          total_amount_paise: input.totalAmountPaise,
-          paid_by_self: input.paidBySelf,
-          paid_by_person_id: input.paidBySelf ? null : input.paidByPersonId,
-          expense_date: input.expenseDate,
-          split_type: input.splitType,
-          self_transaction_id: selfTxId,
-          note: input.note?.trim() || null,
-          ...(input.createdAt ? { created_at: input.createdAt } : {}),
-        })
-        .select()
-        .single(),
-      "Save group expense"
-    )
-  );
-
-  const splitRows = accounting.splits.map((s) => ({
-    group_expense_id: expense.id,
-    is_self: s.isSelf,
-    person_id: s.isSelf ? null : s.personId,
-    direction: s.direction,
-    share_amount_paise: s.shareAmountPaise,
-    remaining_amount_paise: s.remainingAmountPaise,
-    status: s.status,
-    ...(input.createdAt ? { created_at: input.createdAt } : {}),
-  }));
-
-  const splitsRes = await supabase.from("group_expense_splits").insert(splitRows).select();
-  if (splitsRes.error) throw new Error(`Save group splits failed: ${splitsRes.error.message}`);
+  const rpcRes = await supabase.rpc("record_group_expense_atomic", payload);
+  const data = unwrap(rpcRes, "Record group expense") as {
+    expense: any;
+    splits: any[];
+  };
 
   return {
-    expense,
-    splits: (splitsRes.data as any[]).map(normalizeSplit),
+    expense: normalizeExpense(data.expense),
+    splits: (Array.isArray(data.splits) ? data.splits : []).map(normalizeSplit),
   };
+}
+
+export async function updateGroupExpense(
+  expenseId: string,
+  input: {
+    description: string;
+    totalAmountPaise: Paise;
+    paidBySelf: boolean;
+    paidByPersonId: string | null;
+    expenseDate: ISODate;
+    splitType: GroupSplitType;
+    shares: ComputedSplitShare[];
+    category?: string;
+    expenseType?: ExpenseType;
+    note?: string | null;
+  }
+): Promise<{ expense: GroupExpense; splits: GroupExpenseSplit[] }> {
+  const desc = input.description.trim();
+  if (!desc) throw new Error("Enter a description for this shared expense.");
+
+  const category = input.category?.trim() || "food";
+  const expenseType: ExpenseType = input.expenseType === "work" ? "work" : "living";
+
+  // Validate accounting & split totals locally before RPC
+  computeGroupExpenseAccounting({
+    totalAmountPaise: input.totalAmountPaise,
+    paidBySelf: input.paidBySelf,
+    paidByPersonId: input.paidByPersonId,
+    shares: input.shares,
+  });
+
+  const payload = {
+    p_expense_id: expenseId,
+    p_description: desc,
+    p_total_amount_paise: input.totalAmountPaise,
+    p_paid_by_self: input.paidBySelf,
+    p_paid_by_person_id: input.paidBySelf ? null : input.paidByPersonId,
+    p_expense_date: input.expenseDate,
+    p_split_type: input.splitType,
+    p_splits: input.shares.map((s) => ({
+      isSelf: s.isSelf,
+      personId: s.isSelf ? null : s.personId,
+      shareAmountPaise: s.shareAmountPaise,
+    })),
+    p_note: input.note?.trim() || null,
+    p_self_category: category,
+    p_self_expense_type: expenseType,
+  };
+
+  const rpcRes = await supabase.rpc("update_group_expense_atomic", payload);
+  const data = unwrap(rpcRes, "Update group expense") as {
+    expense: any;
+    splits: any[];
+  };
+
+  return {
+    expense: normalizeExpense(data.expense),
+    splits: (Array.isArray(data.splits) ? data.splits : []).map(normalizeSplit),
+  };
+}
+
+export async function deleteGroupExpense(expenseId: string): Promise<void> {
+  const rpcRes = await supabase.rpc("delete_group_expense_safe", {
+    p_expense_id: expenseId,
+  });
+  if (rpcRes.error) {
+    throw new Error(rpcRes.error.message || "Delete group expense failed");
+  }
+}
+
+export async function reverseGroupSettlement(settlementId: string): Promise<void> {
+  const res = await supabase
+    .from("group_settlements")
+    .delete()
+    .eq("id", settlementId)
+    .select();
+
+  if (res.error) {
+    throw new Error(`Reverse group settlement failed: ${res.error.message}`);
+  }
+  if (!res.data || res.data.length === 0) {
+    throw new Error("This settlement has already been reversed or does not exist.");
+  }
 }
 
 export async function recordGroupSettlement(
