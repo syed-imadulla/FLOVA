@@ -9,7 +9,15 @@ import type { Paise, Transaction, Payout } from "../types/contracts";
 import { toPaise } from "../lib/money";
 
 export interface IncomeForecastInput {
-  transactions: Array<Partial<Transaction> & { id: string; type: "income" | "expense"; amountPaise: Paise; date: string }>;
+  transactions: Array<
+    Partial<Transaction> & {
+      id: string;
+      type: "income" | "expense";
+      amountPaise: Paise;
+      date: string;
+      inflowCategory?: Transaction["inflow_category"];
+    }
+  >;
   payouts?: Payout[];
   forecastHorizonDays?: 7 | 14 | 30;
 }
@@ -32,10 +40,15 @@ export interface IncomeForecastResult {
 export function generateIncomeForecast(input: IncomeForecastInput): IncomeForecastResult {
   const { transactions, forecastHorizonDays = 7 } = input;
 
-  // Filter only personal confirmed income transactions
-  const incomeRecords = transactions.filter(
-    (t) => t.type === "income" && (!t.ownership || t.ownership === "mine")
-  );
+  // Filter only personal confirmed EARNED income transactions.
+  // Non-earned inflows (family_support, pocket_money, gift, donation) are excluded from recurring earning forecasts.
+  // Legacy records with null/undefined inflow_category fall back to 'earned' for backward compatibility.
+  const incomeRecords = transactions.filter((t) => {
+    if (t.type !== "income") return false;
+    if (t.ownership && t.ownership !== "mine") return false;
+    const inflowCat = t.inflowCategory ?? t.inflow_category ?? "earned";
+    return inflowCat === "earned";
+  });
 
   if (incomeRecords.length < 3) {
     return {

@@ -2,12 +2,14 @@
 // Every number here is computed by the engine or summed in integer paise; nothing is AI-estimated.
 import { useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { categoryLabel } from "../app/categories";
 import { MonthView } from "./MonthView";
 import { useActivity } from "../app/useActivity";
 import { todayLocalISO } from "../data/dates";
 import { formatINR } from "../lib/money";
 import { useRunway } from "../runway/useRunway";
 import {
+  assessFinancialHealth,
   calculateAdaptiveBuffer,
   generateIncomeForecast,
   simulateScenario,
@@ -206,6 +208,16 @@ function InsightsTab({ runway, rawInput, today }: { runway: Runway; rawInput: Ru
     });
   }, [transactions]);
 
+  const healthReport = useMemo(() => {
+    if (!rawInput) return null;
+    return assessFinancialHealth({
+      runwayInput: rawInput,
+      todayISO: today,
+      periodEarnedIncomePaise: spendingReport.earnedIncomePaise,
+      periodExpensesPaise: spendingReport.totalPersonalExpensesPaise,
+    });
+  }, [rawInput, today, spendingReport]);
+
   // 4. Hypothetical What-If Simulator State
   const [simIncomeChange, setSimIncomeChange] = useState<number>(0);
   const [simDelayDays, setSimDelayDays] = useState<number>(0);
@@ -215,10 +227,11 @@ function InsightsTab({ runway, rawInput, today }: { runway: Runway; rawInput: Ru
     if (!rawInput) return null;
     return simulateScenario(rawInput, {
       incomeChangePercent: simIncomeChange,
+      expectedIncomeBasisPaise: incomeForecast.hasSufficientData ? incomeForecast.expectedPaise : undefined,
       payoutDelayDays: simDelayDays,
       oneTimeExpensePaise: simEmergencyRupees * 100,
     });
-  }, [rawInput, simIncomeChange, simDelayDays, simEmergencyRupees]);
+  }, [rawInput, simIncomeChange, simDelayDays, simEmergencyRupees, incomeForecast]);
 
   const week = useMemo(() => {
     let earned = 0, living = 0, work = 0;
@@ -226,8 +239,9 @@ function InsightsTab({ runway, rawInput, today }: { runway: Runway; rawInput: Ru
       if ((it.kind !== "transaction" && it.kind !== "payout_receipt") || it.ownership === "not_mine" || it.amountPaise === undefined) continue;
       const d = daysFromToday(it.date, today);
       if (d > 0 || d < -6) continue;
-      if (it.type === "income") earned += it.amountPaise;
-      else if (it.expenseType === "work") work += it.amountPaise;
+      if (it.type === "income") {
+        if ((it.inflowCategory ?? "earned") === "earned") earned += it.amountPaise;
+      } else if (it.expenseType === "work") work += it.amountPaise;
       else living += it.amountPaise;
     }
     return { earned, living, work, spent: living + work };
@@ -308,8 +322,22 @@ function InsightsTab({ runway, rawInput, today }: { runway: Runway; rawInput: Ru
                 <div className="flex flex-wrap gap-1.5">
                   {spendingReport.topCategories.map((c) => (
                     <span key={c.category} className="text-xs px-2.5 py-1 rounded-lg bg-neutral-100 text-ink-soft border border-line">
-                      <strong className="capitalize">{c.category}</strong>: {formatINR(c.totalPaise)} ({c.percentage}%)
+                      <strong>{categoryLabel(c.category, "expense")}</strong>: {formatINR(c.totalPaise)} ({c.percentage}%)
                     </span>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            {spendingReport.anomalies.length > 0 ? (
+              <div className="space-y-1.5 pt-2 border-t border-line">
+                <p className="text-[12px] font-semibold text-amber-800">Unusual spending detected:</p>
+                <div className="space-y-1.5">
+                  {spendingReport.anomalies.slice(0, 3).map((a, idx) => (
+                    <div key={`${a.kind}-${idx}`} className="text-xs rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 text-amber-900">
+                      {a.category ? <strong>{categoryLabel(a.category, "expense")}: </strong> : null}
+                      {a.message}
+                    </div>
                   ))}
                 </div>
               </div>
@@ -319,6 +347,56 @@ function InsightsTab({ runway, rawInput, today }: { runway: Runway; rawInput: Ru
           <p className="text-xs text-ink-muted">No confirmed expenses yet to analyze spending categories.</p>
         )}
       </Card>
+
+      {/* 2b. Financial Health Indicators */}
+      {healthReport ? (
+        <Card className="p-4 space-y-3">
+          <div className="flex items-center justify-between gap-2">
+            <div>
+              <p className="text-[14px] font-bold text-ink">Financial Health</p>
+              <p className="text-xs text-ink-muted">{healthReport.summary}</p>
+            </div>
+            <span
+              className={cx(
+                "shrink-0 text-[10.5px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider",
+                healthReport.overallStatus === "healthy"
+                  ? "bg-emerald-100 text-emerald-800"
+                  : healthReport.overallStatus === "watch"
+                    ? "bg-amber-100 text-amber-800"
+                    : healthReport.overallStatus === "attention"
+                      ? "bg-red-100 text-red-700"
+                      : "bg-neutral-100 text-neutral-600"
+              )}
+            >
+              {healthReport.overallStatus === "insufficient_data" ? "Needs data" : healthReport.overallStatus}
+            </span>
+          </div>
+          <div className="divide-y divide-line">
+            {healthReport.indicators.map((ind) => (
+              <div key={ind.id} className="py-2 flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-ink">{ind.label}</p>
+                  <p className="text-[11.5px] text-ink-muted">{ind.explanation}</p>
+                </div>
+                <span
+                  className={cx(
+                    "shrink-0 text-xs font-bold tabular-nums",
+                    ind.status === "healthy"
+                      ? "text-emerald-700"
+                      : ind.status === "watch"
+                        ? "text-amber-700"
+                        : ind.status === "attention"
+                          ? "text-red-600"
+                          : "text-ink-muted"
+                  )}
+                >
+                  {ind.valueText}
+                </span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      ) : null}
 
       {/* 3. Adaptive Buffer Recommendation */}
       <Card className="p-4 space-y-3">

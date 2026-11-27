@@ -123,7 +123,7 @@ export function HomeScreen() {
           <div className="mt-2 grid grid-cols-2 gap-3">
             <div>
               <p className="text-xs text-ink-muted">Earned</p>
-              <p className="text-[18px] font-extrabold tabular-nums text-brand-700">{month.summary ? formatINR(month.summary.income) : "…"}</p>
+              <p className="text-[18px] font-extrabold tabular-nums text-brand-700">{month.summary ? formatINR(month.summary.earnedIncome) : "…"}</p>
             </div>
             <div>
               <p className="text-xs text-ink-muted">Spent</p>

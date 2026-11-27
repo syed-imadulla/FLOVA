@@ -8,6 +8,7 @@
 
 import type { Paise, Transaction } from "../types/contracts";
 import { toPaise } from "../lib/money";
+import { addDays } from "./runway";
 
 export type TransactionRecord = Partial<Transaction> & {
   id: string;
@@ -15,6 +16,7 @@ export type TransactionRecord = Partial<Transaction> & {
   amountPaise: Paise;
   date: string;
   expenseType?: "work" | "living" | null;
+  inflowCategory?: Transaction["inflow_category"];
 };
 
 export interface CategorySpending {
@@ -24,9 +26,34 @@ export interface CategorySpending {
   transactionCount: number;
 }
 
+export const ANOMALY_THRESHOLDS = {
+  MIN_EXPENSES_FOR_SPIKE: 3,
+  MIN_SPIKE_PAISE: 100000, // ₹1,000
+  SPIKE_MEAN_MULTIPLIER: 3,
+  MIN_PRIOR_WEEK_FOR_WOW_PAISE: 50000, // ₹500
+  WOW_SURGE_PERCENT: 40,
+  MIN_PRIOR_CAT_PAISE: 30000, // ₹300
+  CATEGORY_SURGE_MULTIPLIER: 2,
+} as const;
+
+export interface SpendingAnomaly {
+  kind: "large_expense" | "category_spike" | "weekly_surge";
+  category?: string;
+  amountPaise: Paise;
+  baselinePaise?: Paise;
+  changePercent?: number;
+  date?: string;
+  message: string;
+}
+
 export interface SpendingIntelligenceReport {
   totalPersonalExpensesPaise: Paise;
+  /** Total confirmed personal cash inflows (earned + non-earned). */
   totalPersonalIncomePaise: Paise;
+  /** Confirmed earned income only (legacy null inflow_category falls back to 'earned'). */
+  earnedIncomePaise: Paise;
+  /** Confirmed non-earned inflows (family_support, pocket_money, gift, donation). */
+  nonEarnedInflowPaise: Paise;
   livingPaise: Paise;
   workPaise: Paise;
   livingPercent: number;
@@ -36,6 +63,7 @@ export interface SpendingIntelligenceReport {
   previousWeekExpensesPaise: Paise;
   weekOverWeekChangePercent: number | null;
   highSpendingSpikes: Array<{ id: string; category: string; amountPaise: Paise; description?: string; date: string }>;
+  anomalies: SpendingAnomaly[];
   insights: string[];
 }
 
@@ -53,24 +81,25 @@ export function analyzeSpendingIntelligence(
 
   let totalPersonalExpensesPaise: Paise = 0;
   let totalPersonalIncomePaise: Paise = 0;
+  let earnedIncomePaise: Paise = 0;
+  let nonEarnedInflowPaise: Paise = 0;
   let livingPaise: Paise = 0;
   let workPaise: Paise = 0;
 
   const categoryMap: Record<string, { totalPaise: Paise; count: number }> = {};
   const expenseAmounts: number[] = [];
 
-  // Dates for week-over-week comparison
-  const today = new Date(todayISO);
-  const sevenDaysAgo = new Date(today);
-  sevenDaysAgo.setDate(today.getDate() - 7);
-  const sevenDaysAgoStr = sevenDaysAgo.toISOString().split("T")[0];
-
-  const fourteenDaysAgo = new Date(today);
-  fourteenDaysAgo.setDate(today.getDate() - 14);
-  const fourteenDaysAgoStr = fourteenDaysAgo.toISOString().split("T")[0];
+  // Pure UTC ISO calendar-date windows:
+  // Recent 7-day window: [today - 6 .. today] (7 calendar days inclusive)
+  // Prior 7-day window:  [today - 13 .. today - 7] (7 calendar days inclusive)
+  const recentWindowStart = addDays(todayISO, -6);
+  const priorWindowStart = addDays(todayISO, -13);
+  const priorWindowEnd = addDays(todayISO, -7);
 
   let recentWeekExpensesPaise: Paise = 0;
   let previousWeekExpensesPaise: Paise = 0;
+  const recentCatTotals: Record<string, Paise> = {};
+  const priorCatTotals: Record<string, Paise> = {};
 
   for (const t of personalTxs) {
     const amt = t.amountPaise ?? (t.amount ? toPaise(t.amount) : 0);
@@ -78,6 +107,12 @@ export function analyzeSpendingIntelligence(
 
     if (t.type === "income") {
       totalPersonalIncomePaise += amt;
+      const inflowCat = t.inflowCategory ?? t.inflow_category ?? "earned";
+      if (inflowCat === "earned") {
+        earnedIncomePaise += amt;
+      } else {
+        nonEarnedInflowPaise += amt;
+      }
     } else if (t.type === "expense") {
       totalPersonalExpensesPaise += amt;
       expenseAmounts.push(amt);
@@ -96,11 +131,13 @@ export function analyzeSpendingIntelligence(
       categoryMap[cat].totalPaise += amt;
       categoryMap[cat].count += 1;
 
-      // Week-over-week window
-      if (date && date >= sevenDaysAgoStr && date <= todayISO) {
+      // Week-over-week window using pure ISO date string comparison
+      if (date && date >= recentWindowStart && date <= todayISO) {
         recentWeekExpensesPaise += amt;
-      } else if (date && date >= fourteenDaysAgoStr && date < sevenDaysAgoStr) {
+        recentCatTotals[cat] = (recentCatTotals[cat] ?? 0) + amt;
+      } else if (date && date >= priorWindowStart && date <= priorWindowEnd) {
         previousWeekExpensesPaise += amt;
+        priorCatTotals[cat] = (priorCatTotals[cat] ?? 0) + amt;
       }
     }
   }
@@ -127,26 +164,77 @@ export function analyzeSpendingIntelligence(
     );
   }
 
-  // Detect high spending spikes (> 3x mean expense)
+  // Detect high spending spikes (> 3x mean expense, guarded by minimum sample count)
   const meanExpensePaise = expenseAmounts.length > 0
     ? totalPersonalExpensesPaise / expenseAmounts.length
     : 0;
-  const spikeThresholdPaise = Math.max(100000, meanExpensePaise * 3); // at least ₹1,000 and 3x average
+  const spikeThresholdPaise = Math.max(
+    ANOMALY_THRESHOLDS.MIN_SPIKE_PAISE,
+    meanExpensePaise * ANOMALY_THRESHOLDS.SPIKE_MEAN_MULTIPLIER
+  );
 
   const highSpendingSpikes: Array<{ id: string; category: string; amountPaise: Paise; description?: string; date: string }> = [];
-  for (const t of personalTxs) {
-    if (t.type === "expense") {
-      const amt = t.amountPaise ?? (t.amount ? toPaise(t.amount) : 0);
-      if (amt >= spikeThresholdPaise) {
-        highSpendingSpikes.push({
-          id: t.id,
-          category: t.category || "other",
-          amountPaise: amt,
-          description: t.description || undefined,
-          date: t.date || t.transaction_date || todayISO,
-        });
+  const anomalies: SpendingAnomaly[] = [];
+
+  if (expenseAmounts.length >= ANOMALY_THRESHOLDS.MIN_EXPENSES_FOR_SPIKE) {
+    for (const t of personalTxs) {
+      if (t.type === "expense") {
+        const amt = t.amountPaise ?? (t.amount ? toPaise(t.amount) : 0);
+        if (amt >= spikeThresholdPaise) {
+          const cat = t.category || "other";
+          const d = t.date || t.transaction_date || todayISO;
+          highSpendingSpikes.push({
+            id: t.id,
+            category: cat,
+            amountPaise: amt,
+            description: t.description || undefined,
+            date: d,
+          });
+          anomalies.push({
+            kind: "large_expense",
+            category: cat,
+            amountPaise: amt,
+            baselinePaise: Math.round(meanExpensePaise),
+            date: d,
+            message: `Large ${cat.replace(/_/g, " ")} expense of ₹${(amt / 100).toLocaleString("en-IN")} (>3× your ₹${(Math.round(meanExpensePaise) / 100).toLocaleString("en-IN")} average).`,
+          });
+        }
       }
     }
+  }
+
+  // Detect category spending surges (recent 7 days >= 2x prior 7 days with meaningful baseline)
+  for (const [cat, recentAmt] of Object.entries(recentCatTotals)) {
+    const priorAmt = priorCatTotals[cat] ?? 0;
+    if (
+      priorAmt >= ANOMALY_THRESHOLDS.MIN_PRIOR_CAT_PAISE &&
+      recentAmt >= priorAmt * ANOMALY_THRESHOLDS.CATEGORY_SURGE_MULTIPLIER
+    ) {
+      const pct = Math.round(((recentAmt - priorAmt) / priorAmt) * 100);
+      anomalies.push({
+        kind: "category_spike",
+        category: cat,
+        amountPaise: recentAmt,
+        baselinePaise: priorAmt,
+        changePercent: pct,
+        message: `${cat.replace(/_/g, " ")} spending jumped +${pct}% this week (₹${(recentAmt / 100).toLocaleString("en-IN")} vs ₹${(priorAmt / 100).toLocaleString("en-IN")} prior week).`,
+      });
+    }
+  }
+
+  // Detect significant overall week-over-week surge
+  if (
+    weekOverWeekChangePercent !== null &&
+    previousWeekExpensesPaise >= ANOMALY_THRESHOLDS.MIN_PRIOR_WEEK_FOR_WOW_PAISE &&
+    weekOverWeekChangePercent >= ANOMALY_THRESHOLDS.WOW_SURGE_PERCENT
+  ) {
+    anomalies.push({
+      kind: "weekly_surge",
+      amountPaise: recentWeekExpensesPaise,
+      baselinePaise: previousWeekExpensesPaise,
+      changePercent: weekOverWeekChangePercent,
+      message: `Weekly spending rose +${weekOverWeekChangePercent}% (₹${(recentWeekExpensesPaise / 100).toLocaleString("en-IN")} vs ₹${(previousWeekExpensesPaise / 100).toLocaleString("en-IN")} prior week).`,
+    });
   }
 
   // Generate grounded insights
@@ -176,6 +264,8 @@ export function analyzeSpendingIntelligence(
   return {
     totalPersonalExpensesPaise,
     totalPersonalIncomePaise,
+    earnedIncomePaise,
+    nonEarnedInflowPaise,
     livingPaise,
     workPaise,
     livingPercent,
@@ -185,6 +275,7 @@ export function analyzeSpendingIntelligence(
     previousWeekExpensesPaise,
     weekOverWeekChangePercent,
     highSpendingSpikes,
+    anomalies,
     insights,
   };
 }

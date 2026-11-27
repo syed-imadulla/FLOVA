@@ -11,6 +11,8 @@ import { calculateConfirmedBalance } from "./balance";
 
 export interface ScenarioParameters {
   incomeChangePercent?: number; // e.g. -30 (30% less income), +20 (20% bonus)
+  /** Optional forecasted income basis (paise) when no pending payouts exist. */
+  expectedIncomeBasisPaise?: Paise;
   dailySpendingChangePaise?: Paise; // e.g. -10000 (spend ₹100 less each day)
   payoutDelayDays?: number; // e.g. 7 (upcoming payouts delayed by 1 week)
   oneTimeExpensePaise?: Paise; // e.g. 300000 (unexpected ₹3,000 emergency expense)
@@ -111,31 +113,89 @@ export function simulateScenario(
     });
   }
 
-  // D. Adjust future expected payouts by percent
-  if (params.incomeChangePercent && params.incomeChangePercent !== 0) {
-    const factor = 1 + params.incomeChangePercent / 100;
-    for (const p of modifiedInput.payouts) {
-      p.expected = Math.max(0, Math.round(p.expected * factor));
+  // D. Compute expected-income shift basis WITHOUT altering confirmedBalancePaise
+  let expectedIncomeBasis = 0;
+  let earliestPayoutDate: ISODate | null = null;
+  for (const p of modifiedInput.payouts) {
+    if (p.status === "cancelled" || p.status === "settled" || p.status === "unearned") continue;
+    const rem = Math.max(0, (p.expected ?? 0) - (p.received ?? 0));
+    if (rem > 0) {
+      expectedIncomeBasis += rem;
+      if (p.expectedDate && (!earliestPayoutDate || p.expectedDate < earliestPayoutDate)) {
+        earliestPayoutDate = p.expectedDate;
+      }
     }
   }
+  if (expectedIncomeBasis === 0 && params.expectedIncomeBasisPaise && params.expectedIncomeBasisPaise > 0) {
+    expectedIncomeBasis = params.expectedIncomeBasisPaise;
+  }
 
-  // 3. Calculate simulated runway
+  const hasIncomeShift = Boolean(params.incomeChangePercent && params.incomeChangePercent !== 0);
+  const projectedIncomeDeltaPaise =
+    hasIncomeShift && expectedIncomeBasis > 0
+      ? Math.round(expectedIncomeBasis * (params.incomeChangePercent! / 100))
+      : 0;
+
+  // 3. Calculate simulated runway (confirmed cash remains strictly separated from forecasted income)
   const simulatedBalanceRes = calculateConfirmedBalance(modifiedInput);
   const simulatedRunway = calculateDailyRunway(modifiedInput);
 
   const simulatedConfirmedPaise = simulatedBalanceRes.confirmedBalancePaise ?? 0;
-  const simulatedProjections = simulatedRunway.projections;
+  const simulatedProjections = simulatedRunway.projections.map((entry) => ({ ...entry }));
+
+  let simulatedFirstShortfall = simulatedRunway.firstShortfallDate;
+  let simulatedFirstBufferShortfall = simulatedRunway.firstBufferShortfallDate ?? null;
+  let simulatedRunwayDays = simulatedRunway.runwayDays ?? 0;
+
+  if (projectedIncomeDeltaPaise !== 0 && simulatedProjections.length > 0) {
+    const startIdx = earliestPayoutDate
+      ? Math.max(0, simulatedProjections.findIndex((d) => d.date >= earliestPayoutDate!))
+      : 0;
+    const safeBuffer = simulatedRunway.safeRunwayBufferPaise ?? 0;
+
+    simulatedFirstShortfall = null;
+    simulatedFirstBufferShortfall = null;
+    let coveredDays = 0;
+    let hitZero = false;
+
+    for (let i = 0; i < simulatedProjections.length; i++) {
+      if (i >= startIdx) {
+        simulatedProjections[i].closingBalancePaise += projectedIncomeDeltaPaise;
+        if (i > startIdx) {
+          simulatedProjections[i].openingBalancePaise += projectedIncomeDeltaPaise;
+        }
+      }
+      const close = simulatedProjections[i].closingBalancePaise;
+      if (!hitZero && close < 0) {
+        hitZero = true;
+        simulatedFirstShortfall = simulatedProjections[i].date;
+      }
+      if (!hitZero) {
+        coveredDays++;
+      }
+      if (safeBuffer > 0 && simulatedFirstBufferShortfall === null && close < safeBuffer) {
+        simulatedFirstBufferShortfall = simulatedProjections[i].date;
+      }
+    }
+    simulatedRunwayDays = coveredDays;
+  }
+
   const simulatedLastEntry = simulatedProjections[simulatedProjections.length - 1];
-  const simulatedClosingPaise = simulatedLastEntry ? simulatedLastEntry.closingBalancePaise : simulatedConfirmedPaise;
-  const simulatedRunwayDays = simulatedRunway.runwayDays ?? 0;
+  const simulatedClosingPaise = simulatedLastEntry
+    ? simulatedLastEntry.closingBalancePaise
+    : simulatedConfirmedPaise + projectedIncomeDeltaPaise;
 
   const deltaClosingBalancePaise = simulatedClosingPaise - baselineClosingPaise;
   const runwayDaysDelta = simulatedRunwayDays - baselineRunwayDays;
 
   // 4. Generate plain-English explanation
   const parts: string[] = [];
-  if (params.incomeChangePercent) {
-    parts.push(`income changes by ${params.incomeChangePercent > 0 ? "+" : ""}${params.incomeChangePercent}%`);
+  if (hasIncomeShift) {
+    if (expectedIncomeBasis > 0) {
+      parts.push(`expected income changes by ${params.incomeChangePercent! > 0 ? "+" : ""}${params.incomeChangePercent}%`);
+    } else {
+      parts.push("no expected payouts or forecast basis available for income shift");
+    }
   }
   if (params.dailySpendingChangePaise) {
     const dir = params.dailySpendingChangePaise < 0 ? "spending ₹" + Math.abs(params.dailySpendingChangePaise / 100) + " less/day" : "spending ₹" + (params.dailySpendingChangePaise / 100) + " more/day";
@@ -173,8 +233,8 @@ export function simulateScenario(
       confirmedBalancePaise: simulatedConfirmedPaise,
       closingBalancePaise: simulatedClosingPaise,
       runwayDays: simulatedRunwayDays,
-      firstShortfallDate: simulatedRunway.firstShortfallDate,
-      firstBufferShortfallDate: simulatedRunway.firstBufferShortfallDate ?? null,
+      firstShortfallDate: simulatedFirstShortfall,
+      firstBufferShortfallDate: simulatedFirstBufferShortfall,
     },
     deltaClosingBalancePaise,
     runwayDaysDelta,
