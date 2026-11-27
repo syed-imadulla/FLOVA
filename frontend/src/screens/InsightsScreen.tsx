@@ -31,7 +31,7 @@ export function InsightsScreen() {
   const tab: "runway" | "month" | "insights" = tabParam === "month" || tabParam === "insights" ? tabParam : "runway";
   const setTab = (t: "runway" | "month" | "insights") => setParams(t === "runway" ? {} : { tab: t }, { replace: true });
   return (
-    <Screen title={tab === "runway" ? "Your 7-day runway" : tab === "month" ? "Monthly timeline" : "Insights"} subtitle="Based only on money you've confirmed">
+    <Screen title={tab === "runway" ? "Your 7-day runway" : tab === "month" ? "Monthly timeline" : "Insights"} subtitle="Based only on money you've confirmed" back="/money">
       <Segmented
         value={tab}
         onChange={setTab}

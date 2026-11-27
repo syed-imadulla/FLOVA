@@ -176,6 +176,7 @@ export function InvoicesScreen() {
     <Screen
       title="Invoices & Bills"
       subtitle="Track expected receivables and upcoming payable bills"
+      back="/more"
       right={
         <button
           type="button"

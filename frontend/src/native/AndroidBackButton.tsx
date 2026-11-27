@@ -5,6 +5,7 @@ import { useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Capacitor } from "@capacitor/core";
 import { App as CapacitorApp } from "@capacitor/app";
+import { resolveFallbackParent } from "../app/navigation";
 import { backAction } from "./backAction";
 
 export function AndroidBackButton() {
@@ -19,7 +20,7 @@ export function AndroidBackButton() {
       const action = backAction(pathRef.current, canGoBack);
       if (action === "history") window.history.back();
       else if (action === "exit") void CapacitorApp.exitApp();
-      else navigate("/app", { replace: true });
+      else navigate(resolveFallbackParent(pathRef.current), { replace: true });
     });
     return () => {
       void handle.then((h) => h.remove());

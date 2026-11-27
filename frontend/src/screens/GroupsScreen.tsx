@@ -813,7 +813,7 @@ export function GroupsScreen() {
     <Screen
       title="Groups"
       subtitle="Split bills and settle shared expenses"
-      back="/money"
+      back="/more"
       right={
         <button
           type="button"
