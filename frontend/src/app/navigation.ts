@@ -21,6 +21,7 @@ const DEFAULT_PARENT_ROUTES: Array<[prefix: string, parent: string]> = [
   ["/payouts", "/more"],
   ["/profile", "/more"],
   ["/insights", "/money"],
+  ["/import", "/activity"],
 ];
 
 /** Returns the canonical parent route for a screen when no in-app history is available. */

@@ -1,6 +1,6 @@
 // Activity — every income, expense, check-in and expected payout, newest first.
 import { useEffect, useMemo, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ActivityRow } from "../app/ActivityRow";
 import { paiseToInput } from "../app/moneyText";
 import { TransactionForm, type TxSubmit } from "../app/TransactionForm";
@@ -52,7 +52,18 @@ export function ActivityScreen() {
   }
 
   return (
-    <Screen title="Your money activity" subtitle="Everything you've recorded">
+    <Screen
+      title="Your money activity"
+      subtitle="Everything you've recorded"
+      right={
+        <Link
+          to="/import"
+          className="h-9 px-3 rounded-full bg-brand-50 border border-brand-100 text-brand-800 text-[12.5px] font-semibold inline-flex items-center"
+        >
+          Import CSV
+        </Link>
+      }
+    >
       {flash ? <Notice tone="success">{flash}</Notice> : null}
       {error ? <Notice tone="danger">{error}</Notice> : null}
 
