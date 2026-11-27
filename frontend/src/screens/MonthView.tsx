@@ -59,7 +59,7 @@ export function MonthView() {
         <>
           <div className="grid grid-cols-3 gap-2">
             <Card className="p-3">
-              <p className="text-[11.5px] font-semibold text-ink-muted">Income</p>
+              <p className="text-[11.5px] font-semibold text-ink-muted">Total inflows</p>
               <p className="text-[16px] font-extrabold tabular-nums text-ink">{formatINR(summary.income)}</p>
             </Card>
             <Card className="p-3">
@@ -67,10 +67,26 @@ export function MonthView() {
               <p className="text-[16px] font-extrabold tabular-nums text-ink">{formatINR(summary.expense)}</p>
             </Card>
             <Card className="p-3">
-              <p className="text-[11.5px] font-semibold text-ink-muted">Net</p>
+              <p className="text-[11.5px] font-semibold text-ink-muted">Net cash flow</p>
               <p className={cx("text-[16px] font-extrabold tabular-nums", net < 0 ? "text-red-600" : "text-brand-700")}>{net < 0 ? formatINR(net) : `+${formatINR(net)}`}</p>
             </Card>
           </div>
+
+          <Card tone="soft" className="px-3.5 py-2.5 space-y-1">
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div>
+                <span className="text-ink-muted">Earned income: </span>
+                <strong className="tabular-nums text-brand-700">{formatINR(summary.earnedIncome)}</strong>
+              </div>
+              <div className="text-right">
+                <span className="text-ink-muted">Non-earned inflows: </span>
+                <strong className="tabular-nums text-ink">{formatINR(summary.nonEarnedInflow)}</strong>
+              </div>
+            </div>
+            <p className="text-[11px] text-ink-muted">
+              Gifts and family support are kept separate from earned income; borrowing is tracked in Money.
+            </p>
+          </Card>
 
           {summary.count === 0 ? (
             <Card>

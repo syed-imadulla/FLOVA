@@ -3,12 +3,14 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { todayLocalISO } from "../data/dates";
 import { useDataVersion } from "../data/DataVersionProvider";
+import { categoryLabel, EXPENSE_CATEGORIES } from "../app/categories";
 import { splitCustom, splitEqual, splitPercentage } from "../engine/groupSplitEngine";
 import { formatINR, toPaiseStrict } from "../lib/money";
 import {
   computeGroupBalances,
   createExpenseGroup,
   deleteExpenseGroup,
+  deleteGroupExpense,
   listExpenseGroups,
   listGroupExpenses,
   listGroupMembers,
@@ -16,11 +18,14 @@ import {
   listGroupSplits,
   recordGroupExpense,
   recordGroupSettlement,
+  reverseGroupSettlement,
+  updateGroupExpense,
 } from "../services/groupExpenses";
 import { listPeople } from "../services/peerDebts";
 import type {
   ExpenseGroup,
   ExpenseGroupMember,
+  ExpenseType,
   GroupExpense,
   GroupExpenseSplit,
   GroupSettlement,
@@ -63,18 +68,29 @@ export function GroupsScreen() {
   const [createErr, setCreateErr] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
 
-  // Add shared expense state
+  // Add / Edit shared expense state
   const [showAddExp, setShowAddExp] = useState(false);
+  const [editingExpenseId, setEditingExpenseId] = useState<string | null>(null);
   const [expDesc, setExpDesc] = useState("");
   const [expAmount, setExpAmount] = useState("");
   const [expDate, setExpDate] = useState(todayLocalISO());
   const [expPayer, setExpPayer] = useState<string>("__self__");
+  const [expCategory, setExpCategory] = useState<string>("food");
+  const [expType, setExpType] = useState<ExpenseType>("living");
   const [splitType, setSplitType] = useState<GroupSplitType>("equal");
   const [customInputs, setCustomInputs] = useState<Record<string, string>>({});
   const [pctInputs, setPctInputs] = useState<Record<string, string>>({});
   const [expPreview, setExpPreview] = useState(false);
   const [expErr, setExpErr] = useState<string | null>(null);
   const [savingExp, setSavingExp] = useState(false);
+
+  // Delete expense / reverse settlement state
+  const [deletingExpenseId, setDeletingExpenseId] = useState<string | null>(null);
+  const [expDeleteErr, setExpDeleteErr] = useState<string | null>(null);
+  const [deletingExp, setDeletingExp] = useState(false);
+  const [reversingSettlementId, setReversingSettlementId] = useState<string | null>(null);
+  const [reverseErr, setReverseErr] = useState<string | null>(null);
+  const [reversingSettle, setReversingSettle] = useState(false);
 
   // Settlement state
   const [settlingSplit, setSettlingSplit] = useState<(GroupExpenseSplit & { memberName: string }) | null>(null);
@@ -201,6 +217,50 @@ export function GroupsScreen() {
       );
     }
 
+    function resetExpenseForm() {
+      setShowAddExp(false);
+      setEditingExpenseId(null);
+      setExpPreview(false);
+      setExpErr(null);
+      setExpDesc("");
+      setExpAmount("");
+      setExpDate(todayLocalISO());
+      setExpPayer("__self__");
+      setExpCategory("food");
+      setExpType("living");
+      setSplitType("equal");
+      setCustomInputs({});
+      setPctInputs({});
+    }
+
+    function startEditExpense(exp: GroupExpense, expSplits: GroupExpenseSplit[]) {
+      setEditingExpenseId(exp.id);
+      setExpDesc(exp.description);
+      setExpAmount((exp.total_amount_paise / 100).toString());
+      setExpDate(exp.expense_date);
+      setExpPayer(exp.paid_by_self ? "__self__" : exp.paid_by_person_id ?? "__self__");
+      setExpCategory(exp.category || "food");
+      setExpType(exp.expense_type || "living");
+      setSplitType(exp.split_type);
+
+      const nextCustom: Record<string, string> = {};
+      const nextPct: Record<string, string> = {};
+      for (const sp of expSplits) {
+        const key = sp.is_self ? "__self__" : sp.person_id ?? "";
+        if (!key) continue;
+        nextCustom[key] = (sp.share_amount_paise / 100).toString();
+        const pct = exp.total_amount_paise > 0
+          ? Math.round((sp.share_amount_paise / exp.total_amount_paise) * 10000) / 100
+          : 0;
+        nextPct[key] = pct.toString();
+      }
+      setCustomInputs(nextCustom);
+      setPctInputs(nextPct);
+      setExpPreview(false);
+      setExpErr(null);
+      setShowAddExp(true);
+    }
+
     async function handleSaveExpense() {
       setExpErr(null);
       try {
@@ -208,25 +268,66 @@ export function GroupsScreen() {
         if (!totalPaise) throw new Error("Enter a valid total amount.");
         const shares = computeCurrentShares();
         setSavingExp(true);
-        await recordGroupExpense({
-          groupId: group!.id,
-          description: expDesc,
-          totalAmountPaise: totalPaise,
-          paidBySelf: expPayer === "__self__",
-          paidByPersonId: expPayer === "__self__" ? null : expPayer,
-          expenseDate: expDate,
-          splitType,
-          shares,
-        });
-        setShowAddExp(false);
-        setExpPreview(false);
-        setExpDesc("");
-        setExpAmount("");
+        if (editingExpenseId) {
+          await updateGroupExpense(editingExpenseId, {
+            description: expDesc,
+            totalAmountPaise: totalPaise,
+            paidBySelf: expPayer === "__self__",
+            paidByPersonId: expPayer === "__self__" ? null : expPayer,
+            expenseDate: expDate,
+            splitType,
+            shares,
+            category: expCategory,
+            expenseType: expType,
+          });
+        } else {
+          await recordGroupExpense({
+            groupId: group!.id,
+            description: expDesc,
+            totalAmountPaise: totalPaise,
+            paidBySelf: expPayer === "__self__",
+            paidByPersonId: expPayer === "__self__" ? null : expPayer,
+            expenseDate: expDate,
+            splitType,
+            shares,
+            category: expCategory,
+            expenseType: expType,
+          });
+        }
+        resetExpenseForm();
         bump();
       } catch (err) {
         setExpErr(err instanceof Error ? err.message : "Could not save group expense.");
       } finally {
         setSavingExp(false);
+      }
+    }
+
+    async function handleDeleteGroupExpense(expenseId: string) {
+      setExpDeleteErr(null);
+      setDeletingExp(true);
+      try {
+        await deleteGroupExpense(expenseId);
+        setDeletingExpenseId(null);
+        bump();
+      } catch (err) {
+        setExpDeleteErr(err instanceof Error ? err.message : "Could not delete group expense.");
+      } finally {
+        setDeletingExp(false);
+      }
+    }
+
+    async function handleReverseSettlement(settlementId: string) {
+      setReverseErr(null);
+      setReversingSettle(true);
+      try {
+        await reverseGroupSettlement(settlementId);
+        setReversingSettlementId(null);
+        bump();
+      } catch (err) {
+        setReverseErr(err instanceof Error ? err.message : "Could not reverse settlement.");
+      } finally {
+        setReversingSettle(false);
       }
     }
 
@@ -283,9 +384,8 @@ export function GroupsScreen() {
           <button
             type="button"
             onClick={() => {
+              resetExpenseForm();
               setShowAddExp(true);
-              setExpPreview(false);
-              setExpErr(null);
             }}
             className="h-9 px-3 rounded-full bg-brand-700 text-white text-[13px] font-semibold inline-flex items-center gap-1"
           >
@@ -293,10 +393,18 @@ export function GroupsScreen() {
           </button>
         }
       >
-        {/* Add Shared Expense & Split Config */}
+        {/* Add / Edit Shared Expense & Split Config */}
         {showAddExp ? (
           <Card className="p-4 space-y-3">
-            <SectionTitle>{expPreview ? "Confirm shared expense" : "Add shared expense"}</SectionTitle>
+            <SectionTitle>
+              {expPreview
+                ? editingExpenseId
+                  ? "Confirm expense update"
+                  : "Confirm shared expense"
+                : editingExpenseId
+                  ? "Edit shared expense"
+                  : "Add shared expense"}
+            </SectionTitle>
             {expErr ? <Notice tone="danger">{expErr}</Notice> : null}
 
             {expPreview ? (
@@ -305,7 +413,7 @@ export function GroupsScreen() {
                   <p className="text-[15px] font-bold text-ink">{expDesc}</p>
                   <p className="text-xs text-ink-soft">
                     {expPayer === "__self__" ? "You paid" : `${peopleById.get(expPayer) ?? "Member"} paid`}{" "}
-                    {formatINR(parseRupees(expAmount) ?? 0)} ({splitType} split)
+                    {formatINR(parseRupees(expAmount) ?? 0)} ({splitType} split · {categoryLabel(expCategory, "expense")} · {expType === "work" ? "Work" : "Living"})
                   </p>
                   <div className="pt-1 border-t border-line space-y-1">
                     {previewShares.map((s) => (
@@ -319,7 +427,7 @@ export function GroupsScreen() {
                 <div className="grid grid-cols-2 gap-2">
                   <Button variant="secondary" onClick={() => setExpPreview(false)}>Edit</Button>
                   <Button loading={savingExp} icon={<IconCheckCircle size={18} />} onClick={handleSaveExpense}>
-                    Confirm & save
+                    {editingExpenseId ? "Save changes" : "Confirm & save"}
                   </Button>
                 </div>
               </div>
@@ -334,6 +442,40 @@ export function GroupsScreen() {
                   </Field>
                   <Field label="Date">
                     {(id) => <TextInput id={id} type="date" value={expDate} onChange={(e) => setExpDate(e.target.value)} />}
+                  </Field>
+                </div>
+                <div className="grid grid-cols-2 gap-2.5">
+                  <Field label="Category">
+                    {(id) => (
+                      <SelectInput
+                        id={id}
+                        value={expCategory}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setExpCategory(val);
+                          const opt = EXPENSE_CATEGORIES.find((c) => c.value === val);
+                          if (opt?.suggests) setExpType(opt.suggests);
+                        }}
+                      >
+                        {EXPENSE_CATEGORIES.map((c) => (
+                          <option key={c.value} value={c.value}>
+                            {c.label}
+                          </option>
+                        ))}
+                      </SelectInput>
+                    )}
+                  </Field>
+                  <Field label="Classification">
+                    {() => (
+                      <Segmented
+                        value={expType}
+                        onChange={setExpType}
+                        options={[
+                          { value: "living", label: "Living" },
+                          { value: "work", label: "Work" },
+                        ]}
+                      />
+                    )}
                   </Field>
                 </div>
                 <Field label="Who paid?">
@@ -403,7 +545,7 @@ export function GroupsScreen() {
                 ) : null}
 
                 <div className="grid grid-cols-2 gap-2 pt-1">
-                  <Button variant="secondary" onClick={() => setShowAddExp(false)}>Cancel</Button>
+                  <Button variant="secondary" onClick={resetExpenseForm}>Cancel</Button>
                   <Button
                     onClick={() => {
                       setExpErr(null);
@@ -502,16 +644,58 @@ export function GroupsScreen() {
             {grpExpenses.map((e) => {
               const eSplits = grpSplits.filter((s) => s.group_expense_id === e.id);
               const payerName = e.paid_by_self ? "You" : peopleById.get(e.paid_by_person_id ?? "") ?? "Member";
+              const catText = `${categoryLabel(e.category ?? "food", "expense")} (${e.expense_type === "work" ? "Work" : "Living"})`;
+              const isConfirmingDelete = deletingExpenseId === e.id;
               return (
                 <Card key={e.id} className="p-4 space-y-2.5">
                   <div className="flex items-start justify-between gap-2">
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-[15px] font-bold text-ink">{e.description}</p>
                       <p className="text-xs text-ink-muted">
-                        {payerName} paid {formatINR(e.total_amount_paise)} · {formatDay(e.expense_date)}
+                        {payerName} paid {formatINR(e.total_amount_paise)} · {catText} · {formatDay(e.expense_date)}
                       </p>
                     </div>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => startEditExpense(e, eSplits)}
+                        className="text-xs font-semibold text-brand-700 px-2 py-1 rounded-lg hover:bg-brand-50"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setDeletingExpenseId(isConfirmingDelete ? null : e.id);
+                          setExpDeleteErr(null);
+                        }}
+                        className="text-xs font-semibold text-red-600 px-2 py-1 rounded-lg hover:bg-red-50"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
+                  {isConfirmingDelete ? (
+                    <div className="p-2.5 rounded-xl bg-red-50/70 border border-red-200 space-y-2">
+                      <p className="text-xs text-ink">
+                        Delete <strong>{e.description}</strong>? This removes its splits and any linked personal expense.
+                      </p>
+                      {expDeleteErr ? <Notice tone="danger">{expDeleteErr}</Notice> : null}
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button variant="secondary" className="h-8 text-xs" onClick={() => setDeletingExpenseId(null)}>
+                          Cancel
+                        </Button>
+                        <Button
+                          variant="danger"
+                          className="h-8 text-xs"
+                          loading={deletingExp}
+                          onClick={() => handleDeleteGroupExpense(e.id)}
+                        >
+                          Confirm delete
+                        </Button>
+                      </div>
+                    </div>
+                  ) : null}
                   <div className="divide-y divide-line border-t border-line pt-1">
                     {eSplits.map((sp) => {
                       const mName = sp.is_self
@@ -522,43 +706,89 @@ export function GroupsScreen() {
                         sp.remaining_amount_paise > 0;
                       const spSettlements = settlements.filter((st) => st.group_expense_split_id === sp.id);
                       return (
-                        <div key={sp.id} className="py-2 flex items-center justify-between gap-2 text-xs">
-                          <div>
-                            <p className="font-semibold text-ink">
-                              {mName}: {formatINR(sp.share_amount_paise)}
-                            </p>
-                            <p className="text-ink-muted">
-                              {sp.direction === "self_share"
-                                ? "Your share"
-                                : sp.direction === "third_party"
-                                  ? "Between other members"
-                                  : sp.status === "settled"
-                                    ? "Settled"
-                                    : sp.direction === "they_owe"
-                                      ? `Owes you ${formatINR(sp.remaining_amount_paise)}`
-                                      : `You owe ${formatINR(sp.remaining_amount_paise)}`}
-                            </p>
-                            {spSettlements.length > 0 ? (
-                              <p className="text-[11px] text-ink-muted">
-                                {spSettlements.length} settlement{spSettlements.length === 1 ? "" : "s"}
+                        <div key={sp.id} className="py-2 space-y-1.5 text-xs">
+                          <div className="flex items-center justify-between gap-2">
+                            <div>
+                              <p className="font-semibold text-ink">
+                                {mName}: {formatINR(sp.share_amount_paise)}
                               </p>
+                              <p className="text-ink-muted">
+                                {sp.direction === "self_share"
+                                  ? "Your share"
+                                  : sp.direction === "third_party"
+                                    ? "Between other members"
+                                    : sp.status === "settled"
+                                      ? "Settled"
+                                      : sp.direction === "they_owe"
+                                        ? `Owes you ${formatINR(sp.remaining_amount_paise)}`
+                                        : `You owe ${formatINR(sp.remaining_amount_paise)}`}
+                              </p>
+                            </div>
+                            {canSettle ? (
+                              <Button
+                                variant="secondary"
+                                className="h-8 w-auto px-3 text-xs"
+                                onClick={() => {
+                                  const targetName =
+                                    sp.direction === "you_owe" ? payerName : mName;
+                                  setSettlingSplit({ ...sp, memberName: targetName });
+                                  setSettleAmount("");
+                                  setSettleNote("");
+                                  setSettleErr(null);
+                                }}
+                              >
+                                Settle
+                              </Button>
                             ) : null}
                           </div>
-                          {canSettle ? (
-                            <Button
-                              variant="secondary"
-                              className="h-8 w-auto px-3 text-xs"
-                              onClick={() => {
-                                const targetName =
-                                  sp.direction === "you_owe" ? payerName : mName;
-                                setSettlingSplit({ ...sp, memberName: targetName });
-                                setSettleAmount("");
-                                setSettleNote("");
-                                setSettleErr(null);
-                              }}
-                            >
-                              Settle
-                            </Button>
+                          {spSettlements.length > 0 ? (
+                            <div className="pl-2 border-l-2 border-line space-y-1">
+                              {spSettlements.map((st) => (
+                                <div key={st.id} className="flex items-center justify-between gap-2 text-[11px] text-ink-muted">
+                                  <span>
+                                    Settled {formatINR(st.amount_paise)} · {formatDay(st.settled_at.slice(0, 10))}
+                                    {st.notes ? ` · ${st.notes}` : ""}
+                                  </span>
+                                  {reversingSettlementId === st.id ? (
+                                    <span className="inline-flex items-center gap-1">
+                                      <button
+                                        type="button"
+                                        disabled={reversingSettle}
+                                        onClick={() => handleReverseSettlement(st.id)}
+                                        className="font-semibold text-red-600 hover:underline"
+                                      >
+                                        Confirm
+                                      </button>
+                                      <span>/</span>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setReversingSettlementId(null);
+                                          setReverseErr(null);
+                                        }}
+                                        className="text-ink-soft hover:underline"
+                                      >
+                                        Cancel
+                                      </button>
+                                    </span>
+                                  ) : (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setReversingSettlementId(st.id);
+                                        setReverseErr(null);
+                                      }}
+                                      className="font-semibold text-amber-700 hover:underline"
+                                    >
+                                      Reverse
+                                    </button>
+                                  )}
+                                </div>
+                              ))}
+                              {reverseErr && spSettlements.some((st) => st.id === reversingSettlementId) ? (
+                                <Notice tone="danger">{reverseErr}</Notice>
+                              ) : null}
+                            </div>
                           ) : null}
                         </div>
                       );
@@ -583,7 +813,7 @@ export function GroupsScreen() {
     <Screen
       title="Groups"
       subtitle="Split bills and settle shared expenses"
-      back="/money"
+      back="/more"
       right={
         <button
           type="button"

@@ -4,11 +4,11 @@ import { supabase, unwrap } from "../lib/supabase";
 import { assertPaise, paiseToRupeeString, toPaise, toPaiseOrNull } from "../lib/money";
 import { LIMIT_ERROR_MESSAGE, MAX_TRANSACTION_LIMIT_PAISE } from "../lib/limits";
 import type {
-  ActivityItem, BalanceCheckin, Commitment, CommitmentStatus,
+  ActivityItem, BalanceCheckin, Commitment, CommitmentKind, CommitmentStatus,
   DebtSettlementEngineItem, ExtractedReceiptCandidate,
-  GroupSettlementEngineItem, GroupSplitEngineItem,
+  GroupSettlementEngineItem, GroupSplitEngineItem, ISODate,
   NewBalanceCheckin, NewCommitment, NewPayout, NewTransaction,
-  Payout, PayoutStatus, PeerDebtEngineItem, Profile, ProfileUpdate,
+  Paise, Payout, PayoutStatus, PeerDebtEngineItem, Profile, ProfileUpdate,
   RunwayInput, Transaction, VoiceTransactionCandidate,
 } from "../types/contracts";
 
@@ -61,11 +61,14 @@ export async function addTransaction(t: NewTransaction): Promise<Transaction> {
   }
 
   const expectedExpenseType = t.type === "expense" && ownership === "mine" ? t.expenseType : null;
+  const expectedInflowCategory = t.type === "income" && ownership === "mine" ? (t.inflowCategory ?? null) : null;
   const insertRes = await supabase.from("transactions").insert({
     id: t.id,
     type: t.type, amount: money(t.amount), category: t.category ?? "other", description: t.description ?? null,
     expense_type: expectedExpenseType,
-    ...(t.inflowCategory ? { inflow_category: t.inflowCategory } : {}),
+    ...(expectedInflowCategory ? { inflow_category: expectedInflowCategory } : {}),
+    ...(t.paymentMethod ? { payment_method: t.paymentMethod } : {}),
+    ...(t.receiptPath ? { receipt_path: t.receiptPath } : {}),
     ownership, payout_id: t.payoutId ?? null, source: t.source ?? "manual",
     ...(t.date ? { transaction_date: t.date } : {}),
   }).select().single();
@@ -130,9 +133,22 @@ export async function updateTransaction(id: string, t: Partial<NewTransaction>):
     row.expense_type = null;
     if (isNotMine) {
       row.payout_id = null;
+      row.inflow_category = null;
+    } else if ("inflowCategory" in t) {
+      row.inflow_category = t.inflowCategory ?? null;
     }
-  } else if (t.expenseType !== undefined) {
-    row.expense_type = t.expenseType ?? null;
+  } else {
+    row.inflow_category = null;
+    if (t.expenseType !== undefined) {
+      row.expense_type = t.expenseType ?? null;
+    }
+  }
+
+  if ("paymentMethod" in t) {
+    row.payment_method = t.paymentMethod ?? null;
+  }
+  if ("receiptPath" in t) {
+    row.receipt_path = t.receiptPath ?? null;
   }
 
   if (t.payoutId !== undefined && !isNotMine) {
@@ -173,6 +189,34 @@ export async function addCommitment(c: NewCommitment): Promise<Commitment> {
   return unwrap(await supabase.from("commitments").insert({
     title: c.title, amount: money(c.amount), due_date: c.dueDate, category: c.category ?? "other", kind: c.kind ?? "bill",
   }).select().single(), "Save commitment");
+}
+
+export async function updateCommitment(
+  id: string,
+  patch: { title: string; amount: Paise; dueDate: ISODate; kind: CommitmentKind; category?: string }
+): Promise<Commitment> {
+  const title = patch.title.trim();
+  if (!title) throw new Error("Enter a commitment title.");
+  if (!Number.isSafeInteger(patch.amount) || patch.amount <= 0) {
+    throw new Error("Commitment amount must be greater than ₹0.");
+  }
+  if (!patch.dueDate) throw new Error("Choose a due date.");
+
+  return unwrap(
+    await supabase
+      .from("commitments")
+      .update({
+        title,
+        amount: money(patch.amount),
+        due_date: patch.dueDate,
+        kind: patch.kind,
+        category: patch.category ?? "other",
+      })
+      .eq("id", id)
+      .select()
+      .single(),
+    "Update commitment"
+  );
 }
 
 export async function listCommitments(status: CommitmentStatus | "all" = "upcoming"): Promise<Commitment[]> {
@@ -348,6 +392,9 @@ export async function listActivityTimeline(opts: {
       category: t.category,
       ownership: t.ownership,
       expenseType: t.expense_type,
+      inflowCategory: t.inflow_category ?? null,
+      paymentMethod: t.payment_method ?? null,
+      receiptPath: t.receipt_path ?? null,
       amountPaise: toPaise(t.amount),
       rupeeAmount: t.amount,
       payoutId: t.payout_id,
@@ -461,6 +508,8 @@ export async function confirmCandidateTransaction(
       category: rc.category || "other",
       description,
       expenseType: txType === "expense" ? (expenseType ?? undefined) : undefined,
+      paymentMethod: rc.paymentMethod ?? undefined,
+      receiptPath: rc.receiptPath ?? undefined,
       ownership: rc.ownership ?? "mine",
       date: rc.date ?? undefined,
       source: "ai_suggestion",

@@ -7,6 +7,7 @@
 
 import { supabase, unwrap } from "../lib/supabase";
 import { assertPaise, formatINR } from "../lib/money";
+import { addTransaction } from "./data";
 import { validateAndApplySettlement, validatePeerDebt } from "../engine/peerDebtEngine";
 import type {
   DebtSettlement,
@@ -15,11 +16,13 @@ import type {
   ISODate,
   ISOTimestamp,
   Paise,
+  PaymentMethod,
   PeerDebt,
   PeerDebtDirection,
   PeerDebtStatus,
   Person,
   SettlementDirection,
+  Transaction,
 } from "../types/contracts";
 
 export interface NewPersonInput {
@@ -65,6 +68,10 @@ export interface PersonFinancialSummary {
   totalRepaidPaise: Paise;
   receivableRemainingPaise: Paise;
   payableRemainingPaise: Paise;
+  personalReceivablePaise: Paise;
+  personalPayablePaise: Paise;
+  groupReceivablePaise: Paise;
+  groupPayablePaise: Paise;
   /** Positive = they owe you; Negative = you owe them; Zero = settled */
   netBalancePaise: number;
   statusLabel: string;
@@ -275,6 +282,96 @@ export async function recordDebtSettlement(
   return normalizeSettlement(unwrap(res, "Record settlement"));
 }
 
+export async function updatePeerDebt(input: {
+  debtId: string;
+  personId: string;
+  totalAmountPaise: Paise;
+  dueDate?: ISODate | null;
+  reason?: string | null;
+}): Promise<PeerDebt> {
+  if (!Number.isSafeInteger(input.totalAmountPaise) || input.totalAmountPaise <= 0) {
+    throw new Error("Original amount must be greater than ₹0.");
+  }
+  const rpcRes = await supabase.rpc("update_peer_debt_atomic", {
+    p_debt_id: input.debtId,
+    p_person_id: input.personId,
+    p_total_amount_paise: input.totalAmountPaise,
+    p_due_date: input.dueDate ?? null,
+    p_reason: input.reason?.trim() || null,
+  });
+  return normalizePeerDebt(unwrap(rpcRes, "Update peer debt"));
+}
+
+export async function deletePeerDebt(debtId: string): Promise<void> {
+  const { error } = await supabase.rpc("delete_peer_debt_safe", { p_debt_id: debtId });
+  if (error) {
+    throw new Error(error.message || "Could not delete peer debt.");
+  }
+}
+
+export async function reverseDebtSettlement(settlementId: string): Promise<DebtSettlement> {
+  const { data, error } = await supabase
+    .from("debt_settlements")
+    .delete()
+    .eq("id", settlementId)
+    .select()
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Reverse settlement failed: ${error.message}`);
+  }
+  if (!data) {
+    throw new Error("Settlement was already reversed or not found.");
+  }
+  return normalizeSettlement(data);
+}
+
+export async function recordGiftTransaction(input: {
+  direction: "received" | "given";
+  amountPaise: Paise;
+  personName?: string | null;
+  date: ISODate;
+  note?: string | null;
+  paymentMethod?: PaymentMethod | null;
+}): Promise<Transaction> {
+  if (!Number.isSafeInteger(input.amountPaise) || input.amountPaise <= 0) {
+    throw new Error("Gift amount must be greater than ₹0.");
+  }
+  const cleanPerson = input.personName?.trim() || "";
+  const cleanNote = input.note?.trim() || "";
+  const descParts = [
+    input.direction === "received" ? "Gift received" : "Gift given",
+    cleanPerson ? (input.direction === "received" ? `from ${cleanPerson}` : `to ${cleanPerson}`) : "",
+    cleanNote ? `(${cleanNote})` : "",
+  ].filter(Boolean);
+
+  if (input.direction === "received") {
+    return addTransaction({
+      type: "income",
+      amount: input.amountPaise,
+      category: "other",
+      inflowCategory: "gift",
+      paymentMethod: input.paymentMethod ?? null,
+      description: descParts.join(" "),
+      ownership: "mine",
+      date: input.date,
+      source: "manual",
+    });
+  }
+
+  return addTransaction({
+    type: "expense",
+    amount: input.amountPaise,
+    category: "other",
+    expenseType: "living",
+    paymentMethod: input.paymentMethod ?? null,
+    description: descParts.join(" "),
+    ownership: "mine",
+    date: input.date,
+    source: "manual",
+  });
+}
+
 // ---------- Deterministic Aggregation (Pure Integer Paise) ----------
 
 export function computePeopleSummaries(
@@ -292,19 +389,21 @@ export function computePeopleSummaries(
 
     let totalLentPaise = 0;
     let totalBorrowedPaise = 0;
-    let receivableRemainingPaise = 0;
-    let payableRemainingPaise = 0;
+    let personalReceivablePaise = 0;
+    let personalPayablePaise = 0;
+    let groupReceivablePaise = 0;
+    let groupPayablePaise = 0;
 
     for (const d of pDebts) {
       if (d.direction === "they_owe") {
         totalLentPaise += d.total_amount_paise;
         if (d.status === "active" || d.status === "partially_settled") {
-          receivableRemainingPaise += d.remaining_amount_paise;
+          personalReceivablePaise += d.remaining_amount_paise;
         }
       } else {
         totalBorrowedPaise += d.total_amount_paise;
         if (d.status === "active" || d.status === "partially_settled") {
-          payableRemainingPaise += d.remaining_amount_paise;
+          personalPayablePaise += d.remaining_amount_paise;
         }
       }
     }
@@ -321,7 +420,7 @@ export function computePeopleSummaries(
       if (gs.direction === "they_owe" && gs.person_id === person.id) {
         totalLentPaise += gs.share_amount_paise;
         if (gs.status === "active" || gs.status === "partially_settled") {
-          receivableRemainingPaise += gs.remaining_amount_paise;
+          groupReceivablePaise += gs.remaining_amount_paise;
         }
         const paidBack = groupSettlements
           .filter((st) => st.group_expense_split_id === gs.id && st.direction === "repayment_in")
@@ -330,7 +429,7 @@ export function computePeopleSummaries(
       } else if (gs.direction === "you_owe" && groupPayerByExpenseId.get(gs.group_expense_id) === person.id) {
         totalBorrowedPaise += gs.share_amount_paise;
         if (gs.status === "active" || gs.status === "partially_settled") {
-          payableRemainingPaise += gs.remaining_amount_paise;
+          groupPayablePaise += gs.remaining_amount_paise;
         }
         const paidOut = groupSettlements
           .filter((st) => st.group_expense_split_id === gs.id && st.direction === "repayment_out")
@@ -339,6 +438,8 @@ export function computePeopleSummaries(
       }
     }
 
+    const receivableRemainingPaise = personalReceivablePaise + groupReceivablePaise;
+    const payableRemainingPaise = personalPayablePaise + groupPayablePaise;
     const netBalancePaise = receivableRemainingPaise - payableRemainingPaise;
     let statusLabel = "No pending balance";
     if (netBalancePaise > 0) statusLabel = `Owes you ${formatINR(netBalancePaise)}`;
@@ -353,6 +454,10 @@ export function computePeopleSummaries(
       totalRepaidPaise,
       receivableRemainingPaise,
       payableRemainingPaise,
+      personalReceivablePaise,
+      personalPayablePaise,
+      groupReceivablePaise,
+      groupPayablePaise,
       netBalancePaise,
       statusLabel,
       debts: pDebts,

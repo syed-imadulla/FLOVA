@@ -2,11 +2,19 @@
 // Every number here is computed by the engine or summed in integer paise; nothing is AI-estimated.
 import { useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { categoryLabel } from "../app/categories";
+import { buildStructuredInsights } from "../app/insightsCommitmentsModel";
+import {
+  FINANCIAL_TERMS,
+  formatFinancialAmount,
+  useFinancialIntelligence,
+  type FinancialIntelligenceSnapshot,
+} from "../app/useFinancialIntelligence";
 import { MonthView } from "./MonthView";
 import { useActivity } from "../app/useActivity";
 import { todayLocalISO } from "../data/dates";
 import { formatINR } from "../lib/money";
-import { useRunway } from "../runway/useRunway";
+import type { ProcessedRunway } from "../runway/adapter";
 import {
   calculateAdaptiveBuffer,
   generateIncomeForecast,
@@ -23,7 +31,7 @@ export function InsightsScreen() {
   const tab: "runway" | "month" | "insights" = tabParam === "month" || tabParam === "insights" ? tabParam : "runway";
   const setTab = (t: "runway" | "month" | "insights") => setParams(t === "runway" ? {} : { tab: t }, { replace: true });
   return (
-    <Screen title={tab === "runway" ? "Your 7-day runway" : tab === "month" ? "Monthly timeline" : "Insights"} subtitle="Based only on money you've confirmed">
+    <Screen title={tab === "runway" ? "Your 7-day runway" : tab === "month" ? "Monthly timeline" : "Insights"} subtitle="Based only on money you've confirmed" back="/money">
       <Segmented
         value={tab}
         onChange={setTab}
@@ -39,8 +47,9 @@ export function InsightsScreen() {
 }
 
 function RunwayAndInsights({ tab }: { tab: "runway" | "insights" }) {
-  const { runway, rawInput, loading, error } = useRunway({ horizonDays: 7 });
-  const today = todayLocalISO();
+  const { data: intel, rawInput, loading, error } = useFinancialIntelligence({ horizonDays: 7 });
+  const runway = intel?.runway ?? null;
+  const today = intel?.todayISO ?? todayLocalISO();
   return (
     <>
       {error ? <Notice tone="danger">{error}</Notice> : null}
@@ -65,13 +74,13 @@ function RunwayAndInsights({ tab }: { tab: "runway" | "insights" }) {
       ) : tab === "runway" ? (
         <RunwayTab runway={runway} dailyLiving={rawInput?.profile.dailyLivingEstimate ?? null} dailyWork={rawInput?.profile.dailyWorkEstimate ?? null} today={today} />
       ) : (
-        <InsightsTab runway={runway} rawInput={rawInput} today={today} />
+        <InsightsTab runway={runway} rawInput={rawInput} intel={intel} today={today} />
       )}
     </>
   );
 }
 
-type Runway = NonNullable<ReturnType<typeof useRunway>["runway"]>;
+type Runway = ProcessedRunway;
 
 function RunwayTab({ runway, dailyLiving, dailyWork, today }: { runway: Runway; dailyLiving: number | null; dailyWork: number | null; today: string }) {
   const [active, setActive] = useState<number | null>(null);
@@ -165,7 +174,7 @@ function RunwayTab({ runway, dailyLiving, dailyWork, today }: { runway: Runway; 
   );
 }
 
-function InsightsTab({ runway, rawInput, today }: { runway: Runway; rawInput: RunwayInput | null; today: string }) {
+function InsightsTab({ runway, rawInput, intel, today }: { runway: Runway; rawInput: RunwayInput | null; intel: FinancialIntelligenceSnapshot | null; today: string }) {
   const { items } = useActivity({ limit: 200, includeExpectedPayouts: false });
 
   const transactions = useMemo(() => {
@@ -178,6 +187,7 @@ function InsightsTab({ runway, rawInput, today }: { runway: Runway; rawInput: Ru
         category: it.category || "other",
         description: it.title || "",
         expenseType: it.expenseType,
+        inflowCategory: it.inflowCategory ?? null,
         ownership: it.ownership || "mine",
         date: it.date!,
       }));
@@ -206,6 +216,9 @@ function InsightsTab({ runway, rawInput, today }: { runway: Runway; rawInput: Ru
     });
   }, [transactions]);
 
+  // Reuse shared Financial Health from useFinancialIntelligence() so HomeScreen and InsightsScreen always match
+  const healthReport = intel?.financialHealth ?? null;
+
   // 4. Hypothetical What-If Simulator State
   const [simIncomeChange, setSimIncomeChange] = useState<number>(0);
   const [simDelayDays, setSimDelayDays] = useState<number>(0);
@@ -215,23 +228,31 @@ function InsightsTab({ runway, rawInput, today }: { runway: Runway; rawInput: Ru
     if (!rawInput) return null;
     return simulateScenario(rawInput, {
       incomeChangePercent: simIncomeChange,
+      expectedIncomeBasisPaise: incomeForecast.hasSufficientData ? incomeForecast.expectedPaise : undefined,
       payoutDelayDays: simDelayDays,
       oneTimeExpensePaise: simEmergencyRupees * 100,
     });
-  }, [rawInput, simIncomeChange, simDelayDays, simEmergencyRupees]);
+  }, [rawInput, simIncomeChange, simDelayDays, simEmergencyRupees, incomeForecast]);
 
   const week = useMemo(() => {
-    let earned = 0, living = 0, work = 0;
+    let earned = 0, nonEarned = 0, living = 0, work = 0;
     for (const it of items ?? []) {
       if ((it.kind !== "transaction" && it.kind !== "payout_receipt") || it.ownership === "not_mine" || it.amountPaise === undefined) continue;
       const d = daysFromToday(it.date, today);
       if (d > 0 || d < -6) continue;
-      if (it.type === "income") earned += it.amountPaise;
-      else if (it.expenseType === "work") work += it.amountPaise;
+      if (it.type === "income") {
+        if ((it.inflowCategory ?? "earned") === "earned") earned += it.amountPaise;
+        else nonEarned += it.amountPaise;
+      } else if (it.expenseType === "work") work += it.amountPaise;
       else living += it.amountPaise;
     }
-    return { earned, living, work, spent: living + work };
+    return { earned, nonEarned, living, work, spent: living + work };
   }, [items, today]);
+
+  const structuredInsights = useMemo(
+    () => buildStructuredInsights({ intel, spendingReport }),
+    [intel, spendingReport]
+  );
 
   const tips: Array<{ tone: "danger" | "warn" | "info" | "brand"; title: string; body: string; to?: string; cta?: string }> = [];
   const minClose = Math.min(...runway.projections.map((p) => p.closingBalancePaise));
@@ -255,6 +276,56 @@ function InsightsTab({ runway, rawInput, today }: { runway: Runway; rawInput: Ru
 
   return (
     <div className="space-y-4">
+      {/* 0. Safe-to-Spend & Allowance Snapshot */}
+      {intel && intel.confirmedCashPaise !== null ? (
+        <Card tone="brand" className="p-4 space-y-2.5">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <p className="text-xs font-semibold text-brand-800">{FINANCIAL_TERMS.safeToSpend.label}</p>
+              <p className="text-[20px] font-extrabold tabular-nums text-ink">
+                {formatFinancialAmount(intel.safeToSpendPaise)}
+              </p>
+              <p className="text-[11px] text-ink-muted">
+                {formatFinancialAmount(intel.dailySpendingAllowancePaise)}/day allowance
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-xs font-semibold text-brand-800">{FINANCIAL_TERMS.confirmedCash.label}</p>
+              <p className="text-[20px] font-extrabold tabular-nums text-ink">
+                {formatFinancialAmount(intel.confirmedCashPaise)}
+              </p>
+              <p className="text-[11px] text-ink-muted">
+                {formatFinancialAmount(intel.remainingMonthlyAllowancePaise)} left this month
+              </p>
+            </div>
+          </div>
+        </Card>
+      ) : null}
+
+      {/* 0b. Structured Actionable Insights (What happened / Why it matters / Next step) */}
+      {structuredInsights.length > 0 ? (
+        <div className="space-y-2.5">
+          {structuredInsights.map((ins) => (
+            <Notice
+              key={ins.id}
+              tone={ins.tone === "brand" ? "success" : ins.tone}
+              title={ins.title}
+              action={
+                <Link
+                  to={ins.nextActionTo}
+                  className="inline-flex h-8 items-center rounded-full bg-white/90 border border-line px-3 text-xs font-semibold text-ink"
+                >
+                  {ins.nextActionLabel} →
+                </Link>
+              }
+            >
+              <span className="block">{ins.whatHappened}</span>
+              <span className="block mt-0.5 opacity-80">{ins.whyItMatters}</span>
+            </Notice>
+          ))}
+        </div>
+      ) : null}
+
       {/* 1. Activity Overview */}
       <Card className="p-4">
         <p className="text-[13px] font-semibold text-ink-soft">Last 7 days confirmed</p>
@@ -268,9 +339,10 @@ function InsightsTab({ runway, rawInput, today }: { runway: Runway; rawInput: Ru
             <p className="text-[19px] font-extrabold tabular-nums">{items ? formatINR(week.spent) : "…"}</p>
           </div>
         </div>
-        {items && week.spent > 0 ? (
+        {items && (week.spent > 0 || week.nonEarned > 0) ? (
           <p className="mt-2 text-xs text-ink-muted">
-            Living {formatINR(week.living)} · Work {formatINR(week.work)}
+            {week.spent > 0 ? `Living ${formatINR(week.living)} · Work ${formatINR(week.work)}` : ""}
+            {week.nonEarned > 0 ? `${week.spent > 0 ? " · " : ""}+${formatINR(week.nonEarned)} non-earned inflows` : ""}
           </p>
         ) : null}
       </Card>
@@ -308,8 +380,27 @@ function InsightsTab({ runway, rawInput, today }: { runway: Runway; rawInput: Ru
                 <div className="flex flex-wrap gap-1.5">
                   {spendingReport.topCategories.map((c) => (
                     <span key={c.category} className="text-xs px-2.5 py-1 rounded-lg bg-neutral-100 text-ink-soft border border-line">
-                      <strong className="capitalize">{c.category}</strong>: {formatINR(c.totalPaise)} ({c.percentage}%)
+                      <strong>{categoryLabel(c.category, "expense")}</strong>: {formatINR(c.totalPaise)} ({c.percentage}%)
                     </span>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            {spendingReport.anomalies.length > 0 ? (
+              <div className="space-y-1.5 pt-2 border-t border-line">
+                <div className="flex items-center justify-between">
+                  <p className="text-[12px] font-semibold text-amber-800">Unusual spending detected:</p>
+                  <Link to="/activity" className="text-[11.5px] font-semibold text-brand-700">
+                    Review activity →
+                  </Link>
+                </div>
+                <div className="space-y-1.5">
+                  {spendingReport.anomalies.slice(0, 3).map((a, idx) => (
+                    <div key={`${a.kind}-${idx}`} className="text-xs rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 text-amber-900">
+                      {a.category ? <strong>{categoryLabel(a.category, "expense")}: </strong> : null}
+                      {a.message}
+                    </div>
                   ))}
                 </div>
               </div>
@@ -319,6 +410,56 @@ function InsightsTab({ runway, rawInput, today }: { runway: Runway; rawInput: Ru
           <p className="text-xs text-ink-muted">No confirmed expenses yet to analyze spending categories.</p>
         )}
       </Card>
+
+      {/* 2b. Financial Health Indicators */}
+      {healthReport ? (
+        <Card className="p-4 space-y-3">
+          <div className="flex items-center justify-between gap-2">
+            <div>
+              <p className="text-[14px] font-bold text-ink">Financial Health</p>
+              <p className="text-xs text-ink-muted">{healthReport.summary}</p>
+            </div>
+            <span
+              className={cx(
+                "shrink-0 text-[10.5px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider",
+                healthReport.overallStatus === "healthy"
+                  ? "bg-emerald-100 text-emerald-800"
+                  : healthReport.overallStatus === "watch"
+                    ? "bg-amber-100 text-amber-800"
+                    : healthReport.overallStatus === "attention"
+                      ? "bg-red-100 text-red-700"
+                      : "bg-neutral-100 text-neutral-600"
+              )}
+            >
+              {healthReport.overallStatus === "insufficient_data" ? "Needs data" : healthReport.overallStatus}
+            </span>
+          </div>
+          <div className="divide-y divide-line">
+            {healthReport.indicators.map((ind) => (
+              <div key={ind.id} className="py-2 flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-ink">{ind.label}</p>
+                  <p className="text-[11.5px] text-ink-muted">{ind.explanation}</p>
+                </div>
+                <span
+                  className={cx(
+                    "shrink-0 text-xs font-bold tabular-nums",
+                    ind.status === "healthy"
+                      ? "text-emerald-700"
+                      : ind.status === "watch"
+                        ? "text-amber-700"
+                        : ind.status === "attention"
+                          ? "text-red-600"
+                          : "text-ink-muted"
+                  )}
+                >
+                  {ind.valueText}
+                </span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      ) : null}
 
       {/* 3. Adaptive Buffer Recommendation */}
       <Card className="p-4 space-y-3">

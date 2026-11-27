@@ -1,7 +1,8 @@
 // FLOVA app UI kit: the small set of primitives every screen is built from,
 // so spacing, type and states stay identical from screen to screen.
 import React, { useEffect, useId } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import { resolveBackNavigation } from "../app/navigation";
 import { IconBack, IconClose, IconInfo, IconAlert, IconCheckCircle } from "./icons";
 
 export function cx(...parts: Array<string | false | null | undefined>): string {
@@ -22,10 +23,18 @@ interface ScreenProps {
 
 export function Screen({ title, subtitle, back, right, children, header }: ScreenProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const goBack = () => {
-    if (typeof back === "string") navigate(back);
-    else if (window.history.state && window.history.state.idx > 0) navigate(-1);
-    else navigate("/app");
+    const historyIdx = typeof window !== "undefined" ? (window.history.state?.idx ?? 0) : 0;
+    const originRoute = (location.state as { from?: string } | null)?.from ?? null;
+    const target = resolveBackNavigation({
+      back,
+      historyIdx,
+      originRoute,
+      pathname: location.pathname,
+    });
+    if (target.type === "history") navigate(-1);
+    else navigate(target.to, { replace: target.replace });
   };
   return (
     <div className="min-h-full">

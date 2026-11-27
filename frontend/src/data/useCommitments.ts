@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useSession } from "../auth/useSession";
-import { addCommitment, listCommitments, setCommitmentStatus } from "../services/data";
-import type { Commitment, CommitmentStatus, NewCommitment } from "../types/contracts";
+import { addCommitment, listCommitments, setCommitmentStatus, updateCommitment } from "../services/data";
+import type { Commitment, CommitmentKind, CommitmentStatus, ISODate, NewCommitment, Paise } from "../types/contracts";
 import { useDataVersion } from "./DataVersionProvider";
 
 export function useCommitments(filter: CommitmentStatus | "all" = "upcoming") {
@@ -65,5 +65,17 @@ export function useCommitments(filter: CommitmentStatus | "all" = "upcoming") {
     [bump]
   );
 
-  return { items, loading, error, add, setStatus, reload: fetchCommitments };
+  const update = useCallback(
+    async (
+      id: string,
+      patch: { title: string; amount: Paise; dueDate: ISODate; kind: CommitmentKind; category?: string }
+    ): Promise<Commitment> => {
+      const updated = await updateCommitment(id, patch);
+      bump();
+      return updated;
+    },
+    [bump]
+  );
+
+  return { items, loading, error, add, update, setStatus, reload: fetchCommitments };
 }

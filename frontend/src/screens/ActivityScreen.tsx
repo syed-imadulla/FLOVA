@@ -8,6 +8,7 @@ import { useActivity } from "../app/useActivity";
 import { useDataVersion } from "../data/DataVersionProvider";
 import { todayLocalISO } from "../data/dates";
 import { deleteTransaction, updateTransaction } from "../services/data";
+import { deleteReceiptObjectQuietly, getReceiptSignedUrl } from "../services/receiptStorage";
 import type { ActivityItem } from "../types/contracts";
 import { Button, Card, Chip, EmptyState, Notice, Screen, Sheet, Skeleton, relativeDayLabel } from "../ui/kit";
 import { IconActivity, IconTrash } from "../ui/icons";
@@ -118,27 +119,74 @@ function EditBody({ item, onDone }: { item: ActivityItem; onDone: () => void }) 
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [receiptPath, setReceiptPath] = useState<string | null>(item.receiptPath ?? null);
+  const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
+  const [receiptBusy, setReceiptBusy] = useState(false);
+  const [receiptErr, setReceiptErr] = useState<string | null>(null);
+  const [confirmRemoveReceipt, setConfirmRemoveReceipt] = useState(false);
   const type = item.type === "income" ? "income" : "expense";
 
   async function save(v: TxSubmit) {
     const isMineExpense = v.type === "expense" && v.ownership === "mine";
+    const isMineIncome = v.type === "income" && v.ownership === "mine";
     await updateTransaction(item.id, {
       type: v.type,
       amount: v.amountPaise,
       category: v.category,
       description: v.note ? v.note.trim() : null,
       expenseType: isMineExpense ? v.expenseType : null,
+      inflowCategory: isMineIncome ? v.inflowCategory : null,
+      paymentMethod: v.paymentMethod,
+      receiptPath,
       ownership: v.ownership,
       date: v.date,
     });
     onDone();
   }
 
+  async function viewReceipt() {
+    if (!receiptPath) return;
+    setReceiptBusy(true);
+    setReceiptErr(null);
+    try {
+      const url = await getReceiptSignedUrl(receiptPath);
+      setReceiptUrl(url);
+    } catch (e) {
+      setReceiptErr(e instanceof Error ? e.message : "Could not load receipt evidence.");
+    } finally {
+      setReceiptBusy(false);
+    }
+  }
+
+  async function removeReceipt() {
+    if (!receiptPath) return;
+    setReceiptBusy(true);
+    setReceiptErr(null);
+    try {
+      await updateTransaction(item.id, {
+        type,
+        amount: item.amountPaise ?? 0,
+        category: item.category || "other",
+        receiptPath: null,
+      });
+      await deleteReceiptObjectQuietly(receiptPath);
+      setReceiptPath(null);
+      setReceiptUrl(null);
+      setConfirmRemoveReceipt(false);
+    } catch (e) {
+      setReceiptErr(e instanceof Error ? e.message : "Could not remove receipt evidence.");
+    } finally {
+      setReceiptBusy(false);
+    }
+  }
+
   async function remove() {
     setDeleting(true);
     setErr(null);
     try {
+      const oldPath = receiptPath;
       await deleteTransaction(item.id);
+      if (oldPath) await deleteReceiptObjectQuietly(oldPath);
       onDone();
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Could not delete");
@@ -149,12 +197,74 @@ function EditBody({ item, onDone }: { item: ActivityItem; onDone: () => void }) 
   return (
     <div className="space-y-4">
       {item.payoutId ? <Notice tone="info">This income is linked to an expected payout. Changing it updates what's been received.</Notice> : null}
+      {receiptPath ? (
+        <Card tone="soft" className="p-3 space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <div>
+              <p className="text-xs font-bold text-ink">Receipt evidence</p>
+              <p className="text-[11px] text-ink-muted">Stored privately · short-lived access</p>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Button variant="secondary" className="h-8 w-auto px-3 text-xs" loading={receiptBusy} onClick={viewReceipt}>
+                View
+              </Button>
+              <button
+                type="button"
+                onClick={() => setConfirmRemoveReceipt((v) => !v)}
+                className="text-xs font-semibold text-red-600 px-2 py-1 rounded-lg hover:bg-red-50"
+              >
+                Remove
+              </button>
+            </div>
+          </div>
+          {receiptErr ? <Notice tone="danger">{receiptErr}</Notice> : null}
+          {receiptUrl ? (
+            receiptPath.toLowerCase().endsWith(".pdf") ? (
+              <a
+                href={receiptUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block text-xs font-semibold text-brand-700 underline"
+              >
+                Open PDF receipt (expires in 2 min)
+              </a>
+            ) : (
+              <div className="space-y-1.5">
+                <img src={receiptUrl} alt="Saved receipt" className="w-full max-h-60 object-contain rounded-xl border border-line bg-white" />
+                <a
+                  href={receiptUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block text-[11px] font-semibold text-brand-700 underline"
+                >
+                  Open full size
+                </a>
+              </div>
+            )
+          ) : null}
+          {confirmRemoveReceipt ? (
+            <div className="p-2 rounded-xl bg-red-50/70 border border-red-200 space-y-2">
+              <p className="text-xs text-ink">Remove this receipt image from private storage?</p>
+              <div className="grid grid-cols-2 gap-2">
+                <Button variant="secondary" className="h-8 text-xs" onClick={() => setConfirmRemoveReceipt(false)} disabled={receiptBusy}>
+                  Keep receipt
+                </Button>
+                <Button variant="danger" className="h-8 text-xs" loading={receiptBusy} onClick={removeReceipt}>
+                  Confirm remove
+                </Button>
+              </div>
+            </div>
+          ) : null}
+        </Card>
+      ) : null}
       <TransactionForm
         initial={{
           type,
           amount: paiseToInput(item.amountPaise ?? null),
           category: item.category || "other",
           expenseType: item.expenseType ?? "",
+          inflowCategory: item.inflowCategory ?? "",
+          paymentMethod: item.paymentMethod ?? "",
           ownership: item.ownership ?? "mine",
           date: item.date,
           note: item.title && item.title !== item.category ? item.title : "",

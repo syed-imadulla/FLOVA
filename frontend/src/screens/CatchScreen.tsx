@@ -12,6 +12,7 @@ import { paiseToInput } from "../app/moneyText";
 import type { ReviewState } from "./AddScreen";
 import { todayLocalISO } from "../data/dates";
 import { extractReceipt, type ExtractionStage } from "../services/receipt";
+import { validateReceiptFileMetadata } from "../services/receiptStorage";
 import { claimAndResolveShare, renewShareLease, acknowledgeShare } from "../native/sharePlugin";
 import { Button, Card, Notice, Screen, Segmented } from "../ui/kit";
 import { IconCamera, IconImage, IconSparkle, IconTrash } from "../ui/icons";
@@ -157,9 +158,20 @@ export function CatchScreen() {
 
   function pick(f: File | null) {
     setError(null);
+    if (f) {
+      try {
+        validateReceiptFileMetadata(f);
+      } catch (err) {
+        setFile(null);
+        if (preview) URL.revokeObjectURL(preview);
+        setPreview(null);
+        setError(err instanceof Error ? err.message : "Unsupported receipt file.");
+        return;
+      }
+    }
     setFile(f);
     if (preview) URL.revokeObjectURL(preview);
-    setPreview(f ? URL.createObjectURL(f) : null);
+    setPreview(f && f.type !== "application/pdf" && !f.name.toLowerCase().endsWith(".pdf") ? URL.createObjectURL(f) : null);
   }
 
   function clearImage() {
@@ -178,6 +190,26 @@ export function CatchScreen() {
     setStagePercent(10);
 
     try {
+      if (mode === "photo" && file && (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf"))) {
+        const state: ReviewState = {
+          origin: "receipt",
+          candidateId: typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : undefined,
+          receiptFile: file,
+          aiNote: `PDF receipt (${file.name}) attached. Enter the amount and details below, then save.`,
+          draft: {
+            type: "expense",
+            amount: "",
+            category: "other",
+            expenseType: "",
+            ownership: "mine",
+            date: todayLocalISO(),
+            note: file.name.replace(/\.pdf$/i, ""),
+          },
+        };
+        navigate("/add", { state });
+        return;
+      }
+
       const c = await extractReceipt({
         file: mode === "photo" ? file ?? undefined : undefined,
         text: mode === "text" ? text.trim() : undefined,
@@ -213,6 +245,7 @@ export function CatchScreen() {
       const state: ReviewState = {
         origin,
         candidateId: c.id || c.candidate_id,
+        receiptFile: mode === "photo" ? file ?? undefined : undefined,
         merchant: c.merchant,
         aiNote,
         paymentStatus: c.paymentStatus,
@@ -310,16 +343,23 @@ export function CatchScreen() {
           <input
             ref={galleryInputRef}
             type="file"
-            accept="image/jpeg,image/png,image/webp,image/jpg"
+            accept="image/jpeg,image/png,image/webp,image/jpg,application/pdf"
             className="hidden"
             onChange={(e) => pick(e.target.files?.[0] ?? null)}
           />
 
-          {preview ? (
+          {preview || (file && (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf"))) ? (
             <div className="space-y-3">
-              <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-neutral-900 border border-line">
-                <img src={preview} alt="Receipt preview" className="w-full h-full object-contain" />
-              </div>
+              {preview ? (
+                <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-neutral-900 border border-line">
+                  <img src={preview} alt="Receipt preview" className="w-full h-full object-contain" />
+                </div>
+              ) : (
+                <div className="p-4 rounded-2xl border border-line bg-neutral-50 text-center space-y-1">
+                  <p className="text-sm font-semibold text-ink">{file?.name}</p>
+                  <p className="text-xs text-ink-muted">PDF receipt ready to attach</p>
+                </div>
+              )}
 
               <div className="flex items-center gap-2">
                 <Button

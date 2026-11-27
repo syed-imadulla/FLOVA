@@ -10,6 +10,7 @@ import { todayLocalISO } from "../data/dates";
 import { formatINR } from "../lib/money";
 import { useProfile } from "../profile/useProfile";
 import { addTransaction, confirmCandidateTransaction } from "../services/data";
+import { saveTransactionWithReceipt } from "../services/receiptStorage";
 import { calculateBatchSummary } from "../engine/batchArithmetic";
 import type { ExtractedReceiptCandidate, VoiceTransactionCandidate, ExpenseType, TransactionType } from "../types/contracts";
 import { Button, Card, Notice, Screen, Segmented } from "../ui/kit";
@@ -27,6 +28,7 @@ export interface ReviewState {
   /** Omitted for a manual entry opened with pre-filled values (e.g. paying a bill). */
   origin?: "voice" | "receipt" | "upi_screenshot" | "shared_upi" | "batch_voice";
   candidateId?: string;
+  receiptFile?: File;
   draft: TxDraft;
   aiNote?: string;
   merchant?: string | null;
@@ -78,56 +80,69 @@ export function AddScreen() {
   const [batchError, setBatchError] = useState<string | null>(null);
 
   async function save(v: TxSubmit) {
-    if (review?.origin === "receipt" || review?.origin === "upi_screenshot" || review?.origin === "shared_upi") {
-      const c: ExtractedReceiptCandidate = {
-        id: activeCandidateId,
-        merchant: review.merchant ?? null,
-        amountPaise: v.amountPaise,
-        type: v.type,
-        category: v.category,
-        expenseType: v.expenseType,
-        date: v.date,
-        description: v.note || null,
-        ownership: v.ownership,
-        needsReview: false,
-        missingFields: [],
-        kind: review.origin === "receipt" ? "physical_receipt" : "upi_screenshot",
-        paymentStatus: review.paymentStatus,
-        upiReference: review.upiReference ?? null,
-        upiApp: review.upiApp ?? null,
-        dateFallback: review.dateFallback,
-        extractedDate: review.extractedDate ?? null,
-        scannedAt: review.scannedAt,
-        items: review.items,
-      };
-      await confirmCandidateTransaction(c);
-    } else if (review?.origin === "voice") {
-      const c: VoiceTransactionCandidate = {
-        id: activeCandidateId,
-        transcript: review.transcript || "",
-        description: v.note || review.transcript || null,
-        type: v.type,
-        amountPaise: v.amountPaise,
-        category: v.category,
-        expenseType: v.expenseType,
-        date: v.date,
-        ownership: v.ownership,
-        needsReview: false,
-        missingFields: [],
-      };
-      await confirmCandidateTransaction(c);
+    const persistCandidate = async (receiptPath: string | null) => {
+      if (review?.origin === "receipt" || review?.origin === "upi_screenshot" || review?.origin === "shared_upi") {
+        const c: ExtractedReceiptCandidate = {
+          id: activeCandidateId,
+          merchant: review.merchant ?? null,
+          amountPaise: v.amountPaise,
+          type: v.type,
+          category: v.category,
+          expenseType: v.expenseType,
+          date: v.date,
+          description: v.note || null,
+          ownership: v.ownership,
+          paymentMethod: v.paymentMethod ?? null,
+          receiptPath,
+          needsReview: false,
+          missingFields: [],
+          kind: review.origin === "receipt" ? "physical_receipt" : "upi_screenshot",
+          paymentStatus: review.paymentStatus,
+          upiReference: review.upiReference ?? null,
+          upiApp: review.upiApp ?? null,
+          dateFallback: review.dateFallback,
+          extractedDate: review.extractedDate ?? null,
+          scannedAt: review.scannedAt,
+          items: review.items,
+        };
+        await confirmCandidateTransaction(c);
+      } else if (review?.origin === "voice") {
+        const c: VoiceTransactionCandidate = {
+          id: activeCandidateId,
+          transcript: review.transcript || "",
+          description: v.note || review.transcript || null,
+          type: v.type,
+          amountPaise: v.amountPaise,
+          category: v.category,
+          expenseType: v.expenseType,
+          date: v.date,
+          ownership: v.ownership,
+          needsReview: false,
+          missingFields: [],
+        };
+        await confirmCandidateTransaction(c);
+      } else {
+        await addTransaction({
+          id: activeCandidateId,
+          type: v.type,
+          amount: v.amountPaise,
+          category: v.category,
+          description: v.note || undefined,
+          expenseType: v.expenseType ?? undefined,
+          inflowCategory: v.inflowCategory,
+          paymentMethod: v.paymentMethod,
+          receiptPath,
+          ownership: v.ownership,
+          date: v.date,
+          source: "manual",
+        });
+      }
+    };
+
+    if (review?.receiptFile) {
+      await saveTransactionWithReceipt(review.receiptFile, activeCandidateId, persistCandidate);
     } else {
-      await addTransaction({
-        id: activeCandidateId,
-        type: v.type,
-        amount: v.amountPaise,
-        category: v.category,
-        description: v.note || undefined,
-        expenseType: v.expenseType ?? undefined,
-        ownership: v.ownership,
-        date: v.date,
-        source: "manual",
-      });
+      await persistCandidate(null);
     }
     bump();
     const what = v.type === "income" ? "income" : `${categoryLabel(v.category, v.type).toLowerCase()} expense`;

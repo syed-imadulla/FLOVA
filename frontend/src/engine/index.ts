@@ -135,6 +135,45 @@ export {
 
 export {
   analyzeSpendingIntelligence,
+  ANOMALY_THRESHOLDS,
   type CategorySpending,
+  type SpendingAnomaly,
   type SpendingIntelligenceReport,
 } from "./spendingIntelligence";
+
+export {
+  assessFinancialHealth,
+  type FinancialHealthIndicator,
+  type FinancialHealthInput,
+  type FinancialHealthReport,
+  type HealthIndicatorStatus,
+} from "./financialHealth";
+
+export {
+  analyzeWishGoals,
+  normalizeWishGoalForEngine,
+  simulateWishContribution,
+  type WishContributionCadence,
+  type WishGoalAnalysis,
+  type WishGoalEngineStatus,
+  type WishGoalInput,
+  type WishIntelligenceInput,
+  type WishIntelligenceReport,
+} from "./wishIntelligence";
+
+export {
+  calculateSafeToSpend,
+  type SafeToSpendInput,
+  type SafeToSpendResult,
+} from "./safeToSpend";
+
+export {
+  buildDebtRepaymentPlan,
+  compareRepaymentBudgets,
+  type CreditorDebtSummary,
+  type DebtObligationItem,
+  type DebtRepaymentPlan,
+  type DebtRepaymentPlannerInput,
+  type DebtUrgency,
+  type RepaymentBudgetComparison,
+} from "./debtRepaymentPlanner";
