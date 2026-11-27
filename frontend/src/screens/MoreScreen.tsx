@@ -5,7 +5,7 @@ import { useSession } from "../auth/useSession";
 import { useProfile } from "../profile/useProfile";
 import { signOut } from "../services/auth";
 import { Card, Notice, Screen } from "../ui/kit";
-import { IconCalendar, IconCamera, IconChevronRight, IconClock, IconLogout, IconPencil, IconShield, IconTarget, IconUser, IconWallet } from "../ui/icons";
+import { IconCalendar, IconCamera, IconChevronRight, IconClock, IconLogout, IconPencil, IconReceipt, IconShield, IconTarget, IconUser, IconWallet } from "../ui/icons";
 
 const GROUPS: Array<{ title: string; items: Array<{ to: string; icon: React.ReactNode; label: string; hint: string }> }> = [
   {
@@ -26,6 +26,7 @@ const GROUPS: Array<{ title: string; items: Array<{ to: string; icon: React.Reac
       { to: "/checkin", icon: <IconWallet size={20} />, label: "Balance check-in", hint: "Count cash and bank" },
       { to: "/add", icon: <IconPencil size={20} />, label: "Add income or expense", hint: "Manual entry" },
       { to: "/catch", icon: <IconCamera size={20} />, label: "Scan a receipt", hint: "Photo or SMS text" },
+      { to: "/import", icon: <IconReceipt size={20} />, label: "Import bank statement", hint: "Upload a CSV statement" },
     ],
   },
   {

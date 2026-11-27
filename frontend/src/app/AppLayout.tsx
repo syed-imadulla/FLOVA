@@ -6,7 +6,7 @@ import { cx } from "../ui/kit";
 import { useKeyboardOpen } from "../native/keyboard";
 import { IconActivity, IconHome, IconInsights, IconMic, IconWallet } from "../ui/icons";
 
-const MONEY_PATHS = ["/money", "/groups", "/insights", "/more", "/wish", "/payouts", "/commitments", "/invoices", "/profile"];
+const MONEY_PATHS = ["/money", "/groups", "/insights", "/more", "/wish", "/payouts", "/commitments", "/invoices", "/profile", "/import"];
 
 export function AppLayout() {
   const { pathname } = useLocation();

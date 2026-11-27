@@ -28,6 +28,7 @@ import { ProfileScreen } from "./screens/ProfileScreen";
 import { PeopleScreen } from "./screens/PeopleScreen";
 import { MoneyScreen } from "./screens/MoneyScreen";
 import { GroupsScreen } from "./screens/GroupsScreen";
+import { ImportStatementScreen } from "./screens/ImportStatementScreen";
 import { AndroidBackButton } from "./native/AndroidBackButton";
 import { AppUrlListener } from "./native/AppUrlListener";
 import { APP_START_PATH, IS_NATIVE_APP } from "./native/platform";
@@ -80,6 +81,7 @@ export default function App() {
                 <Route path="/invoices" element={<InvoicesScreen />} />
                 <Route path="/wish" element={<WishScreen />} />
                 <Route path="/profile" element={<ProfileScreen />} />
+                <Route path="/import" element={<ImportStatementScreen />} />
               </Route>
 
               {/* Legacy URLs → their single current screen */}
