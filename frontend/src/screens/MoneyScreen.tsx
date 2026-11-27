@@ -2,10 +2,15 @@
 // Available Liquidity vs Sustainable Capital, and confirmation-gated Borrowing/Lending/Repayments.
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { buildDebtPlannerModel } from "../app/debtPlannerModel";
+import {
+  FINANCIAL_TERMS,
+  formatFinancialAmount,
+  useFinancialIntelligence,
+} from "../app/useFinancialIntelligence";
 import { todayLocalISO } from "../data/dates";
 import { useDataVersion } from "../data/DataVersionProvider";
 import { formatINR, toPaiseStrict } from "../lib/money";
-import { useRunway } from "../runway/useRunway";
 import {
   computeMoneyOverview,
   createPeerDebt,
@@ -38,7 +43,7 @@ function parseRupees(raw: string): number | null {
 export function MoneyScreen() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { version, bump } = useDataVersion();
-  const { runway } = useRunway({ horizonDays: 30 });
+  const { data: intel, loading: intelLoading } = useFinancialIntelligence({ horizonDays: 30 });
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -47,6 +52,11 @@ export function MoneyScreen() {
   const [settlements, setSettlements] = useState<DebtSettlement[]>([]);
   const [groupSplits, setGroupSplits] = useState<GroupExpenseSplit[]>([]);
   const [tab, setTab] = useState<MoneyTab>("receive");
+
+  // Read-only repayment budget simulator state
+  const [showSimulator, setShowSimulator] = useState(false);
+  const [simCadence, setSimCadence] = useState<"daily" | "weekly">("daily");
+  const [simBudgetInput, setSimBudgetInput] = useState("");
 
   // Record Borrowing / Lending / Gift state
   const [showRecord, setShowRecord] = useState(false);
@@ -126,6 +136,52 @@ export function MoneyScreen() {
     [people, debts, groupSplits]
   );
   const items = tab === "receive" ? overview.receivables : overview.payables;
+  const activeReceiveCount = useMemo(
+    () => overview.receivables.filter((d) => d.status === "active" || d.status === "partially_settled").length,
+    [overview.receivables]
+  );
+  const activeRepayCount = useMemo(
+    () => overview.payables.filter((d) => d.status === "active" || d.status === "partially_settled").length,
+    [overview.payables]
+  );
+
+  const simulatedDailyBudgetPaise = useMemo(() => {
+    const parsed = parseRupees(simBudgetInput);
+    if (!parsed || parsed <= 0) return null;
+    return simCadence === "weekly" ? Math.max(1, Math.round(parsed / 7)) : parsed;
+  }, [simBudgetInput, simCadence]);
+
+  const planner = useMemo(() => {
+    const today = intel?.todayISO ?? todayLocalISO();
+    return buildDebtPlannerModel({
+      debtPlan: intel?.debtPlan ?? null,
+      safeToSpend: intel?.safeToSpend ?? null,
+      peerDebts: debts.map((d) => ({
+        id: d.id,
+        personId: d.person_id,
+        personName: people.find((p) => p.id === d.person_id)?.name,
+        direction: d.direction,
+        totalAmountPaise: d.total_amount_paise,
+        remainingAmountPaise: d.remaining_amount_paise,
+        status: d.status,
+        dueDate: d.due_date,
+        createdAt: d.created_at,
+      })),
+      groupSplits: groupSplits.map((gs) => ({
+        id: gs.id,
+        groupExpenseId: gs.group_expense_id,
+        isSelf: gs.is_self,
+        personId: gs.person_id,
+        direction: gs.direction,
+        shareAmountPaise: gs.share_amount_paise,
+        remainingAmountPaise: gs.remaining_amount_paise,
+        status: gs.status,
+        createdAt: gs.created_at,
+      })),
+      todayISO: today,
+      simulatedDailyBudgetPaise,
+    });
+  }, [intel, debts, people, groupSplits, simulatedDailyBudgetPaise]);
 
   function openNewRecord(dir: PeerDebtDirection) {
     setEntryKind("loan");
@@ -261,17 +317,33 @@ export function MoneyScreen() {
     >
       {error ? <Notice tone="danger">{error}</Notice> : null}
 
+      {/* Quick navigation pills so Insights, WISH, Groups, and Bills are 1-tap reachable */}
+      <div className="-mx-4 px-4 flex gap-2 overflow-x-auto no-scrollbar">
+        <Link to="/groups" className="shrink-0 h-8 px-3 rounded-full bg-white border border-line text-[12.5px] font-semibold text-ink inline-flex items-center">
+          Groups
+        </Link>
+        <Link to="/insights" className="shrink-0 h-8 px-3 rounded-full bg-white border border-line text-[12.5px] font-semibold text-ink inline-flex items-center">
+          Insights
+        </Link>
+        <Link to="/wish" className="shrink-0 h-8 px-3 rounded-full bg-white border border-line text-[12.5px] font-semibold text-ink inline-flex items-center">
+          WISH goals
+        </Link>
+        <Link to="/commitments" className="shrink-0 h-8 px-3 rounded-full bg-white border border-line text-[12.5px] font-semibold text-ink inline-flex items-center">
+          Bills
+        </Link>
+      </div>
+
       {/* Top Totals: Receivables vs Payables */}
       <div className="grid grid-cols-2 gap-3">
         <Card tone="brand" className="p-3.5 space-y-1">
-          <p className="text-xs font-semibold text-brand-800">Money to receive</p>
+          <p className="text-xs font-semibold text-brand-800">Others owe you</p>
           <p className="text-[22px] font-extrabold tabular-nums text-ink">{formatINR(overview.totalToReceivePaise)}</p>
           <p className="text-[11px] text-ink-muted">
             Personal {formatINR(overview.personalToReceivePaise)} · Group {formatINR(overview.groupToReceivePaise)}
           </p>
         </Card>
         <Card tone="warn" className="p-3.5 space-y-1">
-          <p className="text-xs font-semibold text-amber-900">Money to repay</p>
+          <p className="text-xs font-semibold text-amber-900">Total you owe</p>
           <p className="text-[22px] font-extrabold tabular-nums text-ink">{formatINR(overview.totalToRepayPaise)}</p>
           <p className="text-[11px] text-ink-muted">
             Personal {formatINR(overview.personalToRepayPaise)} · Group {formatINR(overview.groupToRepayPaise)}
@@ -279,21 +351,163 @@ export function MoneyScreen() {
         </Card>
       </div>
 
-      {/* Available Liquidity vs Sustainable Capital summary */}
-      {runway && runway.confirmedBalancePaise !== null ? (
-        <Card tone="soft" className="px-4 py-3 flex items-center justify-between gap-3 text-xs">
+      {/* Confirmed Cash vs Sustainable Capital summary */}
+      {intel && intel.confirmedCashPaise !== null ? (
+        <Card tone="soft" className="px-4 py-3 grid grid-cols-3 gap-2 text-xs">
           <div>
-            <p className="text-ink-muted">Available liquidity</p>
-            <p className="text-[15px] font-bold tabular-nums text-ink">
-              {formatINR(runway.availableLiquidityPaise ?? runway.startingSpendableBalancePaise ?? 0)}
+            <p className="text-ink-muted">{FINANCIAL_TERMS.confirmedCash.label}</p>
+            <p className="text-[14px] font-bold tabular-nums text-ink">
+              {formatFinancialAmount(intel.confirmedCashPaise)}
+            </p>
+          </div>
+          <div>
+            <p className="text-ink-muted">{FINANCIAL_TERMS.safeToSpend.label}</p>
+            <p className="text-[14px] font-bold tabular-nums text-ink">
+              {formatFinancialAmount(intel.safeToSpendPaise)}
             </p>
           </div>
           <div className="text-right">
-            <p className="text-ink-muted">Debt-free capital</p>
-            <p className="text-[15px] font-bold tabular-nums text-ink">
-              {formatINR(runway.sustainableCapitalPaise ?? 0)}
+            <p className="text-ink-muted">{FINANCIAL_TERMS.sustainableCapital.label}</p>
+            <p className="text-[14px] font-bold tabular-nums text-ink">
+              {formatFinancialAmount(intel.sustainableCapitalPaise)}
             </p>
           </div>
+        </Card>
+      ) : null}
+
+      {/* Debt Repayment Planner & Read-Only Budget Simulator */}
+      {intelLoading && !intel ? (
+        <Skeleton className="h-32" />
+      ) : planner.hasDebts ? (
+        <Card className="p-4 space-y-3">
+          <div className="flex items-center justify-between gap-2">
+            <div>
+              <h2 className="text-[15px] font-bold text-ink">Repayment planner</h2>
+              <p className="text-[11.5px] text-ink-muted">
+                Receivables ({formatINR(planner.totalReceivablePaise)}) are kept separate and not used for repayment.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowSimulator((v) => !v)}
+              className="shrink-0 h-8 px-3 rounded-full bg-brand-50 text-brand-700 text-xs font-semibold"
+            >
+              {showSimulator ? "Hide simulator" : "Explore budget"}
+            </button>
+          </div>
+
+          {planner.overdueTotalPaise > 0 ? (
+            <div className="rounded-xl bg-red-50 border border-red-100 px-3 py-2 text-xs font-semibold text-red-800">
+              {formatINR(planner.overdueTotalPaise)} overdue across {planner.overdueCount} obligation{planner.overdueCount === 1 ? "" : "s"} — prioritized first.
+            </div>
+          ) : null}
+
+          <div className="grid grid-cols-2 gap-3 rounded-xl bg-[#F1F3EE] p-3 text-xs">
+            <div>
+              <p className="text-ink-muted">Suggested set-aside</p>
+              <p className="mt-0.5 text-[15px] font-extrabold tabular-nums text-ink">
+                {formatINR(planner.recommendedDailySetAsidePaise)}/day
+              </p>
+              <p className="text-[11px] text-ink-muted">
+                {formatINR(planner.recommendedWeeklySetAsidePaise)}/week
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-ink-muted">Est. payoff timeline</p>
+              <p className="mt-0.5 text-[15px] font-extrabold tabular-nums text-ink">
+                {planner.totalPayoffDays !== null ? `${planner.totalPayoffDays} day${planner.totalPayoffDays === 1 ? "" : "s"}` : "—"}
+              </p>
+              <p className="text-[11px] text-ink-muted">
+                {planner.estimatedPayoffDate ? `By ${formatDay(planner.estimatedPayoffDate)}` : "Needs repayment budget"}
+              </p>
+            </div>
+          </div>
+
+          {planner.obligations.length > 0 ? (
+            <div className="space-y-1.5">
+              <p className="text-xs font-semibold text-ink-soft">Priority order</p>
+              <div className="divide-y divide-line rounded-xl border border-line bg-white">
+                {planner.obligations.slice(0, 4).map((ob) => (
+                  <div key={`${ob.source}-${ob.id}`} className="px-3 py-2 flex items-center justify-between gap-2 text-xs">
+                    <div className="min-w-0">
+                      <p className="font-semibold text-ink truncate">
+                        {ob.creditorName} · <span className="font-normal text-ink-muted">{ob.source === "group_split" ? "Group split" : "Personal"}</span>
+                      </p>
+                      <p className="text-[11px] text-ink-muted">
+                        {ob.dueDate ? `Due ${formatDay(ob.dueDate)}` : "No due date"}
+                        {ob.urgency === "overdue" ? " · Overdue" : ob.urgency === "due_soon" ? " · Due soon" : ""}
+                      </p>
+                    </div>
+                    <span className={cx("font-bold tabular-nums shrink-0", ob.urgency === "overdue" ? "text-red-700" : "text-ink")}>
+                      {formatINR(ob.remainingAmountPaise)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          {showSimulator ? (
+            <div className="pt-2 border-t border-line space-y-2.5">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-xs font-bold text-ink">Explore repayment budget (simulation only)</p>
+                <Segmented
+                  size="sm"
+                  value={simCadence}
+                  onChange={setSimCadence}
+                  options={[
+                    { value: "daily", label: "Daily" },
+                    { value: "weekly", label: "Weekly" },
+                  ]}
+                />
+              </div>
+              <Field label={`Test ${simCadence} repayment amount`}>
+                {(id) => (
+                  <MoneyInput
+                    id={id}
+                    value={simBudgetInput}
+                    onChange={setSimBudgetInput}
+                    placeholder={simCadence === "daily" ? "e.g. 200" : "e.g. 1400"}
+                  />
+                )}
+              </Field>
+              {planner.simulation ? (
+                <div className="rounded-xl bg-brand-50/70 border border-brand-100 p-3 space-y-1 text-xs">
+                  <p className="font-semibold text-brand-900">
+                    Simulated result (does not record a payment):
+                  </p>
+                  <p className="text-ink">
+                    At {formatINR(planner.simulation.dailyBudgetPaise)}/day ({formatINR(planner.simulation.weeklyBudgetPaise)}/week):{" "}
+                    <strong>
+                      {planner.simulation.totalPayoffDays !== null
+                        ? `${planner.simulation.totalPayoffDays} day${planner.simulation.totalPayoffDays === 1 ? "" : "s"}`
+                        : "—"}
+                    </strong>
+                    {planner.simulation.estimatedPayoffDate ? ` (by ${formatDay(planner.simulation.estimatedPayoffDate)})` : ""}
+                  </p>
+                  {planner.simulation.missedDueDatesCount > 0 ? (
+                    <p className="text-amber-800">
+                      {planner.simulation.missedDueDatesCount} due date{planner.simulation.missedDueDatesCount === 1 ? "" : "s"} may be missed at this pace.
+                    </p>
+                  ) : null}
+                  {planner.simulation.exceedsSafeToSpendDaily || planner.simulation.exceedsAvailableSafeToSpend ? (
+                    <p className="text-red-700 font-semibold">
+                      Exceeds your current safe-to-spend allowance
+                      {planner.simulation.safeDailyAllowancePaise !== null
+                        ? ` (${formatINR(planner.simulation.safeDailyAllowancePaise)}/day)`
+                        : ""} — may cause an immediate shortfall.
+                    </p>
+                  ) : planner.simulation.safeDailyAllowancePaise !== null ? (
+                    <p className="text-brand-800">
+                      Fits within your daily safe-to-spend allowance ({formatINR(planner.simulation.safeDailyAllowancePaise)}/day).
+                    </p>
+                  ) : null}
+                </div>
+              ) : (
+                <p className="text-[11.5px] text-ink-muted">Enter an amount above to simulate payoff duration without changing any records.</p>
+              )}
+            </div>
+          ) : null}
         </Card>
       ) : null}
 
@@ -467,8 +681,8 @@ export function MoneyScreen() {
         value={tab}
         onChange={setTab}
         options={[
-          { value: "receive", label: `To Receive (${overview.receivables.length})` },
-          { value: "repay", label: `To Repay (${overview.payables.length})` },
+          { value: "receive", label: `To Receive (${activeReceiveCount})` },
+          { value: "repay", label: `To Repay (${activeRepayCount})` },
         ]}
       />
 
@@ -555,27 +769,15 @@ export function MoneyScreen() {
         </div>
       )}
 
-      {/* Preserve easy access to existing v1.0.1 Money Planning features */}
+      {/* Additional money tools not in top quick-jump pills */}
       <SectionTitle>Other money tools</SectionTitle>
       <Card className="divide-y divide-line">
-        <Link to="/groups" className="flex items-center justify-between px-4 py-3 text-[14px] font-semibold text-ink">
-          <span>Group expenses & bill splits</span>
-          <IconChevronRight size={18} className="text-ink-faint" />
-        </Link>
-        <Link to="/commitments" className="flex items-center justify-between px-4 py-3 text-[14px] font-semibold text-ink">
-          <span>Bills & upcoming commitments</span>
-          <IconChevronRight size={18} className="text-ink-faint" />
-        </Link>
         <Link to="/payouts" className="flex items-center justify-between px-4 py-3 text-[14px] font-semibold text-ink">
           <span>Expected platform payouts</span>
           <IconChevronRight size={18} className="text-ink-faint" />
         </Link>
         <Link to="/invoices" className="flex items-center justify-between px-4 py-3 text-[14px] font-semibold text-ink">
           <span>Client invoices</span>
-          <IconChevronRight size={18} className="text-ink-faint" />
-        </Link>
-        <Link to="/insights" className="flex items-center justify-between px-4 py-3 text-[14px] font-semibold text-ink">
-          <span>Insights & WISH goals</span>
           <IconChevronRight size={18} className="text-ink-faint" />
         </Link>
         <Link to="/more" className="flex items-center justify-between px-4 py-3 text-[14px] font-semibold text-ink">

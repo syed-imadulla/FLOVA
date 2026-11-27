@@ -68,6 +68,10 @@ export interface PersonFinancialSummary {
   totalRepaidPaise: Paise;
   receivableRemainingPaise: Paise;
   payableRemainingPaise: Paise;
+  personalReceivablePaise: Paise;
+  personalPayablePaise: Paise;
+  groupReceivablePaise: Paise;
+  groupPayablePaise: Paise;
   /** Positive = they owe you; Negative = you owe them; Zero = settled */
   netBalancePaise: number;
   statusLabel: string;
@@ -385,19 +389,21 @@ export function computePeopleSummaries(
 
     let totalLentPaise = 0;
     let totalBorrowedPaise = 0;
-    let receivableRemainingPaise = 0;
-    let payableRemainingPaise = 0;
+    let personalReceivablePaise = 0;
+    let personalPayablePaise = 0;
+    let groupReceivablePaise = 0;
+    let groupPayablePaise = 0;
 
     for (const d of pDebts) {
       if (d.direction === "they_owe") {
         totalLentPaise += d.total_amount_paise;
         if (d.status === "active" || d.status === "partially_settled") {
-          receivableRemainingPaise += d.remaining_amount_paise;
+          personalReceivablePaise += d.remaining_amount_paise;
         }
       } else {
         totalBorrowedPaise += d.total_amount_paise;
         if (d.status === "active" || d.status === "partially_settled") {
-          payableRemainingPaise += d.remaining_amount_paise;
+          personalPayablePaise += d.remaining_amount_paise;
         }
       }
     }
@@ -414,7 +420,7 @@ export function computePeopleSummaries(
       if (gs.direction === "they_owe" && gs.person_id === person.id) {
         totalLentPaise += gs.share_amount_paise;
         if (gs.status === "active" || gs.status === "partially_settled") {
-          receivableRemainingPaise += gs.remaining_amount_paise;
+          groupReceivablePaise += gs.remaining_amount_paise;
         }
         const paidBack = groupSettlements
           .filter((st) => st.group_expense_split_id === gs.id && st.direction === "repayment_in")
@@ -423,7 +429,7 @@ export function computePeopleSummaries(
       } else if (gs.direction === "you_owe" && groupPayerByExpenseId.get(gs.group_expense_id) === person.id) {
         totalBorrowedPaise += gs.share_amount_paise;
         if (gs.status === "active" || gs.status === "partially_settled") {
-          payableRemainingPaise += gs.remaining_amount_paise;
+          groupPayablePaise += gs.remaining_amount_paise;
         }
         const paidOut = groupSettlements
           .filter((st) => st.group_expense_split_id === gs.id && st.direction === "repayment_out")
@@ -432,6 +438,8 @@ export function computePeopleSummaries(
       }
     }
 
+    const receivableRemainingPaise = personalReceivablePaise + groupReceivablePaise;
+    const payableRemainingPaise = personalPayablePaise + groupPayablePaise;
     const netBalancePaise = receivableRemainingPaise - payableRemainingPaise;
     let statusLabel = "No pending balance";
     if (netBalancePaise > 0) statusLabel = `Owes you ${formatINR(netBalancePaise)}`;
@@ -446,6 +454,10 @@ export function computePeopleSummaries(
       totalRepaidPaise,
       receivableRemainingPaise,
       payableRemainingPaise,
+      personalReceivablePaise,
+      personalPayablePaise,
+      groupReceivablePaise,
+      groupPayablePaise,
       netBalancePaise,
       statusLabel,
       debts: pDebts,

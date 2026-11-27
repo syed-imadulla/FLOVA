@@ -1,6 +1,7 @@
 // People — Track everyone you lend to or borrow from, with full history and zero-balance support.
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { todayLocalISO } from "../data/dates";
 import { formatINR, toPaiseStrict } from "../lib/money";
 import { useDataVersion } from "../data/DataVersionProvider";
 import {
@@ -234,6 +235,13 @@ export function PeopleScreen() {
     }
 
     const { person } = selected;
+    const today = todayLocalISO();
+    const overduePayablePaise = selected.debts
+      .filter((d) => d.direction === "you_owe" && d.remaining_amount_paise > 0 && d.due_date && d.due_date < today)
+      .reduce((acc, d) => acc + d.remaining_amount_paise, 0);
+    const hasPersonal = selected.personalReceivablePaise > 0 || selected.personalPayablePaise > 0;
+    const hasGroup = selected.groupReceivablePaise > 0 || selected.groupPayablePaise > 0;
+
     return (
       <Screen
         title={person.name}
@@ -279,6 +287,31 @@ export function PeopleScreen() {
             {selected.netBalancePaise === 0 ? "₹0" : formatINR(Math.abs(selected.netBalancePaise))}
           </p>
           <p className="text-[13px] font-medium text-ink-soft">{selected.statusLabel}</p>
+          {(hasPersonal || hasGroup) ? (
+            <div className="pt-2 border-t border-black/10 grid grid-cols-2 gap-2 text-[11.5px] text-ink-soft">
+              <div>
+                <span className="font-semibold text-ink">Personal:</span>{" "}
+                {selected.personalReceivablePaise > 0
+                  ? `+${formatINR(selected.personalReceivablePaise)}`
+                  : selected.personalPayablePaise > 0
+                    ? `−${formatINR(selected.personalPayablePaise)}`
+                    : "₹0"}
+              </div>
+              <div className="text-right">
+                <span className="font-semibold text-ink">Group splits:</span>{" "}
+                {selected.groupReceivablePaise > 0
+                  ? `+${formatINR(selected.groupReceivablePaise)}`
+                  : selected.groupPayablePaise > 0
+                    ? `−${formatINR(selected.groupPayablePaise)}`
+                    : "₹0"}
+              </div>
+            </div>
+          ) : null}
+          {overduePayablePaise > 0 ? (
+            <p className="text-xs font-semibold text-red-700">
+              Overdue to repay: {formatINR(overduePayablePaise)}
+            </p>
+          ) : null}
         </Card>
 
         <div className="grid grid-cols-2 gap-3">
@@ -349,6 +382,7 @@ export function PeopleScreen() {
             {selected.debts.map((d) => {
               const settled = d.total_amount_paise - d.remaining_amount_paise;
               const dSettlements = selected.settlements.filter((s) => s.debt_id === d.id);
+              const isOverdue = d.remaining_amount_paise > 0 && Boolean(d.due_date && d.due_date < today);
               return (
                 <Card key={d.id} className="p-4 space-y-2">
                   <div className="flex items-start justify-between gap-2">
@@ -365,14 +399,16 @@ export function PeopleScreen() {
                     <span
                       className={cx(
                         "px-2.5 py-0.5 rounded-full text-[11px] font-semibold",
-                        d.status === "settled"
-                          ? "bg-brand-50 text-brand-700"
-                          : d.status === "partially_settled"
-                            ? "bg-amber-50 text-amber-800"
-                            : "bg-[#F1F3EE] text-ink-soft"
+                        isOverdue
+                          ? "bg-red-50 text-red-700"
+                          : d.status === "settled"
+                            ? "bg-brand-50 text-brand-700"
+                            : d.status === "partially_settled"
+                              ? "bg-amber-50 text-amber-800"
+                              : "bg-[#F1F3EE] text-ink-soft"
                       )}
                     >
-                      {d.status === "partially_settled" ? "Partially settled" : d.status === "settled" ? "Settled" : "Pending"}
+                      {isOverdue ? "Overdue" : d.status === "partially_settled" ? "Partially settled" : d.status === "settled" ? "Settled" : "Pending"}
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-xs text-ink-soft pt-1 border-t border-line">
@@ -516,33 +552,48 @@ export function PeopleScreen() {
         </Card>
       ) : (
         <Card className="divide-y divide-line">
-          {filtered.map((s) => (
-            <Link
-              key={s.person.id}
-              to={`/people/${s.person.id}`}
-              className="flex items-center gap-3 px-4 py-3.5 hover:bg-black/[0.02]"
-            >
-              <span className="w-10 h-10 rounded-full bg-brand-50 text-brand-700 font-bold flex items-center justify-center shrink-0">
-                {s.person.name.charAt(0).toUpperCase()}
-              </span>
-              <div className="flex-1 min-w-0">
-                <p className="text-[15px] font-semibold text-ink truncate">{s.person.name}</p>
-                <p
-                  className={cx(
-                    "text-xs truncate font-medium",
-                    s.netBalancePaise > 0
-                      ? "text-brand-700"
-                      : s.netBalancePaise < 0
-                        ? "text-amber-700"
-                        : "text-ink-muted"
-                  )}
-                >
-                  {s.statusLabel}
-                </p>
-              </div>
-              <IconChevronRight size={18} className="text-ink-faint shrink-0" />
-            </Link>
-          ))}
+          {filtered.map((s) => {
+            const today = todayLocalISO();
+            const hasOverdue = s.debts.some(
+              (d) => d.remaining_amount_paise > 0 && Boolean(d.due_date && d.due_date < today)
+            );
+            const hasGroup = s.groupReceivablePaise > 0 || s.groupPayablePaise > 0;
+            return (
+              <Link
+                key={s.person.id}
+                to={`/people/${s.person.id}`}
+                className="flex items-center gap-3 px-4 py-3.5 hover:bg-black/[0.02]"
+              >
+                <span className="w-10 h-10 rounded-full bg-brand-50 text-brand-700 font-bold flex items-center justify-center shrink-0">
+                  {s.person.name.charAt(0).toUpperCase()}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-[15px] font-semibold text-ink truncate">{s.person.name}</p>
+                    {hasOverdue ? (
+                      <span className="px-1.5 py-0.5 rounded-full bg-red-50 text-red-700 text-[10px] font-semibold shrink-0">
+                        Overdue
+                      </span>
+                    ) : null}
+                  </div>
+                  <p
+                    className={cx(
+                      "text-xs truncate font-medium",
+                      s.netBalancePaise > 0
+                        ? "text-brand-700"
+                        : s.netBalancePaise < 0
+                          ? "text-amber-700"
+                          : "text-ink-muted"
+                    )}
+                  >
+                    {s.statusLabel}
+                    {hasGroup ? " · includes group split" : ""}
+                  </p>
+                </div>
+                <IconChevronRight size={18} className="text-ink-faint shrink-0" />
+              </Link>
+            );
+          })}
         </Card>
       )}
     </Screen>

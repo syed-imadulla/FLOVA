@@ -227,9 +227,13 @@ export function calculateSafeToSpend(input: SafeToSpendInput): SafeToSpendResult
   const remainingMonthlyAllowancePaise = Math.max(0, safeSub(sustainableCapitalPaise, reservedForMonth));
   const dailyMonthlyPace = Math.floor(remainingMonthlyAllowancePaise / remainingDaysInMonth);
 
-  // Use the more conservative daily pace if next income is later than month-end or vice versa
+  // Use the more conservative daily pace when next expected income is after month-end,
+  // unknown, or on a 1-day same-day horizon (so a 1-day horizon never recommends spending
+  // cash needed for tomorrow's bills).
   const dailySpendingAllowancePaise =
-    nextExpectedIncomeDate && nextExpectedIncomeDate <= monthEndDate
+    nextExpectedIncomeDate &&
+    nextExpectedIncomeDate <= monthEndDate &&
+    planningHorizonDays > 1
       ? dailyAllowanceOverHorizon
       : Math.min(dailyAllowanceOverHorizon, dailyMonthlyPace);
 

@@ -1,7 +1,13 @@
 // Bills & debts — upcoming commitments the runway deducts on their due date.
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { buildCommitmentsIntelligenceModel } from "../app/insightsCommitmentsModel";
 import { paiseToInput } from "../app/moneyText";
+import {
+  FINANCIAL_TERMS,
+  formatFinancialAmount,
+  useFinancialIntelligence,
+} from "../app/useFinancialIntelligence";
 import type { ReviewState } from "./AddScreen";
 import { useCommitments } from "../data/useCommitments";
 import { todayLocalISO } from "../data/dates";
@@ -15,13 +21,18 @@ export function CommitmentsScreen() {
   const navigate = useNavigate();
   const [filter, setFilter] = useState<CommitmentStatus | "all">("upcoming");
   const { items, loading, error, add, update, setStatus } = useCommitments(filter);
+  const { data: intel } = useFinancialIntelligence({ horizonDays: 30 });
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Commitment | null>(null);
   const [selected, setSelected] = useState<Commitment | null>(null);
   const [busy, setBusy] = useState(false);
   const [actionErr, setActionErr] = useState<string | null>(null);
   const today = todayLocalISO();
-  const total = items.reduce((s, c) => s + toPaise(c.amount), 0);
+  const model = useMemo(
+    () => buildCommitmentsIntelligenceModel({ items, filter, intel, todayISO: today }),
+    [items, filter, intel, today]
+  );
+  const total = model.displayedTotalPaise;
 
   async function mark(status: CommitmentStatus, recordExpense: boolean) {
     if (!selected) return;
@@ -63,6 +74,41 @@ export function CommitmentsScreen() {
           <p className="text-[22px] font-extrabold tabular-nums">{loading ? "…" : formatINR(total)}</p>
         </div>
       </Card>
+
+      {/* Safe-to-Spend & Overdue Impact */}
+      {!loading && (model.confirmedCashPaise !== null || model.overdueCount > 0) ? (
+        <Card tone={model.hasPressure ? "warn" : "soft"} className="p-3.5 space-y-2 text-xs">
+          <div className="flex items-start justify-between gap-2">
+            <div>
+              <p className="text-ink-muted">Remaining monthly allowance (after this month&apos;s bills)</p>
+              <p className="text-[16px] font-extrabold tabular-nums text-ink">
+                {formatFinancialAmount(model.remainingMonthlyAllowancePaise)}
+              </p>
+            </div>
+            <Link to="/insights" className="font-semibold text-brand-700 shrink-0">
+              View insights →
+            </Link>
+          </div>
+          {model.overdueCount > 0 ? (
+            <p className="text-red-700 font-semibold">
+              {model.overdueCount} overdue commitment{model.overdueCount === 1 ? "" : "s"} ({formatINR(model.overdueTotalPaise)}) — deducted from Safe-to-Spend.
+            </p>
+          ) : model.shortfallPaise > 0 ? (
+            <p className="text-red-700 font-semibold">
+              Shortfall of {formatINR(model.shortfallPaise)} after cushion, debts, and due bills.
+            </p>
+          ) : model.laterMonthCommitmentsPaise > 0 ? (
+            <p className="text-ink-muted">
+              {formatINR(model.laterMonthCommitmentsPaise)} due after{" "}
+              {model.nextExpectedIncomeDate ? formatDay(model.nextExpectedIncomeDate) : "your current horizon"} is deducted from your monthly allowance ({formatFinancialAmount(model.remainingMonthlyAllowancePaise)}), not from short-horizon {FINANCIAL_TERMS.safeToSpend.label} ({formatFinancialAmount(model.safeToSpendPaise)}).
+            </p>
+          ) : (
+            <p className="text-ink-muted">
+              Upcoming bills within your {FINANCIAL_TERMS.safeToSpend.label} ({formatFinancialAmount(model.safeToSpendPaise)}) are already deducted once; paid and cancelled bills are excluded.
+            </p>
+          )}
+        </Card>
+      ) : null}
 
       {formOpen || editing ? (
         <CommitmentForm
